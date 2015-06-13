@@ -6,11 +6,13 @@ package axl.xdef.types
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
+	import axl.xdef.interfaces.ixDisplay;
 	
-	public class xText extends TextField
+	public class xText extends TextField implements ixDisplay
 	{
-		private var xdef:XML;
-		public var meta:Object;
+		protected var xdef:XML;
+		protected var xmeta:Object={};
+		
 		private var tff:TextFormat;
 		public var onAnimationComplete:Function;
 		
@@ -27,7 +29,6 @@ package axl.xdef.types
 	
 		protected function ats(event:Event):void
 		{
-			trace(this, "ATS");
 			if(meta != null && meta.hasOwnProperty('addChild'))
 			{
 				trace(this, 'metaadd');
@@ -37,7 +38,6 @@ package axl.xdef.types
 			}
 		}
 		
-		
 		private function onComplete():void
 		{
 			if(onAnimationComplete != null)
@@ -45,11 +45,11 @@ package axl.xdef.types
 		}
 		
 		public function get def():XML { return xdef }
-		
 		public function set def(value:XML):void { 
 			xdef = value;
 			parseDef();
 		}
+		
 		
 		protected function parseDef():void
 		{
@@ -71,10 +71,9 @@ package axl.xdef.types
 				this.height = textHeight + 5;
 		}
 		
-		public function reset():void
-		{
-			trace('RESET', this, this.name);
-			parseDef();
-		}
+		public function reset():void { parseDef() }
+		public function get meta():Object { return xmeta }
+		public function set meta(v:Object):void { xmeta =v }
+		
 	}
 }
