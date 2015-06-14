@@ -34,8 +34,8 @@ package axl.xdef.types
 		private var isEnabled:Boolean;
 		private var texture:DisplayObject;
 		
-		public var intervalValue:int=200;
-		public var intervalDelay:int = 100;
+		public var intervalValue:int=0;
+		public var intervalDelay:int = 0;
 		
 		private var userClickHandler:Function;
 		private var eventClick:Event = new Event(flash.events.Event.SELECT,true);
