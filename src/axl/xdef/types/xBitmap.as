@@ -13,7 +13,7 @@ package axl.xdef.types
 		protected var xname:String='';
 		protected var xdef:XML;
 		protected var xmeta:Object={};
-		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=false)
+		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true)
 		{
 			super(bitmapData, pixelSnapping, smoothing);
 		}
