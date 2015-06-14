@@ -12,9 +12,6 @@ package axl.xdef.types
 		private var rail:DisplayObject;
 		private var train:DisplayObject;
 		private var boxControll:BoundBox;
-		private var isHorizontal:Boolean;
-		private var isVertical:Boolean;
-		private var boxed:Boolean;
 		private var btnUp:xButton;
 		private var btnRight:xButton;
 		private var btnLeft:xButton;
@@ -44,10 +41,7 @@ package axl.xdef.types
 			boxControll = new BoundBox();
 			boxControll.bound = rail;
 			boxControll.box = train;
-			boxControll.horizontalAllowed = isHorizontal;
-			boxControll.verticalAllowed = isVertical;
-			boxControll.verticalBehavior = BoundBox.inscribed;
-			boxed = true;
+			//boxControll.verticalBehavior = BoundBox.inscribed;
 		}
 		
 		override protected function elementAdded(e:Event):void
@@ -91,20 +85,8 @@ package axl.xdef.types
 			}
 			boxControll.dispatchChange();
 		}
-		
-		public function get horizontal():Boolean { return isHorizontal }
-		public function set horizontal(v:Boolean):void { isHorizontal = v
-			if(boxed) 
-				boxControll.horizontalAllowed = v;
-		}
-		
-		public function get vertical():Boolean { return isVertical }
-		public function set vertical(v:Boolean):void { isVertical =v;
-			if(boxed) 
-				boxControll.verticalAllowed = v;
-		}
-		
-		public function get controler():BoundBox { return boxControll }
+			
+		public function get controller():BoundBox { return boxControll }
 		
 		/** determines scroll efficiency default 1. Passing font size + spacing */
 		public function get deltaMultiplier():int { return deltaMultiply }
