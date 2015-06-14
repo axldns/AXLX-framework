@@ -3,7 +3,6 @@ package axl.xdef.types
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.Event;
-	import flash.geom.ColorTransform;
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
@@ -11,19 +10,27 @@ package axl.xdef.types
 	
 	public class xSprite extends Sprite implements ixDisplay
 	{
+		public var onElementAdded:Function;
+		
 		protected var xdef:XML;
 		protected var xmeta:Object={};
-		private var ct:ColorTransform = new ColorTransform();
 		public var onAnimationComplete:Function;
 		private var eventAnimComplete:Event = new Event(Event.COMPLETE);
+		
 		public function xSprite(definition:XML=null)
 		{
+			addEventListener(Event.ADDED, elementAdded);
 			xdef = definition;
 			super();
 			parseDef();
-			
 		}
-				
+		
+		protected function elementAdded(e:Event):void
+		{
+			if(onElementAdded != null)
+				onElementAdded(e);
+		}
+		
 		public function get def():XML { return xdef }
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void { xmeta =v }
@@ -92,8 +99,10 @@ package axl.xdef.types
 		
 		protected function parseDef():void
 		{
+			trace('parse def', xdef != null);
 			if(xdef==null)
 				return;
+			trace(this, "PARSING DEF");
 			drawGraphics();
 			XSupport.pushReadyTypes(def, this);
 			XSupport.applyAttributes(def, this);
@@ -105,49 +114,15 @@ package axl.xdef.types
 			XSupport.drawFromDef(def.graphics[0], this);
 		}
 		
-		public function get roffset():Number {	return ct.redOffset }
-		public function set roffset(v:Number):void
+		public function linkButton(xmlName:String, onClick:Function):xButton
 		{
-			ct.redOffset = v;
-			this.transform.colorTransform = ct;
+			var b:xButton = getChildByName(xmlName) as xButton;
+			if(b != null)
+			{
+				b.onClick = onClick;
+				this.setChildIndex(b, this.numChildren-1);
+			}
+			return b;
 		}
-		public function get goffset():Number {	return ct.greenOffset }
-		public function set goffset(v:Number):void
-		{
-			ct.greenOffset = v;
-			this.transform.colorTransform = ct;
-		}
-		public function get boffset():Number {	return ct.blueOffset }
-		public function set boffset(v:Number):void
-		{
-			ct.blueOffset = v;
-			this.transform.colorTransform = ct;
-		}
-		public function get aoffset():Number {	return ct.alphaOffset }
-		public function set aoffset(v:Number):void
-		{
-			ct.alphaOffset = v;
-			this.transform.colorTransform = ct;
-		}
-		public function get rmulti():Number {	return ct.redMultiplier }
-		public function set rmulti(v:Number):void
-		{
-			ct.redMultiplier = v;
-			this.transform.colorTransform = ct;
-		}
-		public function get gmulti():Number {	return ct.greenMultiplier }
-		public function set gmulti(v:Number):void
-		{
-			ct.greenMultiplier = v;
-			this.transform.colorTransform = ct;
-		}
-		
-		public function get bmulti():Number {	return ct.blueMultiplier }
-		public function set bmulti(v:Number):void
-		{
-			ct.blueMultiplier = v;
-			this.transform.colorTransform = ct;
-		}
-		
 	}
 }
