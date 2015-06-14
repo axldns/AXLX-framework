@@ -1,23 +1,22 @@
 package axl.xdef
 {
-	import com.screens.Div;
-	import com.screens.Masked;
-	import com.screens.ScrollBar;
-	
 	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.filters.BitmapFilter;
-	import flash.text.TextField;
 	import flash.utils.getDefinitionByName;
 	
 	import axl.ui.Carusele;
 	import axl.ui.MaskedScrollable;
 	import axl.utils.AO;
 	import axl.utils.Ldr;
+	import axl.utils.U;
 	import axl.xdef.interfaces.ixDisplay;
+	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
+	import axl.xdef.types.xMasked;
+	import axl.xdef.types.xScroll;
 	import axl.xdef.types.xSprite;
 	import axl.xdef.types.xText;
 
@@ -34,15 +33,21 @@ package axl.xdef
 			var al:int = attribs.length();
 			var val:*;
 			var key:String;
+			var keyArray:Array;
+			var deepTarget:Object;
 			for(var i:int = 0; i < al; i++)
 			{
-				key = attribs[i].name();
+				keyArray = String(attribs[i].name()).split('.');
+				key = keyArray.pop();
+				deepTarget = target;
+				while(keyArray.length)
+					deepTarget = deepTarget[keyArray.shift()];
 				val = attribs[i].valueOf();
 				val = valueReadyTypeCoversion(val);
-				if(target.hasOwnProperty(key))
-					target[key] = val;
+				if(key in deepTarget)
+					deepTarget[key] = val;
 			}
-			if(def.hasOwnProperty('@meta') && target.hasOwnProperty('meta'))
+			if(def.hasOwnProperty('@meta') && 'meta' in target)
 			{
 				try{target.meta = JSON.parse(String(target.meta))}
 				catch(e:Error) {throw new Error("Invalid json for element " + target + " of definition: " + def.toXMLString()); }
@@ -78,7 +83,7 @@ package axl.xdef
 			{
 				if(--atocomplete < 1 && onComplete != null)
 					onComplete();
-				target.dispatchEvent(target.eventAnimationComplete);
+				//target.dispatchEvent(target.eventAnimationComplete);
 			}
 		}
 		public static function valueReadyTypeCoversion(val:String):*
@@ -99,12 +104,10 @@ package axl.xdef
 			var ar:Array = [];
 			for(var i:int = 0; i < len; i++)
 				ar[i] = filterFromDef(fl[i]);
-			trace("RETURNING RRAY OF FILTERS", ar);
 			return ar.length > 0 ? ar : null;
 		}
 		public static function filterFromDef(xml:XML):BitmapFilter
 		{
-			trace("FILTER FROM DEF", xml.toXMLString());
 			var type:String = 'flash.filters.'+String(xml.@type);
 			var Fclass:Class;
 			try { Fclass = flash.utils.getDefinitionByName(type) as Class} catch (e:Error) {}
@@ -112,15 +115,14 @@ package axl.xdef
 				throw new Error("Invalid filter class in definition: " + xml.toXMLString());
 			var filter:BitmapFilter = new Fclass();
 			applyAttributes(xml, filter);
-			trace("FI:TER READY", filter );
 			return filter;
 		}
 		
-		public static function getTextFieldFromDef(def:XML):TextField
+		public static function getTextFieldFromDef(def:XML):xText
 		{
 			if(def == null)
 				return null;
-			var tf:xText = new  xText(def);
+			var tf:xText = new xText(def);
 			return tf;
 		}
 		
@@ -140,20 +142,20 @@ package axl.xdef
 			return btn;
 		}
 		
-		public static function getImageFromDef(xml:XML, dynamicSourceLoad:Boolean=true):xSprite
+		public static function getImageFromDef(xml:XML, dynamicSourceLoad:Boolean=true):xBitmap
 		{
-			var spr:xSprite = new xSprite();
+			var xb:xBitmap = new xBitmap();
 			if(dynamicSourceLoad)
 				checkSource(xml, imageCallback,true);
 			else 
 				return imageCallback();
-			function imageCallback():xSprite
+			function imageCallback():xBitmap
 			{
-				spr.addChild(Ldr.getBitmapCopy(String(xml.@src)));
-				spr.def = xml;
-				return spr;
+				xb.bitmapData = U.getBitmapData(Ldr.getBitmap(String(xml.@src)));
+				xb.def = xml;
+				return xb;
 			}
-			return spr;
+			return xb;
 		}	
 		public static function getSwfFromDef(xml:XML, dynamicSourceLoad:Boolean=true):xSprite
 		{
@@ -172,6 +174,7 @@ package axl.xdef
 			return spr;
 		}
 		
+		// --- axl.ui
 		public static function getMaskedFromDef(xml:XML):MaskedScrollable
 		{
 			var msk:MaskedScrollable = new MaskedScrollable();
@@ -188,7 +191,7 @@ package axl.xdef
 			carusel.movementBit(0);
 			return carusel;
 		}
-		
+		// --- end of axl.ui
 		private static function unknownTypeFromDef(xml:XML):Object
 		{
 			var obj:Object = Ldr.getAny(String(xml.@src));
@@ -223,7 +226,6 @@ package axl.xdef
 					vals[i] = val;
 				}
 				drawable.graphics[directive].apply(null, vals);
-				
 			}
 			applyAttributes(def, drawable);
 			return drawable;
@@ -245,9 +247,7 @@ package axl.xdef
 				{
 					if(v is Array)
 					{
-						trace("PUSHING FILTER TO", container, container.filters is Array);
 						container.filters = v as Array;
-						trace("container filters", container.filters);
 						return
 					}
 					if(command == 'addChildAt')
@@ -304,16 +304,18 @@ package axl.xdef
 					trace('readyTypeCallback', type, xml.@name);
 					switch(type)
 					{
-						case 'txt': obj = getTextFieldFromDef(xml);	break;
+						case 'div': obj = new xSprite(xml); break;
+						case 'txt': obj =  new xText(xml);	break;
+						case 'masked': obj = new xMasked(xml); break;
+						case 'scrollBar': obj = new xScroll(xml); break;
 						case 'msk': obj = getMaskedFromDef(xml); break;
-						case 'masked': obj = new Masked(xml); break;
+						case 'carousel' : obj = getCaruselFromDef(xml); break;
+						case 'filters': obj = filtersFromDef(xml); break;
+						//--- loadable
 						case 'img': obj = getImageFromDef(xml,false); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false); break;
-						case 'div': obj = new Div(xml); break;
 						case 'swf': obj = getSwfFromDef(xml); break;
-						case 'carousel' : obj = getCaruselFromDef(xml); break;
-						case 'scrollBar': obj = new ScrollBar(xml); break;
-						case 'filters': obj = filtersFromDef(xml); break;
+						
 						default : obj = unknownTypeFromDef(xml); break;
 					}
 					if(callBack2argument != null)
@@ -331,7 +333,6 @@ package axl.xdef
 				}
 			}
 		}
-		
 		
 		public static function proxyQueue(call:Function):void
 		{
