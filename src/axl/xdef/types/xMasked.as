@@ -18,28 +18,28 @@ package axl.xdef.types
 			if(e.target is xScroll)
 			{
 				scrollBar = e.target as xScroll;
-				if(scrollBar.controler == null)
+				if(scrollBar.controller == null)
 					throw new Error("scrollBar element needs elements named 'rail' and 'train'");
-				scrollBar.controler.addEventListener(Event.CHANGE, scrollBarMovement);
+				scrollBar.controller.addEventListener(Event.CHANGE, scrollBarMovement);
 			}
 			else if(e.target is MaskedScrollable)
 			{
 				masked = e.target as MaskedScrollable;
-				masked.controler.refresh();
-				masked.controler.addEventListener(Event.CHANGE, maskedMovement);
+				masked.controller.refresh();
+				masked.controller.addEventListener(Event.CHANGE, maskedMovement);
 			}
 		}
 		
 		protected function maskedMovement(e:Event):void
 		{
 			if(scrollBar != null)
-				scrollBar.controler.percentageVertical = 1 - masked.controler.percentageVertical;
+				scrollBar.controller.percentageVertical = 1 - masked.controller.percentageVertical;
 		}
 		
 		protected function scrollBarMovement(e:Event):void
 		{
 			if(masked != null)
-				masked.controler.percentageVertical = 1 - scrollBar.controler.percentageVertical;
+				masked.controller.percentageVertical = 1 - scrollBar.controller.percentageVertical;
 		}
 	}
 }
