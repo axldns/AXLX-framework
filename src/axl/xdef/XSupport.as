@@ -175,14 +175,7 @@ package axl.xdef
 		}
 		
 		// --- axl.ui
-		public static function getMaskedFromDef(xml:XML):MaskedScrollable
-		{
-			var msk:MaskedScrollable = new MaskedScrollable();
-			pushReadyTypes(xml, msk.container);
-			applyAttributes(xml, msk);
-			return msk;
-		}
-		
+				
 		public static function getCaruselFromDef(xml:XML):Object
 		{
 			var carusel:Carusele = new Carusele();
@@ -306,9 +299,9 @@ package axl.xdef
 					{
 						case 'div': obj = new xSprite(xml); break;
 						case 'txt': obj =  new xText(xml);	break;
-						case 'masked': obj = new xMasked(xml); break;
+						case 'masked': throw new Error("use msk "  + xml.toXMLString());
 						case 'scrollBar': obj = new xScroll(xml); break;
-						case 'msk': obj = getMaskedFromDef(xml); break;
+						case 'msk': obj = new xMasked(xml); break;
 						case 'carousel' : obj = getCaruselFromDef(xml); break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						//--- loadable
