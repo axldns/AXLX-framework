@@ -9,17 +9,13 @@ package axl.xdef.types
 	
 	public class xBitmap extends Bitmap implements ixDisplay
 	{
-		
-		protected var xname:String='';
 		protected var xdef:XML;
 		protected var xmeta:Object={};
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true)
 		{
 			super(bitmapData, pixelSnapping, smoothing);
 		}
-		override public function get name():String { return xname }
-		override public function set name(v:String):void {xname = v }
-		
+	
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void { xmeta =v }
 		
