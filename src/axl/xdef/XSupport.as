@@ -8,7 +8,6 @@ package axl.xdef
 	import flash.utils.getDefinitionByName;
 	
 	import axl.ui.Carusele;
-	import axl.ui.MaskedScrollable;
 	import axl.utils.AO;
 	import axl.utils.Ldr;
 	import axl.utils.U;
@@ -22,6 +21,9 @@ package axl.xdef
 
 	public class XSupport
 	{
+		private static var ver:Number = 0.9;
+		public static function get version():Number { return ver}
+		
 		public static var defaultFont:String;
 		private static var additionQueue:Vector.<Function> = new Vector.<Function>();
 		private static var afterQueueVec:Vector.<Function> = new Vector.<Function>();;
@@ -54,6 +56,8 @@ package axl.xdef
 			}
 			return target;
 		}
+		
+		
 		
 		public static function animByName(target:ixDisplay, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):void
 		{
