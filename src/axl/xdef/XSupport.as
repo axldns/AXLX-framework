@@ -298,7 +298,6 @@ package axl.xdef
 					readyTypeCallback();
 				function readyTypeCallback():Object
 				{
-					trace('readyTypeCallback', type, xml.@name);
 					switch(type)
 					{
 						case 'div': obj = new xSprite(xml); break;

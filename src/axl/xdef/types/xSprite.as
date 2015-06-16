@@ -99,10 +99,8 @@ package axl.xdef.types
 		
 		protected function parseDef():void
 		{
-			trace('parse def', xdef != null);
 			if(xdef==null)
 				return;
-			trace(this, "PARSING DEF");
 			drawGraphics();
 			XSupport.pushReadyTypes(def, this);
 			XSupport.applyAttributes(def, this);
