@@ -46,7 +46,6 @@ package axl.xdef.types
 		
 		override protected function elementAdded(e:Event):void
 		{
-			trace("XSCROLL ELEMENT", e.target.name);
 			switch (e.target.name)
 			{
 				case 'rail': rail = boxControll.bound = e.target as DisplayObject; break;

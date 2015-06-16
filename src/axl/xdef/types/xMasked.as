@@ -8,8 +8,9 @@ package axl.xdef.types
 	import flash.geom.Rectangle;
 	
 	import axl.ui.controllers.BoundBox;
+	import axl.xdef.interfaces.ixDisplay;
 
-	public class xMasked extends xSprite
+	public class xMasked extends xSprite implements ixDisplay
 	{
 		public var scrollBar:xScroll;
 		
@@ -46,7 +47,6 @@ package axl.xdef.types
 		
 		override public function addChild(child:DisplayObject):DisplayObject
 		{
-			trace("ADDING CONTENT TO XMASKED", child, child.hasOwnProperty('name') ? child.name : '');
 			if(child is xScroll)
 			{
 				scrollBar = child as xScroll;
@@ -72,13 +72,11 @@ package axl.xdef.types
 		
 		protected function scrollBarMovement(e:Event):void
 		{
-			trace('s',e);
 			ctrl.percentageVertical = 1 - scrollBar.controller.percentageVertical;
 		}
 		
 		protected function maskedMovement(e:Event):void
 		{
-			trace('m',e);
 			if(scrollBar != null)
 				scrollBar.controller.percentageVertical = 1 - ctrl.percentageVertical;
 		}
