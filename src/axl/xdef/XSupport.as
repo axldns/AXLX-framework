@@ -11,6 +11,7 @@ package axl.xdef
 	import axl.utils.AO;
 	import axl.utils.Ldr;
 	import axl.utils.U;
+	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.interfaces.ixDisplay;
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
@@ -59,7 +60,7 @@ package axl.xdef
 		
 		
 		
-		public static function animByName(target:ixDisplay, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):void
+		public static function animByName(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):void
 		{
 			if(reset)
 				target.reset();
@@ -74,6 +75,7 @@ package axl.xdef
 				else
 					ag = a;
 				var atocomplete:uint = ag.length;
+				trace("ANIM BY NAME", target, target['name'], atocomplete);
 				for(var i:int = 0; i < ag.length; i++)
 				{
 					var g:Array = [target].concat(ag[i]);
@@ -156,6 +158,7 @@ package axl.xdef
 			function imageCallback():xBitmap
 			{
 				xb.bitmapData = U.getBitmapData(Ldr.getBitmap(String(xml.@src)));
+				xb.smoothing = true;
 				xb.def = xml;
 				return xb;
 			}
@@ -268,8 +271,8 @@ package axl.xdef
 			{
 				var source:String = String(xml.@src);
 				var inLib:Object = Ldr.getAny(source);
-				if(inLib is Bitmap)
-					inLib = Ldr.getBitmapCopy(source);
+				/*if(inLib is Bitmap)
+					inLib = Ldr.getBitmapCopy(source);*/
 				if(inLib != null)
 					callBack(xml);
 				else if(dynamicLoad)
@@ -300,12 +303,21 @@ package axl.xdef
 				{
 					switch(type)
 					{
-						case 'div': obj = new xSprite(xml); break;
+						case 'div': obj = new xSprite(xml);
+							if(xml.hasOwnProperty('@src'))
+								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							break;
 						case 'txt': obj =  new xText(xml);	break;
 						case 'masked': throw new Error("use msk "  + xml.toXMLString());
 						case 'scrollBar': obj = new xScroll(xml); break;
-						case 'msk': obj = new xMasked(xml); break;
-						case 'carousel' : obj = getCaruselFromDef(xml); break;
+						case 'msk': obj = new xMasked(xml);
+							if(xml.hasOwnProperty('@src'))
+							obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							break;
+						case 'carousel' : obj = getCaruselFromDef(xml);
+							if(xml.hasOwnProperty('@src'))
+								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						//--- loadable
 						case 'img': obj = getImageFromDef(xml,false); break;
