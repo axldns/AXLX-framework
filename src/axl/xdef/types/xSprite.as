@@ -6,6 +6,7 @@ package axl.xdef.types
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
+	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.interfaces.ixDisplay;
 	
 	public class xSprite extends Sprite implements ixDisplay
@@ -20,9 +21,18 @@ package axl.xdef.types
 		public function xSprite(definition:XML=null)
 		{
 			addEventListener(Event.ADDED, elementAdded);
+			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			xdef = definition;
 			super();
 			parseDef();
+		}
+		
+		protected function addedToStageHandler(e:Event):void
+		{
+			if(meta.addedToStage == null)
+				return;
+			this.reset();
+			XSupport.animByName(this, 'addedToStage', animComplete);
 		}
 		
 		protected function elementAdded(e:Event):void
@@ -51,7 +61,7 @@ package axl.xdef.types
 		{
 			super.addChild(child);
 			var c:ixDisplay = child as ixDisplay;
-			if(c != null)
+			if(c != null && c.meta.addChild != null)
 			{
 				c.reset();
 				XSupport.animByName(c, 'addChild', animComplete);
@@ -63,7 +73,7 @@ package axl.xdef.types
 		{
 			super.addChildAt(child, index);
 			var c:ixDisplay = child as ixDisplay;
-			if(c != null)
+			if(c != null && c.meta.addChild != null)
 			{
 				c.reset();
 				XSupport.animByName(c, 'addChild');

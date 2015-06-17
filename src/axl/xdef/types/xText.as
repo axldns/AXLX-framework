@@ -29,9 +29,8 @@ package axl.xdef.types
 	
 		protected function ats(event:Event):void
 		{
-			if(meta != null && meta.hasOwnProperty('addChild'))
+			if(meta != null && meta.hasOwnProperty('addedToStage'))
 			{
-				trace(this, 'metaadd');
 				var a:Array = [this].concat(meta.addChild);
 				a[3] = onComplete;
 				AO.animate.apply(null,a);
