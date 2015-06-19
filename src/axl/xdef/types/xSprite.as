@@ -76,7 +76,7 @@ package axl.xdef.types
 			if(c != null && c.meta.addChild != null)
 			{
 				c.reset();
-				XSupport.animByName(c, 'addChild');
+				XSupport.animByName(c, 'addChild',animComplete);
 			}
 			return child;
 		}

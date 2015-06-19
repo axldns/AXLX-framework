@@ -283,7 +283,7 @@ package axl.xdef
 			else
 				callBack(xml);
 		}
-		
+		/** Creates / loads elements from xml definition based on predefined types: div, txt, msk, img, btn, swf, scrollBar, filters, carousel */
 		public static function getReadyType(xml:XML, callBack:Function, dynamicLoad:Boolean=true,callBack2argument:Object=null):void
 		{
 			if(xml == null)
