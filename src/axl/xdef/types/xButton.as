@@ -73,7 +73,7 @@ package axl.xdef.types
 					trigerUrl = new URLRequest(meta.url);
 			}
 			if(meta.hasOwnProperty('event'))
-				trigerEvent  = new Event(meta.event);
+				trigerEvent  = new Event(meta.event,true);
 			if(meta.hasOwnProperty('js'))
 				trigerExt = meta.js;
 		}
