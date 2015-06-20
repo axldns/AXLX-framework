@@ -1,6 +1,5 @@
 package axl.xdef
 {
-	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
@@ -12,7 +11,6 @@ package axl.xdef
 	import axl.utils.Ldr;
 	import axl.utils.U;
 	import axl.xdef.interfaces.ixDef;
-	import axl.xdef.interfaces.ixDisplay;
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
 	import axl.xdef.types.xMasked;
@@ -57,8 +55,6 @@ package axl.xdef
 			}
 			return target;
 		}
-		
-		
 		
 		public static function animByName(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):void
 		{
@@ -283,7 +279,30 @@ package axl.xdef
 			else
 				callBack(xml);
 		}
-		/** Creates / loads elements from xml definition based on predefined types: div, txt, msk, img, btn, swf, scrollBar, filters, carousel */
+		/** Translates xml node to an ActionScript object within predefined types and their equivalents:
+		 * <ul>
+		 * <li><b>img</b> - <code>axl.xdef.xBitmap</code> extends flash Bitmap </li>
+		 * <li><b>div</b> - <code>axl.xdef.xSprite</code> - extends flash Sprite </li>
+		 * <li><b>txt</b> - <code>axl.xdef.xText</code> - extends flash TextField </li>
+		 * <li><b>btn</b> - <code>axl.xdef.xButton</code>- extends xSprite </li>
+		 * <li><b>msk</b> - <code>axl.xdef.xMasked</code> - extends xSprite </li>
+		 * <li><b>swf</b> - <code>axl.xdef.xSprite</code> - loaded flash DisplayObject is added to xSprite as a child </li>
+		 * <li><b>scrollBar</b> - <code>axl.xdef.xScroll</code> - extends xSprite </li>
+		 * <li><b>carousel</b> - <code>axl.ui.Carusele</code> extends flash Sprite </li>
+		 * </ul>
+		 * @param xml - XML object  which tag name matches one of the listed elements.
+		 * <br>Attribute <code>src</code> will delay calling callback to the moment resource is available.
+		 * Resources are being loaded by <code>axl.utils.Ldr.load()</code> method. If resource is already loaded, and 
+		 * available within Ldr.getAny - no reloading is performed and callback called quicker. All Bitmap related
+		 * objects requested within this method are being re-drawn from originaly loaded resource (copy).
+		 * <br>To avoid duplicating objects use <code>getAdditionByName</code> function, which controlls cache of loaded elements
+		 * and groups.
+		 * @param callback - function to execute once element is available.
+		 * <br> It should accept one parameter - loaded element, or two arguments if <code>callBack2argument</code> is specified.
+		 * @param dynamicLoad - if true - checks for attribute <code>src</code> if false - no loading will occur.
+		 * @param callBack2argument - optional second argument for callback. It is in use to <code>pushReadyTypes</code> children order.
+		 * @see webFlow.MainCallback#getAdditionByName()
+		 * */
 		public static function getReadyType(xml:XML, callBack:Function, dynamicLoad:Boolean=true,callBack2argument:Object=null):void
 		{
 			if(xml == null)
@@ -323,7 +342,6 @@ package axl.xdef
 						case 'img': obj = getImageFromDef(xml,false); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false); break;
 						case 'swf': obj = getSwfFromDef(xml); break;
-						
 						default : obj = unknownTypeFromDef(xml); break;
 					}
 					if(callBack2argument != null)
