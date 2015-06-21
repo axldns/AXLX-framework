@@ -3,10 +3,10 @@ package axl.xdef.types
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.geom.ColorTransform;
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
-	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.interfaces.ixDisplay;
 	
 	public class xSprite extends Sprite implements ixDisplay
@@ -15,8 +15,10 @@ package axl.xdef.types
 		
 		protected var xdef:XML;
 		protected var xmeta:Object={};
+		private var xfilters:Array
 		public var onAnimationComplete:Function;
 		private var eventAnimComplete:Event = new Event(Event.COMPLETE);
+		private var xtransform:ColorTransform;
 		
 		public function xSprite(definition:XML=null)
 		{
@@ -83,6 +85,8 @@ package axl.xdef.types
 		
 		override public function removeChild(child:DisplayObject):DisplayObject
 		{
+			if(child == null)
+				return child;
 			var f:Function = super.removeChild;
 			var c:ixDisplay = child as ixDisplay;
 			if(c != null)
@@ -111,16 +115,18 @@ package axl.xdef.types
 		{
 			if(xdef==null)
 				return;
-			drawGraphics();
+			XSupport.drawFromDef(def.graphics[0], this);
 			XSupport.pushReadyTypes(def, this);
 			XSupport.applyAttributes(def, this);
+			xfilters = this.filters;
+			xtransform = this.transform.colorTransform;
 		}
 		
-		protected function drawGraphics():void
-		{
-			if(!def.hasOwnProperty('graphics')) return
-			XSupport.drawFromDef(def.graphics[0], this);
-		}
+		public function set filtersOn(v:Boolean):void { filters = v ? xfilters : null }
+		public function get filtersOn():Boolean { return filters != null }
+		
+		public function set transformOn(v:Boolean):void { transform.colorTransform = v ? xtransform : null }
+		public function get transformOn():Boolean { return  transform.colorTransform  != null }
 		
 		public function linkButton(xmlName:String, onClick:Function):xButton
 		{
