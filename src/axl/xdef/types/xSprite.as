@@ -15,10 +15,12 @@ package axl.xdef.types
 		
 		protected var xdef:XML;
 		protected var xmeta:Object={};
-		private var xfilters:Array
 		public var onAnimationComplete:Function;
 		private var eventAnimComplete:Event = new Event(Event.COMPLETE);
-		private var xtransform:ColorTransform;
+		
+		protected var xfilters:Array
+		protected var xtrans:ColorTransform;
+		protected var xtransDef:ColorTransform;
 		
 		public function xSprite(definition:XML=null)
 		{
@@ -118,15 +120,32 @@ package axl.xdef.types
 			XSupport.drawFromDef(def.graphics[0], this);
 			XSupport.pushReadyTypes(def, this);
 			XSupport.applyAttributes(def, this);
-			xfilters = this.filters;
-			xtransform = this.transform.colorTransform;
+			//xtransform = this.transform.colorTransform;
 		}
 		
-		public function set filtersOn(v:Boolean):void { filters = v ? xfilters : null }
+		public function get xtransform():ColorTransform { return xtrans }
+		public function set xtransform(v:ColorTransform):void { xtrans =v; this.transform.colorTransform = v;
+			if(xtransDef == null)
+				xtransDef = new ColorTransform();
+		}
+		public function set transformOn(v:Boolean):void { this.transform.colorTransform = (v ? xtrans : xtransDef ) }
+		
+		override public function set filters(v:Array):void
+		{
+			xfilters = v;
+			super.filters=v;
+		}
+		
+		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
 		public function get filtersOn():Boolean { return filters != null }
 		
-		public function set transformOn(v:Boolean):void { transform.colorTransform = v ? xtransform : null }
-		public function get transformOn():Boolean { return  transform.colorTransform  != null }
+		
+		public function ctransform(prop:String,val:Number):void {
+			if(!xtrans)
+				xtrans = new ColorTransform();
+			xtrans[prop] = val;
+			this.transform.colorTransform = xtrans;
+		}
 		
 		public function linkButton(xmlName:String, onClick:Function):xButton
 		{

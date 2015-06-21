@@ -7,6 +7,7 @@ package axl.xdef.types
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
+	import flash.geom.ColorTransform;
 	
 	public class xText extends TextField implements ixDisplay
 	{
@@ -15,6 +16,9 @@ package axl.xdef.types
 		
 		private var tff:TextFormat;
 		public var onAnimationComplete:Function;
+		private var xfilters:Array;
+		private var xtrans:ColorTransform;
+		private var xtransDef:ColorTransform;
 		
 		public function xText(definition:XML=null)
 		{
@@ -73,6 +77,30 @@ package axl.xdef.types
 		public function reset():void { parseDef() }
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void { xmeta =v }
+		
+		public function get xtransform():ColorTransform { return xtrans }
+		public function set xtransform(v:ColorTransform):void { xtrans =v; this.transform.colorTransform = v;
+			if(xtransDef == null)
+				xtransDef = new ColorTransform();
+		}
+		public function set transformOn(v:Boolean):void { this.transform.colorTransform = (v ? xtrans : xtransDef ) }
+		
+		override public function set filters(v:Array):void
+		{
+			xfilters = v;
+			super.filters=v;
+		}
+		
+		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
+		public function get filtersOn():Boolean { return filters != null }
+		
+		
+		public function ctransform(prop:String,val:Number):void {
+			if(!xtrans)
+				xtrans = new ColorTransform();
+			xtrans[prop] = val;
+			this.transform.colorTransform = xtrans;
+		}
 		
 	}
 }

@@ -139,9 +139,11 @@ package axl.xdef.types
 		protected function hover(e:MouseEvent):void
 		{
 			checkProperties();
-			var val:int = (e.type == MouseEvent.ROLL_OVER) ? 1 : 0
-			trace("HOVER",val,'did', sdisabled, disabledTarget, disabledKey, disabledVals);
-			overTarget[overKey] = overVals[val];
+			var val:int = (e.type == MouseEvent.ROLL_OVER) ? 0 : 1;
+			if(overTarget[overKey] is Function)
+				overTarget[overKey].apply(null, overVals[val]);
+			else
+				overTarget[overKey] = overVals[val];
 		}
 		// --- --- PUBLIC API --- --- //
 		public function get enabled():Boolean {	return isEnabled }
@@ -204,6 +206,7 @@ package axl.xdef.types
 			while(keys.length)
 				overTarget = overTarget[keys.shift()];
 			overVals = JSON.parse(val);
+			trace("OVER PROPS", overTarget, overKey);
 		}
 		public function get disabled():String { return sdisabled}
 		public function set disabled(v:String):void

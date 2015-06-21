@@ -7,11 +7,11 @@ package axl.xdef
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
 	
-	import axl.ui.Carusele;
 	import axl.utils.AO;
 	import axl.utils.Ldr;
 	import axl.utils.U;
 	import axl.xdef.interfaces.ixDef;
+	import axl.xdef.interfaces.ixDisplay;
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
 	import axl.xdef.types.xCarousel;
@@ -241,7 +241,12 @@ package axl.xdef
 					if(v is Array)
 						container.filters = v as Array;
 					else if(v is ColorTransform)
-						container.transform.colorTransform = v as  ColorTransform;
+					{
+						if(container is ixDisplay)
+							container['xtransform'] = v;
+						else
+							container.transform.colorTransform = v as  ColorTransform;
+					}
 					else if(command == 'addChildAt')
 					{
 						if(index < container.numChildren-1)
