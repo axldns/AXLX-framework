@@ -4,6 +4,7 @@ package axl.xdef
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.filters.BitmapFilter;
+	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
 	
 	import axl.ui.Carusele;
@@ -13,6 +14,8 @@ package axl.xdef
 	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
+	import axl.xdef.types.xCarousel;
+	import axl.xdef.types.xCarouselSelectable;
 	import axl.xdef.types.xMasked;
 	import axl.xdef.types.xScroll;
 	import axl.xdef.types.xSprite;
@@ -99,27 +102,6 @@ package axl.xdef
 			return val;
 		}
 		
-		public static function filtersFromDef(xml:XML):Array
-		{
-			var fl:XMLList = xml.filter;
-			var len:int = fl.length();
-			var ar:Array = [];
-			for(var i:int = 0; i < len; i++)
-				ar[i] = filterFromDef(fl[i]);
-			return ar.length > 0 ? ar : null;
-		}
-		public static function filterFromDef(xml:XML):BitmapFilter
-		{
-			var type:String = 'flash.filters.'+String(xml.@type);
-			var Fclass:Class;
-			try { Fclass = flash.utils.getDefinitionByName(type) as Class} catch (e:Error) {}
-			if(Fclass == null)
-				throw new Error("Invalid filter class in definition: " + xml.toXMLString());
-			var filter:BitmapFilter = new Fclass();
-			applyAttributes(xml, filter);
-			return filter;
-		}
-		
 		public static function getTextFieldFromDef(def:XML):xText
 		{
 			if(def == null)
@@ -179,26 +161,11 @@ package axl.xdef
 		
 		// --- axl.ui
 				
-		public static function getCaruselFromDef(xml:XML):Object
-		{
-			var carusel:Carusele = new Carusele();
-			XSupport.pushReadyTypes(xml, carusel, 'addToRail');
-			XSupport.applyAttributes(xml, carusel);
-			carusel.movementBit(0);
-			return carusel;
-		}
-		// --- end of axl.ui
-		private static function unknownTypeFromDef(xml:XML):Object
-		{
-			var obj:Object = Ldr.getAny(String(xml.@src));
-			if(obj != null)
-				XSupport.applyAttributes(xml, obj);
-			return obj;
-		}
 		
 		public static function drawFromDef(def:XML, drawable:Sprite=null):DisplayObject
 		{
-			
+			if(def == null)
+				return null;
 			if(drawable == null)
 				drawable= new Sprite();
 			var commands:XMLList = def.command;
@@ -227,6 +194,35 @@ package axl.xdef
 			return drawable;
 		}
 		
+		public static function filtersFromDef(xml:XML):Array
+		{
+			var fl:XMLList = xml.filter;
+			var len:int = fl.length();
+			var ar:Array = [];
+			for(var i:int = 0; i < len; i++)
+				ar[i] = filterFromDef(fl[i]);
+			return ar.length > 0 ? ar : null;
+		}
+		
+		public static function filterFromDef(xml:XML):BitmapFilter
+		{
+			var type:String = 'flash.filters.'+String(xml.@type);
+			var Fclass:Class;
+			try { Fclass = flash.utils.getDefinitionByName(type) as Class} catch (e:Error) {}
+			if(Fclass == null)
+				throw new Error("Invalid filter class in definition: " + xml.toXMLString());
+			var filter:BitmapFilter = new Fclass();
+			applyAttributes(xml, filter);
+			return filter;
+		}
+		
+		public static function getColorTransformFromDef(xml:XML):ColorTransform
+		{
+			var ct:ColorTransform = new ColorTransform();
+			applyAttributes(xml, ct);
+			return ct;
+		}
+		
 		public static function pushReadyTypes(def:XML, container:DisplayObjectContainer, command:String='addChildAt'):void
 		{
 			if(def == null)
@@ -239,14 +235,14 @@ package axl.xdef
 				getReadyType(xml, readyTypeCallback,true, ++i);
 			function readyTypeCallback(v:Object, index:int):void
 			{
+				trace('readyTypeCallback', v);
 				if(v != null)
 				{
 					if(v is Array)
-					{
 						container.filters = v as Array;
-						return
-					}
-					if(command == 'addChildAt')
+					else if(v is ColorTransform)
+						container.transform.colorTransform = v as  ColorTransform;
+					else if(command == 'addChildAt')
 					{
 						if(index < container.numChildren-1)
 							container[command](v, index);
@@ -333,7 +329,11 @@ package axl.xdef
 							if(xml.hasOwnProperty('@src'))
 							obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
 							break;
-						case 'carousel' : obj = getCaruselFromDef(xml);
+						case 'carousel' : obj = new xCarousel(xml);
+							if(xml.hasOwnProperty('@src'))
+								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							break;
+						case 'carouselSelectable' : obj = new xCarouselSelectable(xml);
 							if(xml.hasOwnProperty('@src'))
 								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
 							break;
@@ -342,7 +342,8 @@ package axl.xdef
 						case 'img': obj = getImageFromDef(xml,false); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false); break;
 						case 'swf': obj = getSwfFromDef(xml); break;
-						default : obj = unknownTypeFromDef(xml); break;
+						case 'colorTransform' : obj = getColorTransformFromDef(xml)
+						default : break;
 					}
 					if(callBack2argument != null)
 						callBack(obj, callBack2argument);
@@ -359,6 +360,7 @@ package axl.xdef
 				}
 			}
 		}
+		
 		
 		public static function proxyQueue(call:Function):void
 		{
