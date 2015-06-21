@@ -16,22 +16,10 @@ package axl.xdef.types
 	
 	public class xButton extends xSprite
 	{
-		public static var defaultOverProperty:String='alpha';
-		public static var defaultOverValue:Object='.75';
-		public static var defaultUpValue:Object='1';
-		public static var defaultDisabledProperty:String='alpha';
-		public static var defaultDisabledValue:Object = '.44';
-		public static var defaultEnabledValue:Object = '1';
+		public static var defaultOver:String="upstate.alpha:[1,0.75]";
+		public static var defaultDisabled:String="alpha:[0.66,1]";
 		
-		private var rollProperty:String='default';
-		private var vRollIdle:Object= 'default';
-		private var vRollOver:Object = 'default';
-		
-		private var disProperty:String='default';
-		private var vDisDisabled:Object = 'default';
-		private var vDisEnabled:Object = 'default';
-		
-		private var isEnabled:Boolean;
+		private var isEnabled:Boolean=true;
 		private var texture:DisplayObject;
 		
 		public var intervalValue:int=0;
@@ -50,20 +38,35 @@ package axl.xdef.types
 		private var delayID:uint;
 		private var intervalID:uint;
 		
+		private var actions:Vector.<xAction> = new Vector.<xAction>();
+		private var overTarget:Object;
+		private var overKey:String;
+		private var overVals:Object;
+		private var disabledKey:String;
+		private var disabledTarget:Object;
+		private var disabledVals:Object;
+		private var sdisabled:String;
+		private var sover:String;
+		
 		
 		public function xButton(definition:XML=null)
 		{
 			super(definition);
-			enabled = true;
+			enabled = isEnabled;
 		}
 		
+		override public function addChild(child:DisplayObject):DisplayObject
+		{
+			if(numChildren < 1)
+				texture = child;
+			return super.addChild(child);
+		}
 		//-- internal
 		override public function set meta(v:Object):void
 		{
 			super.meta = v;
 			if(meta.hasOwnProperty('url'))
 			{
-				
 				if(meta.url is Array)
 				{
 					trigerUrl = meta.url[0]
@@ -76,22 +79,21 @@ package axl.xdef.types
 				trigerEvent  = new Event(meta.event,true);
 			if(meta.hasOwnProperty('js'))
 				trigerExt = meta.js;
+			if(meta.hasOwnProperty('action'))
+			{
+				var a:Object = meta.action;
+				var b:Array = (a is Array) ? a as Array : [a];
+				for(var i:int = 0, j:int = b.length; i<j; i++)
+					actions[i] = new xAction(b[i]);
+			}
 		}
 		
 		private function checkProperties():void
 		{
-			if(rollProperty == 'default')
-				rollProperty = defaultOverProperty;
-			if(vRollIdle == 'default')
-				vRollIdle = defaultUpValue;
-			if(vRollOver == 'default')
-				vRollOver = defaultOverValue;
-			if(disProperty == 'default')
-				disProperty = defaultDisabledProperty;
-			if(vDisDisabled == 'default')
-				vDisDisabled = defaultDisabledValue;
-			if(vDisEnabled == 'default')
-				vDisEnabled = defaultEnabledValue;
+			if(overTarget == null)
+				over = defaultOver;
+			if(disabledTarget ==null)
+				disabled = defaultDisabled;
 		}
 		
 		//--click mechanic
@@ -129,6 +131,39 @@ package axl.xdef.types
 				this.dispatchEvent(this.trigerEvent);
 			if(this.trigerExt && ExternalInterface.available)
 				ExternalInterface.call.apply(null, trigerExt);
+			for(var i:int = 0, j:int = actions.length; i<j; i++)
+				actions[i].execute();
+				
+		}
+		
+		protected function hover(e:MouseEvent):void
+		{
+			checkProperties();
+			var val:int = (e.type == MouseEvent.ROLL_OVER) ? 1 : 0
+			trace("HOVER",val,'did', sdisabled, disabledTarget, disabledKey, disabledVals);
+			overTarget[overKey] = overVals[val];
+		}
+		// --- --- PUBLIC API --- --- //
+		public function get enabled():Boolean {	return isEnabled }
+		public function set enabled(v:Boolean):void
+		{
+			//if(isEnabled == v) return;
+			isEnabled = v;
+			checkProperties();
+			if(!isEnabled)
+			{
+				U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
+				U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
+			}
+			var f:String = isEnabled ? 'addEventListener' : 'removeEventListener';
+			this[f](MouseEvent.MOUSE_DOWN, mouseDown);
+			this[f](MouseEvent.CLICK, mouseClick);
+			this[f](MouseEvent.ROLL_OVER, hover);
+			this[f](MouseEvent.ROLL_OUT, hover);
+			
+			buttonMode = isEnabled;
+			useHandCursor = isEnabled;
+			disabledTarget[disabledKey] = this.disabledVals[isEnabled ? 1 : 0];
 		}
 		
 		protected function mouseUp(e:MouseEvent):void { mouseMove(e) }
@@ -152,60 +187,38 @@ package axl.xdef.types
 			flash.utils.clearTimeout(delayID);
 		}
 		
-		protected function onOut(e:MouseEvent):void{ if(rollProperty != null) {this[rollProperty] = vRollIdle} }
-		protected function onOver(e:MouseEvent):void { if(rollProperty != null) {this[rollProperty] = vRollOver} }
-		
-		// --- --- PUBLIC API --- --- //
-		public function get enabled():Boolean {	return isEnabled }
-		public function set enabled(value:Boolean):void
-		{
-			isEnabled = value;
-			checkProperties();
-			if(isEnabled)
-			{
-				this.addEventListener(MouseEvent.CLICK, mouseClick);
-				this.addEventListener(MouseEvent.MOUSE_DOWN, mouseDown);
-				this.addEventListener(MouseEvent.ROLL_OVER, onOver);
-				this.addEventListener(MouseEvent.ROLL_OUT, onOut);
-				if(disProperty != null) {this[disProperty] = vDisEnabled}
-				this.buttonMode = true;
-				this.useHandCursor = true;
-			}
-			else
-			{
-				this.removeEventListener(MouseEvent.CLICK, mouseClick);
-				this.removeEventListener(MouseEvent.ROLL_OVER, onOver);
-				this.removeEventListener(MouseEvent.ROLL_OUT, onOut);
-				U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
-				U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
-				if(disProperty != null) {this[disProperty] = vDisDisabled}
-				this.buttonMode = false;
-				this.useHandCursor = false;
-			}
-		}
-		
+		/** impulse over event*/
 		public function get onClick():Function { return userClickHandler }
 		public function set onClick(v:Function):void { userClickHandler = v	}
 		
-		//--roll over
-		public function get rollOverProperty():String {	return rollProperty }
-		public function set rollOverProperty(value:String):void	{ rollProperty = value }
-		
-		public function get rollOverValue():Object { return vRollOver }
-		public function set rollOverValue(v:Object):void { vRollOver = v }
-		public function get idleValue():Object { return rollProperty }
-		public function set idleValue(v:Object):void { vRollIdle = v }
-		
-		//--disable
-		public function get disableProperty():String {	return disProperty }
-		public function set disableProperty(value:String):void	{ disProperty = value }
-		
-		public function set disableValue(v:Object):void { vDisDisabled = v }
-		public function get disableValue():Object { return vDisDisabled }
-		
-		public function set enableValue(v:Object):void { vDisEnabled = v }
-		public function get enableValue():Object { return vDisEnabled }
-		
+		public function get over():String { return sover }
+		public function set over(v:String):void
+		{
+			sover = v;
+			overKey = v.substring(0, v.lastIndexOf(':'));
+			var val:String = v.substring(v.lastIndexOf(':')+1);
+			
+			var keys:Array = overKey.split('.');
+			overKey = keys.pop();
+			overTarget = this;
+			while(keys.length)
+				overTarget = overTarget[keys.shift()];
+			overVals = JSON.parse(val);
+		}
+		public function get disabled():String { return sdisabled}
+		public function set disabled(v:String):void
+		{
+			sdisabled = v;
+			disabledKey = v.substring(0, v.lastIndexOf(':'));
+			var val:String = v.substring(v.lastIndexOf(':')+1);
+			
+			var keys:Array = disabledKey.split('.');
+			disabledKey = keys.pop();
+			disabledTarget = this;
+			while(keys.length)
+				disabledTarget = disabledTarget[keys.shift()];
+			disabledVals = JSON.parse(val);
+		}
 		
 		public function get upstate():DisplayObject { return texture }
 		public function set upstate(v:DisplayObject):void
