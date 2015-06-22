@@ -1,13 +1,16 @@
 package axl.xdef.types
 {
 	import flash.events.Event;
+	import flash.events.TextEvent;
+	import flash.external.ExternalInterface;
+	import flash.geom.ColorTransform;
+	import flash.net.URLRequest;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
-	import flash.geom.ColorTransform;
 	
 	public class xText extends TextField implements ixDisplay
 	{
@@ -19,6 +22,8 @@ package axl.xdef.types
 		private var xfilters:Array;
 		private var xtrans:ColorTransform;
 		private var xtransDef:ColorTransform;
+		private var trigerExt:Object;
+		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		
 		public function xText(definition:XML=null)
 		{
@@ -28,8 +33,17 @@ package axl.xdef.types
 			if(def!= null)
 				parseDef();
 			this.addEventListener(Event.ADDED_TO_STAGE, ats);
+			this.addEventListener(TextEvent.LINK, linkEvent);
 		}
 		
+		protected function linkEvent(e:TextEvent):void
+		{
+			trace("E", actions.length);
+			if(trigerExt != null && ExternalInterface.available)
+				ExternalInterface.call.apply(null, trigerExt);
+			for(var i:int = 0, j:int = actions.length; i<j; i++)
+				actions[i].execute();
+		}
 	
 		protected function ats(event:Event):void
 		{
@@ -59,6 +73,7 @@ package axl.xdef.types
 			if(def == null)
 				throw new Error("Undefined definition for " + this);
 			XSupport.applyAttributes(def, this);
+			trace("ATTRIBUTES APPLIED FOT", def.toXMLString());
 			XSupport.applyAttributes(def, tff);
 			
 			if(!def.hasOwnProperty('@font'))
@@ -76,7 +91,6 @@ package axl.xdef.types
 		
 		public function reset():void { parseDef() }
 		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void { xmeta =v }
 		
 		public function get xtransform():ColorTransform { return xtrans }
 		public function set xtransform(v:ColorTransform):void { xtrans =v; this.transform.colorTransform = v;
@@ -100,6 +114,24 @@ package axl.xdef.types
 				xtrans = new ColorTransform();
 			xtrans[prop] = val;
 			this.transform.colorTransform = xtrans;
+		}
+		
+		//-- internal
+		public function set meta(v:Object):void
+		{
+			xmeta =v;
+			trace('tf meta equals', v);
+			if(v is String)
+				return
+			if(meta.hasOwnProperty('js'))
+				trigerExt = meta.js;
+			if(meta.hasOwnProperty('action'))
+			{
+				var a:Object = meta.action;
+				var b:Array = (a is Array) ? a as Array : [a];
+				for(var i:int = 0, j:int = b.length; i<j; i++)
+					actions[i] = new xAction(b[i]);
+			}
 		}
 		
 	}
