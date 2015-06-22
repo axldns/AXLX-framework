@@ -16,7 +16,7 @@ package axl.xdef.types
 	
 	public class xButton extends xSprite
 	{
-		public static var defaultOver:String="upstate.alpha:[1,0.75]";
+		public static var defaultOver:String="upstate.alpha:[0.88,1]";
 		public static var defaultDisabled:String="alpha:[0.66,1]";
 		
 		private var isEnabled:Boolean=true;
@@ -65,6 +65,8 @@ package axl.xdef.types
 		override public function set meta(v:Object):void
 		{
 			super.meta = v;
+			if(meta is String)
+				return
 			if(meta.hasOwnProperty('url'))
 			{
 				if(meta.url is Array)
