@@ -22,6 +22,29 @@ package axl.xdef.types
 			
 		}
 		
+		public function add(v:Object,underChild:String=null,node:String='additions'):void
+		{
+			if(v is Array)
+				getAdditionsByName(v as Array, gotit);
+			else
+				getAdditionByName(v as String, gotit)
+			function gotit(d:DisplayObject):void{
+				
+				if(underChild != null)
+					addUnderChild(d,underChild);
+				else
+					addChild(d);
+			}
+		}
+		
+		public function addUnderChild(v:DisplayObject, chname:String):void
+		{
+			var o:DisplayObject = getChildByName(chname);
+			var i:int = o ? this.getChildIndex(o) : 0;
+			if(i > 0)
+				this.addChildAt(v,i);
+			else this.addChild(v);
+		}
 		// ADD - REMOVE
 		/** Returns first XML child of Config[node] which matches it name */
 		public function getAdditionDefByName(v:String,node:String='additions'):XML
