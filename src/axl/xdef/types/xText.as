@@ -4,7 +4,6 @@ package axl.xdef.types
 	import flash.events.TextEvent;
 	import flash.external.ExternalInterface;
 	import flash.geom.ColorTransform;
-	import flash.net.URLRequest;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	
@@ -38,7 +37,6 @@ package axl.xdef.types
 		
 		protected function linkEvent(e:TextEvent):void
 		{
-			trace("E", actions.length);
 			if(trigerExt != null && ExternalInterface.available)
 				ExternalInterface.call.apply(null, trigerExt);
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
@@ -73,7 +71,6 @@ package axl.xdef.types
 			if(def == null)
 				throw new Error("Undefined definition for " + this);
 			XSupport.applyAttributes(def, this);
-			trace("ATTRIBUTES APPLIED FOT", def.toXMLString());
 			XSupport.applyAttributes(def, tff);
 			
 			if(!def.hasOwnProperty('@font'))
