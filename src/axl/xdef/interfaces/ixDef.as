@@ -8,6 +8,8 @@ package axl.xdef.interfaces
 		function set def(v:XML):void;
 		function get meta():Object;
 		function set meta(v:Object):void;
+		function get name():String;
+		function set name(v:String):void;
 		function reset():void;
 	}
 	
