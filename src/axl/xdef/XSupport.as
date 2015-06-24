@@ -51,7 +51,7 @@ package axl.xdef
 				if(key in deepTarget)
 					deepTarget[key] = val;
 			}
-			if(def.hasOwnProperty('@meta') && 'meta' in target)
+			if(def.hasOwnProperty('@meta') && target.hasOwnProperty('meta'))
 			{
 				try{target.meta = JSON.parse(String(target.meta))}
 				catch(e:Error) {throw new Error("Invalid json for element " + target + " of definition: " + def.toXMLString()); }
