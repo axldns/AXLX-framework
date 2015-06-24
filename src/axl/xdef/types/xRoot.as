@@ -6,6 +6,7 @@ package axl.xdef.types
 	import axl.utils.AO;
 	import axl.utils.U;
 	import axl.xdef.XSupport;
+	import axl.xdef.interfaces.ixDef;
 
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
@@ -22,7 +23,7 @@ package axl.xdef.types
 			
 		}
 		
-		public function add(v:Object,underChild:String=null,node:String='additions'):void
+		public function add(v:Object,underChild:String=null,indexModificator:int=0,node:String='additions'):void
 		{
 			if(v is Array)
 				getAdditionsByName(v as Array, gotit);
@@ -31,18 +32,27 @@ package axl.xdef.types
 			function gotit(d:DisplayObject):void{
 				
 				if(underChild != null)
-					addUnderChild(d,underChild);
+					addUnderChild(d,underChild,indexModificator);
 				else
 					addChild(d);
 			}
 		}
 		
-		public function addUnderChild(v:DisplayObject, chname:String):void
+		public function addUnderChild(v:DisplayObject, chname:String,indexMod:int=0):void
 		{
 			var o:DisplayObject = getChildByName(chname);
-			var i:int = o ? this.getChildIndex(o) : 0;
-			if(i > 0)
-				this.addChildAt(v,i);
+			var i:int = o ? this.getChildIndex(o) : -1;
+			trace("ADD UNDER CHILD", v, v.name, 'UNDER', chname, "INDEX:", i, '+ MOD', indexMod);
+			if(i > -1)
+			{
+				i+= indexMod;
+				if(i<0)
+					i=0;
+				if(i <= this.numChildren)
+					this.addChildAt(v,i);
+				else
+					this.addChild(v);
+			}
 			else this.addChild(v);
 		}
 		// ADD - REMOVE
@@ -132,35 +142,36 @@ package axl.xdef.types
 		// ANIMATION UTILITIES - to comment
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null):void
 		{
-			var pair:Object, obj:DisplayObject, meta:Object;
-			if(elements.hasOwnProperty(objName))
+			var c:ixDef = this.getChildByName(objName) as ixDef;
+			trace("singleAnimByMetaName [", screenName, '] - ', objName, c);
+			if(c != null && c.meta.hasOwnProperty(screenName))
 			{
-				pair = elements[objName] || {};
-				obj = pair.hasOwnProperty('obj') ? pair.obj : null;
-				meta = pair.hasOwnProperty('meta') ? pair.meta : null;
-			}
-			if(meta != null && obj != null && meta.hasOwnProperty(screenName))
-			{
-				U.log(objName, '--->', screenName, 'single animation');
-				var animationArguments:Array = [obj].concat(meta[screenName]);
-				animationArguments[3] = onComplete;
-				AO.animate.apply(null, animationArguments);
+				var args:Array = [c].concat(c.meta[screenName]);
+				args[3] = onComplete;
+				AO.animate.apply(null, args);
 			}
 			else
 			{
 				if(onComplete != null)
-					setTimeout(onComplete, 10);
+					setTimeout(onComplete, 5);
 			}
 		}
 		
 		public function animAllMetaToScreen(screenName:String,onComplete:Function=null):void
 		{
+			trace("animAllMetaToScreen", screenName);
 			var all:int=0;
-			for(var key:String in elements)
+			for(var i:int = 0; i < this.numChildren; i++)
 			{
-				all++;
-				singleAnimByMetaName(key,screenName,singleComplete);
+				var c:ixDef = this.getChildAt(i) as ixDef;
+				if(c != null && c.meta.hasOwnProperty(screenName))
+				{
+					all++;
+					singleAnimByMetaName(c.name,screenName,singleComplete);
+				}
 			}
+			if(all < 1)
+				onComplete();
 			function singleComplete():void
 			{
 				if(--all == 0 && onComplete !=null)
