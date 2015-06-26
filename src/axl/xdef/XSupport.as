@@ -23,12 +23,15 @@ package axl.xdef
 
 	public class XSupport
 	{
-		private static var ver:Number = 0.9;
+		private static var ver:Number = 0.91;
 		public static function get version():Number { return ver}
 		
 		public static var defaultFont:String;
 		private static var additionQueue:Vector.<Function> = new Vector.<Function>();
 		private static var afterQueueVec:Vector.<Function> = new Vector.<Function>();;
+		private static var xregistry:Object = {};
+		public static function get registry():Object { return xregistry }
+		public static function registered(v:String):Object { return xregistry[v] }
 		public static function applyAttributes(def:XML, target:Object):Object
 		{
 			if(def == null)
@@ -56,6 +59,8 @@ package axl.xdef
 				try{target.meta = JSON.parse(String(target.meta))}
 				catch(e:Error) {throw new Error("Invalid json for element " + target + " of definition: " + def.toXMLString()); }
 			}
+			if(target.hasOwnProperty('name') && target.name != null)
+				xregistry[target.name] = target;
 			return target;
 		}
 		
