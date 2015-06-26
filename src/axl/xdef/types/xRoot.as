@@ -206,7 +206,7 @@ package axl.xdef.types
 					singleAnimByMetaName(c.name,screenName,singleComplete);
 				}
 			}
-			if(all < 1)
+			if(all < 1 && onComplete != null)
 				onComplete();
 			function singleComplete():void
 			{
