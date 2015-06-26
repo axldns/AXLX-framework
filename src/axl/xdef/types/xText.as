@@ -47,7 +47,7 @@ package axl.xdef.types
 		{
 			if(meta != null && meta.hasOwnProperty('addedToStage'))
 			{
-				var a:Array = [this].concat(meta.addChild);
+				var a:Array = [this].concat(meta.addedToStage);
 				a[3] = onComplete;
 				AO.animate.apply(null,a);
 			}
