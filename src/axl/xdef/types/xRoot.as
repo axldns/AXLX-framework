@@ -22,7 +22,7 @@ package axl.xdef.types
 			instance = this;
 			
 		}
-		
+		// ADD - REMOVE
 		public function add(v:Object,underChild:String=null,indexModificator:int=0,node:String='additions'):void
 		{
 			if(v is Array)
@@ -33,6 +33,30 @@ package axl.xdef.types
 				
 				if(underChild != null)
 					addUnderChild(d,underChild,indexModificator);
+				else
+					addChild(d);
+			}
+		}
+		public function addRespective(v:Object,underChild:String=null,indexModificator:int=0,node:String='additions'):void
+		{
+			var o:DisplayObject = getChildByName(underChild);
+			var i:int = o ? this.getChildIndex(o) : -1;
+			i+=indexModificator;
+			
+			if(v is Array)
+				getAdditionsByName(v as Array, gotit);
+			else
+				getAdditionByName(v as String, gotit);
+			
+			trace("addRespective", v, v.name, 'UNDER',  underChild, "MOD", indexModificator, "INDEX:", i);
+		
+			function gotit(d:DisplayObject):void{
+				if(i>= this.numChildren)
+					i = this.numChildren -1;
+				if(i<0)
+					i=0;
+				if(underChild != null)
+					addChildAt(d,i++);
 				else
 					addChild(d);
 			}
@@ -48,14 +72,14 @@ package axl.xdef.types
 				i+= indexMod;
 				if(i<0)
 					i=0;
-				if(i <= this.numChildren)
+				if(i < this.numChildren)
 					this.addChildAt(v,i);
 				else
 					this.addChild(v);
 			}
 			else this.addChild(v);
 		}
-		// ADD - REMOVE
+		
 		/** Returns first XML child of Config[node] which matches it name */
 		public function getAdditionDefByName(v:String,node:String='additions'):XML
 		{
@@ -107,8 +131,19 @@ package axl.xdef.types
 		/** Executes <code>getAdditionByName</code> in a loop. @see #getAdditionByName() */
 		public function getAdditionsByName(v:Array, callback:Function):void
 		{
-			for(var i:int =0, j:int = v.length; i<j;i++)
-				getAdditionByName(v[i], callback);
+			var i:int = 0, j:int = v.length;
+			next();
+			function next():void
+			{
+				if(i<j)
+					getAdditionByName(v[i++], ready);
+			}
+			
+			function ready(v:DisplayObject):void
+			{
+				callback(v);
+				next()
+			}
 		}
 		
 		/** Removes elements from display list. Accepts arrays of display objects, their names and
@@ -117,6 +152,7 @@ package axl.xdef.types
 		{
 			for(var i:int = 0,j:int = args.length, v:Object; i < j; i++)
 			{	
+				trace("XROOT REMOVE", args[i]);
 				v = args[i]
 				if(v is Array)
 					removeElements(v as Array);
