@@ -1,5 +1,6 @@
 package axl.xdef.types
 {
+	import axl.utils.U;
 	import axl.xdef.interfaces.ixDef;
 
 	/** Class that allows to execute [target] functions by name.
@@ -9,6 +10,7 @@ package axl.xdef.types
 		private var xtype:String;
 		private var xvalue:Object;
 		private var xtarget:ixDef;
+		private var xdef:Object;
 		/** Class that allows to execute [target] functions by name. <br>
 		 *  xButton can call xRoot directly, by defining "action" object in xButton meta attribute.<br>
 		 * @param def - object that contains <code>type</code> which is funciton name, and <code>value</code>  */
@@ -17,6 +19,7 @@ package axl.xdef.types
 			target = xRoot.instance;
 			type = def.type;
 			value = def.value;
+			xdef = def;
 		}
 		
 		/** Owner of the function to execute. By Default main class of the project. */
@@ -36,10 +39,22 @@ package axl.xdef.types
 		{
 			var f:Function;
 			if(target['hasOwnProperty'](type))
+			{
 				f = target[type] as Function;
+				U.log('[xAction][execute]['+xtype+']('+value+')', f);
+			}
 			if(f == null)
 				throw new Error("Unsupported action type: " + type);
-			f.apply(null,value);
+			if(xdef.value == undefined)
+			{
+				U.log(' execute no args', f);
+				f()
+			}
+			else
+			{
+				U.log('applyuing execute', f);
+				f.apply(null,value);
+			}
 		}
 	}
 }
