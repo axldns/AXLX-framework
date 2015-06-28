@@ -17,9 +17,9 @@ package axl.xdef.types
 		public function xRoot(definition:XML=null)
 		{
 			super(definition);
-			if(instance != null)
+			/*if(instance != null)
 				throw new Error("SINGLETONE EXCEPTION! " + this);
-			instance = this;
+			instance = this;*/
 			
 		}
 		// ADD - REMOVE

@@ -38,6 +38,8 @@ package axl.xdef.types
 		public function execute():void
 		{
 			var f:Function;
+			if(!target)
+				return;
 			if(target['hasOwnProperty'](type))
 			{
 				f = target[type] as Function;
@@ -45,14 +47,14 @@ package axl.xdef.types
 			}
 			if(f == null)
 				throw new Error("Unsupported action type: " + type);
-			if(xdef.value == undefined)
+			if(xvalue[0] == undefined)
 			{
-				U.log(' execute no args', f);
+				U.log(' execute no args', f, type);
 				f()
 			}
 			else
 			{
-				U.log('applyuing execute', f);
+				U.log('applyuing execute', f,type);
 				f.apply(null,value);
 			}
 		}
