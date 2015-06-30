@@ -16,7 +16,6 @@ package axl.xdef.types
 	{
 		private var btnSelect:xButton;
 		private var poolMask:DisplayObject;
-		private var v:DisplayObject;
 		private var selectedObject:Object;
 		private var movementPoint:Point= new Point();
 		public var movementSpeed:Number= .2;
@@ -94,28 +93,33 @@ package axl.xdef.types
 		public function set hoverObjectProperty(value:String):void { hoverProperty = value }
 		
 		
-		override protected function elementAdded(e:Event):void
+		override public function addToRail(obj:DisplayObject, seemles:Boolean=false):void
 		{
-			v = e.target as DisplayObject;
-			switch(v.name.toLowerCase())
+			switch(obj.name.toLowerCase())
 			{
 				case 'mask':
-					poolMask = e.target as DisplayObject;
+					poolMask = obj;
 					poolMask.cacheAsBitmap = true;
-						this.mask = poolMask;
+					this.mask = poolMask;
+					addChild(btnSelect);
 					break;
 				case 'btnleft':
 				case 'btnright':
 				case 'btnup' : 
-				case 'btndown' :
-					v['onClick'] = poolDirectionEvent;
+				case 'btndown':
+					if(obj is xButton)
+					{
+						obj['onClick'] = poolDirectionEvent;
+						addChild(obj);
+					}
 					break;
-				case 'btnselect' : btnSelect = v as xButton;
+				case 'btnselect' : btnSelect = obj as xButton;
 					btnSelect.onClick = btnSelectHandler;
+					addChild(btnSelect);
 					break;
-				default : break;
+				default : super.addToRail(obj, seemles);
+					break;
 			}
-			super.elementAdded(e);
 		}
 		
 		override public function set meta(v:Object):void
@@ -138,7 +142,7 @@ package axl.xdef.types
 			if(selectedObject == null)
 				return;
 			
-			poolMovement((e.target.name.match(/(left|up)/g)) ? 1 : -1);
+			poolMovement((e.target.name.match(/(left|up)/i)) ? 1 : -1);
 		}
 		
 		private function poolMovement(dir:int):void
