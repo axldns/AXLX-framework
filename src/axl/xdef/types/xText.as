@@ -6,6 +6,8 @@ package axl.xdef.types
 	import flash.geom.ColorTransform;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
@@ -23,6 +25,7 @@ package axl.xdef.types
 		private var xtransDef:ColorTransform;
 		private var trigerExt:Object;
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
+		private var intervalID:uint;
 		
 		public function xText(definition:XML=null)
 		{
@@ -31,7 +34,8 @@ package axl.xdef.types
 			super();
 			if(def!= null)
 				parseDef();
-			this.addEventListener(Event.ADDED_TO_STAGE, ats);
+			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
+			this.addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			this.addEventListener(TextEvent.LINK, linkEvent);
 		}
 		
@@ -43,13 +47,18 @@ package axl.xdef.types
 				actions[i].execute();
 		}
 	
-		protected function ats(event:Event):void
+		protected function removeFromStageHandler(e:Event):void
 		{
-			if(meta != null && meta.hasOwnProperty('addedToStage'))
+			AO.killOff(this);
+			clearInterval(intervalID);
+		}
+		
+		protected function addedToStageHandler(e:Event):void
+		{
+			if(meta.addedToStage != null)
 			{
-				var a:Array = [this].concat(meta.addedToStage);
-				a[3] = onComplete;
-				AO.animate.apply(null,a);
+				this.reset();
+				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
 			}
 		}
 		

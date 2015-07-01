@@ -4,6 +4,8 @@ package axl.xdef.types
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
@@ -21,22 +23,31 @@ package axl.xdef.types
 		protected var xfilters:Array
 		protected var xtrans:ColorTransform;
 		protected var xtransDef:ColorTransform;
+		private var intervalID:uint;
 		
 		public function xSprite(definition:XML=null)
 		{
 			addEventListener(Event.ADDED, elementAdded);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
+			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			xdef = definition;
 			super();
 			parseDef();
 		}
 		
+		protected function removeFromStageHandler(e:Event):void
+		{
+			AO.killOff(this);
+			clearInterval(intervalID);
+		}
+		
 		protected function addedToStageHandler(e:Event):void
 		{
-			if(meta.addedToStage == null)
-				return;
-			this.reset();
-			XSupport.animByName(this, 'addedToStage', animComplete);
+			if(meta.addedToStage != null)
+			{
+				this.reset();
+				intervalID = XSupport.animByNameExtra(this, 'addedToStage', animComplete);
+			}
 		}
 		
 		protected function elementAdded(e:Event):void

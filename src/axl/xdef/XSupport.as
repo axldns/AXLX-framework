@@ -6,6 +6,7 @@ package axl.xdef
 	import flash.filters.BitmapFilter;
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
+	import flash.utils.setInterval;
 	
 	import axl.utils.AO;
 	import axl.utils.Ldr;
@@ -72,12 +73,12 @@ package axl.xdef
 				AO.killOff(target);
 			if(target.meta.hasOwnProperty(animName))
 			{
-				var a:Array = target.meta[animName];
+				var animNameArray:Array = target.meta[animName];
 				var ag:Array = [];
-				if(!(a[0] is Array))
-					ag[0] =  a;
+				if(!(animNameArray[0] is Array))
+					ag[0] =  animNameArray;
 				else
-					ag = a;
+					ag = animNameArray;
 				var atocomplete:uint = ag.length;
 				trace("ANIM BY NAME", target, target['name'], atocomplete);
 				for(var i:int = 0; i < ag.length; i++)
@@ -96,6 +97,63 @@ package axl.xdef
 				//target.dispatchEvent(target.eventAnimationComplete);
 			}
 		}
+		
+		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):uint
+		{
+			if(reset)
+				target.reset();
+			else if(killCurrent);
+			AO.killOff(target);
+			var toReturn:uint;
+			if(target.meta.hasOwnProperty(animName))
+			{
+				var animNameArray:Array = target.meta[animName];
+				var ag:Array = [];
+				
+				var zeroElement:Object= animNameArray[0];
+				
+				if(zeroElement is Number)
+				{
+					// plain animation
+					ag[0] =  animNameArray;
+					caryOn();
+					
+				}
+				else if(zeroElement is Array)
+				{
+					//group of animations
+					ag = animNameArray
+					caryOn();
+				}
+				else if(zeroElement is Object)
+				{
+					ag = animNameArray[1] is Array ? animNameArray : [animNameArray];
+					if(zeroElement.hasOwnProperty('interval'))
+						toReturn = flash.utils.setInterval(caryOn, zeroElement.interval);
+				}
+				var atocomplete:uint = ag.length;
+				function caryOn():void
+				{
+					atocomplete = ag.length;
+					for(var i:int = 0; i < ag.length; i++)
+					{
+						var g:Array = [target].concat(ag[i]);
+						g[3] = acomplete;
+						AO.animate.apply(null, g);
+					}
+				}
+			}
+			else if(onComplete != null)
+				onComplete();
+			function acomplete():void
+			{
+				if(--atocomplete < 1 && onComplete != null)
+					onComplete();
+				//target.dispatchEvent(target.eventAnimationComplete);
+			}
+			return toReturn;
+		}
+		
 		public static function valueReadyTypeCoversion(val:String):*
 		{
 			switch(val)

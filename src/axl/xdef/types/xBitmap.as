@@ -4,7 +4,10 @@ package axl.xdef.types
 	import flash.display.BitmapData;
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
+	import flash.utils.clearInterval;
+	import flash.utils.setInterval;
 	
+	import axl.utils.AO;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
@@ -16,19 +19,26 @@ package axl.xdef.types
 		private var xtrans:ColorTransform;
 		private var xtransDef:ColorTransform;
 		private var xfilters:Array;
+		private var intervalID:uint;
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true)
 		{
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
+			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);
+		}
+		
+		protected function removeFromStageHandler(e:Event):void
+		{
+			AO.killOff(this);
+			clearInterval(intervalID);
 		}
 		
 		protected function addedToStageHandler(e:Event):void
 		{
-			
 			if(meta.addedToStage != null)
 			{
 				this.reset();
-				XSupport.animByName(this, 'addedToStage');
+				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
 			}
 		}
 	
