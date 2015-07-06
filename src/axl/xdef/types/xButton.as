@@ -30,6 +30,7 @@ package axl.xdef.types
 		private var isRotated:Boolean;
 		
 		
+		
 		private var trigerUrl:URLRequest;
 		private var trigerEvent:Event;
 		private var trigerExt:Array;
@@ -46,7 +47,9 @@ package axl.xdef.types
 		private var disabledTarget:Object;
 		private var disabledVals:Object;
 		private var sdisabled:String;
-		private var sover:String;
+		private var sover:String; 
+		
+		public var externalExecution:Boolean;
 		
 		
 		public function xButton(definition:XML=null)
@@ -126,7 +129,12 @@ package axl.xdef.types
 				else
 					userClickHandler();
 			}
-			
+			if(!externalExecution)
+				execute(e);
+		}
+		
+		public function execute(e:MouseEvent=null):void
+		{
 			if(trigerUrl)
 				navigateToURL(trigerUrl, trigerUrlWindow);
 			if(trigerEvent != null)
@@ -135,7 +143,6 @@ package axl.xdef.types
 				ExternalInterface.call.apply(null, trigerExt);
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
 				actions[i].execute();
-				
 		}
 		
 		protected function hover(e:MouseEvent):void
