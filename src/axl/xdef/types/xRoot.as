@@ -176,10 +176,10 @@ package axl.xdef.types
 		}
 		
 		// ANIMATION UTILITIES - to comment
-		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null):void
+		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
 		{
-			var c:ixDef = this.getChildByName(objName) as ixDef;
-			trace("singleAnimByMetaName [", screenName, '] - ', objName, c);
+			c = c || this.getChildByName(objName) as ixDef;
+			U.log("singleAnimByMetaName [", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
 			{
 				var args:Array = [c].concat(c.meta[screenName]);
@@ -193,6 +193,29 @@ package axl.xdef.types
 			}
 		}
 		
+		public function animateAllRegisteredToScreen(screenName:String,onComplete:Function=null):void
+		{
+			trace("animateAllRegisteredToScreen", screenName);
+			var all:int=0;
+			var reg:Object = XSupport.registry;
+			for(var s:String in reg)
+			{
+				var c:ixDef = reg[s] as ixDef;
+				if(c != null && c.meta.hasOwnProperty(screenName))
+				{
+					all++;
+					singleAnimByMetaName(c.name,screenName,singleComplete,c);
+				}
+			}
+			if(all < 1 && onComplete != null)
+				onComplete();
+			function singleComplete():void
+			{
+				if(--all == 0 && onComplete !=null)
+					onComplete();
+			}
+		}
+		
 		public function animAllMetaToScreen(screenName:String,onComplete:Function=null):void
 		{
 			trace("animAllMetaToScreen", screenName);
@@ -203,7 +226,7 @@ package axl.xdef.types
 				if(c != null && c.meta.hasOwnProperty(screenName))
 				{
 					all++;
-					singleAnimByMetaName(c.name,screenName,singleComplete);
+					singleAnimByMetaName(c.name,screenName,singleComplete,c);
 				}
 			}
 			if(all < 1 && onComplete != null)
