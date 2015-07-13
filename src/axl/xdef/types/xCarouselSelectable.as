@@ -100,8 +100,9 @@ package axl.xdef.types
 				case 'mask':
 					poolMask = obj;
 					poolMask.cacheAsBitmap = true;
-					this.mask = poolMask;
-					addChild(btnSelect);
+					railElementsContainer.cacheAsBitmap = true;
+					railElementsContainer.mask = poolMask;
+					addChild(poolMask);
 					break;
 				case 'btnleft':
 				case 'btnright':
@@ -129,6 +130,14 @@ package axl.xdef.types
 				if(meta.hasOwnProperty('elementSelected'))
 					elementSelected = new xAction(meta.elementSelected);
 		}
+		
+		override protected function elementAdded(e:Event):void
+		{
+			selectedObject = getChildClosestToCenter()[0];
+			super.elementAdded(e);
+		}
+		
+		
 		
 		private function btnSelectHandler(e:MouseEvent):void
 		{
