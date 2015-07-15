@@ -26,7 +26,7 @@ package axl.xdef.types
 		public var intervalDelay:int = 0;
 		
 		private var userClickHandler:Function;
-		private var eventClick:Event = new Event(flash.events.Event.SELECT,true);
+		private var eventClick:Event = new Event("clickButton",true);
 		private var isRotated:Boolean;
 		
 		
