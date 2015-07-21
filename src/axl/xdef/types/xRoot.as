@@ -175,6 +175,21 @@ package axl.xdef.types
 				args[i] is String ? removeByName(args[i]) : removeChild(args[i]);
 		}
 		
+		/**  Uses registry to define child to remove. This can reach inside containers to remove specific element.
+		 * The last registered element of name defined in V will be removed */
+		public function removeRegistered(v:String):void
+		{
+			var dobj:DisplayObject = XSupport.registered(v) as DisplayObject
+			if(dobj != null && dobj.parent != null)
+				dobj.parent.removeChild(dobj);
+		}
+		/** executes <code>removeRegistered</code> in a loop */
+		public function removeRegisteredGroup(v:Array):void
+		{
+			for(var i:int = 0; i < v.length; i++)
+				removeRegistered(v[i]);
+		}
+
 		// ANIMATION UTILITIES - to comment
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
 		{
