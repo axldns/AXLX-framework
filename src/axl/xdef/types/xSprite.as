@@ -5,9 +5,9 @@ package axl.xdef.types
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
 	import flash.utils.clearInterval;
-	import flash.utils.setInterval;
 	
 	import axl.utils.AO;
+	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
@@ -24,7 +24,8 @@ package axl.xdef.types
 		protected var xtrans:ColorTransform;
 		protected var xtransDef:ColorTransform;
 		private var intervalID:uint;
-		
+		public var distributeHorizontal:Number;
+		public var distributeVertical:Number;
 		public function xSprite(definition:XML=null)
 		{
 			addEventListener(Event.ADDED, elementAdded);
@@ -52,6 +53,10 @@ package axl.xdef.types
 		
 		protected function elementAdded(e:Event):void
 		{
+			if(!isNaN(distributeHorizontal))
+				U.distribute(this,distributeHorizontal,true);
+			if(!isNaN(distributeVertical))
+				U.distribute(this,distributeVertical,false);
 			if(onElementAdded != null)
 				onElementAdded(e);
 		}

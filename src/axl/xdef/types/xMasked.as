@@ -8,6 +8,7 @@ package axl.xdef.types
 	import flash.geom.Rectangle;
 	
 	import axl.ui.controllers.BoundBox;
+	import axl.utils.U;
 	import axl.xdef.interfaces.ixDisplay;
 
 	public class xMasked extends xSprite implements ixDisplay
@@ -58,6 +59,16 @@ package axl.xdef.types
 			else
 				container.addChild(child);
 			return child;
+		}
+		
+		override protected function elementAdded(e:Event):void
+		{
+			if(!isNaN(distributeHorizontal))
+				U.distribute(container,distributeHorizontal,true);
+			if(!isNaN(distributeVertical))
+				U.distribute(container,distributeVertical,false);
+			if(onElementAdded != null)
+				onElementAdded(e);
 		}
 		
 		private function addListeners():void {
@@ -118,6 +129,17 @@ package axl.xdef.types
 		{
 			vWid = value;
 			redrawMask();
+		}
+		
+		public function setMask(v:DisplayObject):void
+		{
+			if(maskObject != null && contains(maskObject))
+				removeChild(maskObject);
+			if(shapeMask != null && contains(shapeMask))
+				removeChild(shapeMask);
+			maskObject = v;
+			this.addChild(maskObject);
+			container.mask = maskObject;
 		}
 		
 		/** determines scroll efficiency default 1. Passing font size + spacing */
