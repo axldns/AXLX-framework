@@ -27,6 +27,8 @@ package axl.xdef.types
 		
 		public var container:Sprite;
 		public var wheelScrollAllowed:Boolean = true;
+		private var vX:Number=0;
+		private var vY:Number=0;
 		
 		public function xMasked(definiton:XML=null)
 		{
@@ -113,6 +115,8 @@ package axl.xdef.types
 			shapeMask.graphics.clear();
 			shapeMask.graphics.beginFill(0);
 			shapeMask.graphics.drawRect(0,0,visibleWidth, visibleHeight);
+			shapeMask.x = vX;
+			shapeMask.y = vY;
 			container.mask =shapeMask;
 		}
 		
@@ -128,6 +132,20 @@ package axl.xdef.types
 		public function set visibleWidth(value:Number):void
 		{
 			vWid = value;
+			redrawMask();
+		}
+		
+		public function get visibleX():Number { return vX }
+		public function set visibleX(v:Number):void
+		{
+			vX = v;
+			redrawMask();
+		}
+		
+		public function get visibleY():Number { return vY }
+		public function set visibleY(v:Number):void
+		{
+			vY = v;
 			redrawMask();
 		}
 		
