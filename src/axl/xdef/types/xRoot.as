@@ -23,12 +23,12 @@ package axl.xdef.types
 			
 		}
 		// ADD - REMOVE
-		public function add(v:Object,underChild:String=null,indexModificator:int=0,node:String='additions'):void
+		public function add(v:Object,underChild:String=null,onNotExist:Function=null,indexModificator:int=0,node:String='additions'):void
 		{
 			if(v is Array)
-				getAdditionsByName(v as Array, gotit);
+				getAdditionsByName(v as Array, gotit,node,onNotExist);
 			else
-				getAdditionByName(v as String, gotit)
+				getAdditionByName(v as String, gotit,node,onNotExist)
 			function gotit(d:DisplayObject):void{
 				
 				if(underChild != null)
@@ -66,7 +66,7 @@ package axl.xdef.types
 		{
 			var o:DisplayObject = getChildByName(chname);
 			var i:int = o ? this.getChildIndex(o) : -1;
-			trace("ADD UNDER CHILD", v, v.name, 'UNDER', chname, "INDEX:", i, '+ MOD', indexMod);
+			U.log("ADD UNDER CHILD", v, v.name, 'UNDER', chname, "INDEX:", i, '+ MOD', indexMod);
 			if(i > -1)
 			{
 				i+= indexMod;
@@ -111,11 +111,15 @@ package axl.xdef.types
 			var xml:XML = getAdditionDefByName(v,node);
 			if(xml== null)
 			{
+				U.log('---@---@---@---@---@ [WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE @---@---@---@---@---');
 				if(onError == null) 
 					throw new Error(v + ' does not exist in additions node');
 				else
 				{
-					onError();
+					if(onError.length > 0)
+						onError(v);
+					else
+						onError()
 					return;
 				}
 			}
@@ -129,14 +133,14 @@ package axl.xdef.types
 		}
 		
 		/** Executes <code>getAdditionByName</code> in a loop. @see #getAdditionByName() */
-		public function getAdditionsByName(v:Array, callback:Function):void
+		public function getAdditionsByName(v:Array, callback:Function,node:String='additions',onError:Function=null):void
 		{
 			var i:int = 0, j:int = v.length;
 			next();
 			function next():void
 			{
 				if(i<j)
-					getAdditionByName(v[i++], ready);
+					getAdditionByName(v[i++], ready,node,onError);
 			}
 			
 			function ready(v:DisplayObject):void
@@ -196,11 +200,7 @@ package axl.xdef.types
 			c = c || this.getChildByName(objName) as ixDef;
 			U.log("singleAnimByMetaName [", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
-			{
-				var args:Array = [c].concat(c.meta[screenName]);
-				args[3] = onComplete;
-				AO.animate.apply(null, args);
-			}
+				XSupport.animByNameExtra(c, screenName, onComplete);
 			else
 			{
 				if(onComplete != null)
