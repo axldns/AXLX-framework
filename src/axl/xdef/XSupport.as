@@ -127,7 +127,15 @@ package axl.xdef
 				}
 				else if(zeroElement is Object)
 				{
-					ag = animNameArray[1] is Array ? animNameArray : [animNameArray];
+					//interval anim
+					var ag1:Array = animNameArray[1] as Array;
+					if(ag1 != null && ag1.length > 0)
+					{
+						if(ag1[0] is Array)
+							ag = ag1;
+						else
+							ag = [ag1];
+					}
 					if(zeroElement.hasOwnProperty('interval'))
 						toReturn = flash.utils.setInterval(caryOn, zeroElement.interval);
 				}
@@ -395,7 +403,7 @@ package axl.xdef
 						case 'scrollBar': obj = new xScroll(xml); break;
 						case 'msk': obj = new xMasked(xml);
 							if(xml.hasOwnProperty('@src'))
-							obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
 							break;
 						case 'carousel' : obj = new xCarousel(xml);
 							if(xml.hasOwnProperty('@src'))
