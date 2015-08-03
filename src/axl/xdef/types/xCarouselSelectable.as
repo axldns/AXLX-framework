@@ -33,6 +33,8 @@ package axl.xdef.types
 		private var selectProperty:String;
 		public var selectValue:Object;
 		public var selectValueIdle:Object;
+		public var onMovementComplete:Function;
+		public var onMovementStart:Function;
 		
 		public function xCarouselSelectable(definition:XML)
 		{
@@ -138,7 +140,6 @@ package axl.xdef.types
 		}
 		
 		
-		
 		private function btnSelectHandler(e:MouseEvent):void
 		{
 			if(onSelect != null) onSelect();
@@ -158,7 +159,10 @@ package axl.xdef.types
 		{	
 			var p:Object = {onUpdate : updateCarusele};
 				p[mod.a] = (selectedObject.width+GAP) * dir;
+			if(onMovementStart != null)
+				onMovementStart();
 			AO.animate(movementPoint, movementSpeed, p,onCaruseleTarget,1,false,null,true);
+			
 		}
 		
 		private function updateCarusele():void
@@ -170,6 +174,8 @@ package axl.xdef.types
 		private function onCaruseleTarget():void
 		{
 			selectedObject = getChildClosestToCenter()[0];
+			if(onMovementComplete != null)
+				onMovementComplete();
 		}
 		
 		public function get currentChoice():String { return selectedObject ?  selectedObject.name : null }
