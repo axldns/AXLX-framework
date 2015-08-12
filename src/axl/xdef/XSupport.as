@@ -58,7 +58,7 @@ package axl.xdef
 			if(def.hasOwnProperty('@meta') && target.hasOwnProperty('meta'))
 			{
 				try{target.meta = JSON.parse(String(target.meta))}
-				catch(e:Error) {throw new Error("Invalid json for element " + target + " of definition: " + def.toXMLString()); }
+				catch(e:Error) {throw new Error("Invalid json for element " + target + " of definition: " + def.toXMLString()  + '\nDETAILS:\n' + e + '\n '+ e.message); }
 			}
 			if(target.hasOwnProperty('name') && target.name != null)
 				xregistry[target.name] = target;
@@ -306,7 +306,6 @@ package axl.xdef
 				getReadyType(xml, readyTypeCallback,true, ++i);
 			function readyTypeCallback(v:Object, index:int):void
 			{
-				trace('readyTypeCallback', v);
 				if(v != null)
 				{
 					if(v is Array)
@@ -390,7 +389,7 @@ package axl.xdef
 					checkSource(xml, readyTypeCallback, true);
 				else
 					readyTypeCallback();
-				function readyTypeCallback():Object
+				function readyTypeCallback():void
 				{
 					switch(type)
 					{

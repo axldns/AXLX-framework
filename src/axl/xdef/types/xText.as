@@ -126,7 +126,6 @@ package axl.xdef.types
 		public function set meta(v:Object):void
 		{
 			xmeta =v;
-			trace('tf meta equals', v);
 			if(v is String)
 				return
 			if(meta.hasOwnProperty('js'))
