@@ -74,7 +74,7 @@ package axl.xdef.types
 			{
 				if(meta.url is Array)
 				{
-					trigerUrl = meta.url[0]
+					trigerUrl =  new URLRequest(meta.url[0]);
 					trigerUrlWindow = meta.url[1];
 				}
 				else
