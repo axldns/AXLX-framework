@@ -16,7 +16,7 @@ package axl.xdef.types
 	{
 		protected var xdef:XML;
 		protected var xmeta:Object={};
-		protected var xroot:xRoot;
+		private var xxroot:xRoot;
 		private var xtrans:ColorTransform;
 		private var xtransDef:ColorTransform;
 		private var xfilters:Array;
@@ -29,6 +29,8 @@ package axl.xdef.types
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);
 		}
+		public function get xroot():xRoot { return xxroot }
+		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
 		protected function removeFromStageHandler(e:Event):void
 		{

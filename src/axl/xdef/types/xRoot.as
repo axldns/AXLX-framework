@@ -29,7 +29,7 @@ package axl.xdef.types
 			// as xRoot is not called via XSupport.getReadyType
 			// it must take care of parsing definition itself
 			super.def = value;
-			xsupport.pushReadyTypes2(value, this);
+			xsupport.pushReadyTypes2(value, this,'addChildAt',this);
 			XSupport.applyAttributes(value, this);
 		}
 		
@@ -133,7 +133,7 @@ package axl.xdef.types
 				}
 			}
 			
-			xsupport.getReadyType2(xml, loaded);
+			xsupport.getReadyType2(xml, loaded,true,null,this);
 			function loaded(dob:DisplayObject):void
 			{
 				elements[v] =  dob;
@@ -191,7 +191,7 @@ package axl.xdef.types
 		 * The last registered element of name defined in V will be removed */
 		public function removeRegistered(v:String):void
 		{
-			var dobj:DisplayObject = xsupport.registered[v] as DisplayObject;
+			var dobj:DisplayObject = xsupport.registered(v) as DisplayObject;
 			if(dobj != null && dobj.parent != null)
 				dobj.parent.removeChild(dobj);
 		}

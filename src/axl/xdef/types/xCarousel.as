@@ -14,7 +14,7 @@ package axl.xdef.types
 		
 		private var xdef:XML;
 		private var xmeta:Object = {}
-		protected var xroot:xRoot;
+		private var xxroot:xRoot;
 		public function xCarousel(definition:XML,xroot:xRoot=null)
 		{
 			xdef = definition;
@@ -24,7 +24,8 @@ package axl.xdef.types
 			railElementsContainer.addEventListener(Event.ADDED, elementAdded);
 			parseDef();
 		}
-		
+		public function get xroot():xRoot { return xxroot }
+		public function set xroot(v:xRoot):void	{ xxroot = v }
 		protected function addedToStageHandler(e:Event):void
 		{
 			if(meta.addedToStage == null)
@@ -49,7 +50,7 @@ package axl.xdef.types
 		public function set meta(v:Object):void { xmeta =v 
 			if(!(meta is String))
 				if(meta.hasOwnProperty('addedToRail'))
-					addedToRail = new xAction(meta.addedToRail,xroot);
+					addedToRail = new xAction(meta.addedToRail,xroot,this);
 		}
 		public function reset():void { 
 			AO.killOff(this);
@@ -72,6 +73,9 @@ package axl.xdef.types
 			XSupport.pushReadyTypes(def, this, 'addToRail');*/
 			movementBit(0);
 		}
+
+	
+
 		
 	}
 }

@@ -130,7 +130,7 @@ package axl.xdef.types
 			super.meta = v;
 			if(!(meta is String))
 				if(meta.hasOwnProperty('elementSelected'))
-					elementSelected = new xAction(meta.elementSelected,xroot);
+					elementSelected = new xAction(meta.elementSelected,xroot,this);
 		}
 		
 		override protected function elementAdded(e:Event):void

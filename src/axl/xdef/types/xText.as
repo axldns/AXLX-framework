@@ -17,6 +17,7 @@ package axl.xdef.types
 	{
 		protected var xdef:XML;
 		protected var xmeta:Object={};
+		private var xxroot:xRoot;
 		
 		private var tff:TextFormat;
 		public var onAnimationComplete:Function;
@@ -27,7 +28,7 @@ package axl.xdef.types
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		private var intervalID:uint;
 		private var defaultFont:String;
-		protected var xroot:xRoot;
+	
 		
 		public function xText(definition:XML=null,xroot:xRoot=null,xdefaultFont:String=null)
 		{
@@ -42,6 +43,9 @@ package axl.xdef.types
 			this.addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			this.addEventListener(TextEvent.LINK, linkEvent);
 		}
+		
+		public function get xroot():xRoot { return xxroot }
+		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
 		protected function linkEvent(e:TextEvent):void
 		{
@@ -139,7 +143,7 @@ package axl.xdef.types
 				var a:Object = meta.action;
 				var b:Array = (a is Array) ? a as Array : [a];
 				for(var i:int = 0, j:int = b.length; i<j; i++)
-					actions[i] = new xAction(b[i],xroot);
+					actions[i] = new xAction(b[i],xroot,this);
 			}
 		}
 		

@@ -17,7 +17,7 @@ package axl.xdef.types
 		
 		protected var xdef:XML;
 		protected var xmeta:Object={};
-		protected var xroot:xRoot;
+		private var xxroot:xRoot;
 		
 		public var onAnimationComplete:Function;
 		private var eventAnimComplete:Event = new Event(Event.COMPLETE);
@@ -34,11 +34,14 @@ package axl.xdef.types
 			addEventListener(Event.ADDED, elementAdded);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
-			xdef = definition;
 			this.xroot = xroot;
+			xdef = definition;
 			super();
 			parseDef();
 		}
+		
+		public function get xroot():xRoot { return xxroot }
+		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
 		protected function removeFromStageHandler(e:Event):void
 		{

@@ -87,7 +87,7 @@ package axl.xdef.types
 				var a:Object = meta.action;
 				var b:Array = (a is Array) ? a as Array : [a];
 				for(var i:int = 0, j:int = b.length; i<j; i++)
-					actions[i] = new xAction(b[i],xroot);
+					actions[i] = new xAction(b[i],xroot,this);
 			}
 		}
 		
@@ -119,6 +119,7 @@ package axl.xdef.types
 		
 		protected function mouseClick(e:MouseEvent):void
 		{
+			U.log(this.name, "CLICK");
 			this.dispatchEvent(eventClick);
 			if(userClickHandler != null) 
 			{

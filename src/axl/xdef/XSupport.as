@@ -300,7 +300,7 @@ package axl.xdef
 		}
 		
 		
-		public function pushReadyTypes2(def:XML, container:DisplayObjectContainer, command:String='addChildAt'):void
+		public function pushReadyTypes2(def:XML, container:DisplayObjectContainer, command:String='addChildAt',xroot:xRoot=null):void
 		{
 			if(def == null)
 				return;
@@ -309,7 +309,7 @@ package axl.xdef
 			var i:int = -1;
 			var numC:int = celements.children().length();
 			for each(var xml:XML in celements)
-			getReadyType2(xml, readyTypeCallback,true, ++i);
+			getReadyType2(xml, readyTypeCallback,true, ++i,xroot);
 			function readyTypeCallback(v:Object, index:int):void
 			{
 				if(v != null)
@@ -419,7 +419,7 @@ package axl.xdef
 							break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						//--- loadable
-						case 'img': obj = getImageFromDef(xml,false); break;
+						case 'img': obj = getImageFromDef(xml,false,xroot); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
 						case 'swf': obj = getSwfFromDef2(xml,xroot); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml)
@@ -427,17 +427,24 @@ package axl.xdef
 					}
 					if(obj is xSprite)
 					{
-						pushReadyTypes2(xml, obj as DisplayObjectContainer);
+						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChildAt',xroot);
 						applyAttributes(xml, obj);
 					}
 					else if(obj is Carusele)
 					{
 						XSupport.applyAttributes(xml, obj);
-						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail');
+						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
 						Carusele(obj).movementBit(0);
 					}
-					if(obj != null && obj.hasOwnProperty('name'))
-						smallRegistry[obj.name] = obj;
+					if(obj != null)
+					{
+						if(obj.hasOwnProperty('name'))
+							smallRegistry[obj.name] = obj;
+						if(obj.hasOwnProperty('xroot'))
+							obj.xroot = xroot;
+						U.log("OBJ", obj, obj && obj.hasOwnProperty('name') ? obj.name : '', 'has received root of', xroot);
+						U.log((obj && obj.hasOwnProperty('xroot')) ? obj.xroot : "NO ROOT");
+					}
 					
 					// notify
 					if(callBack2argument != null)
