@@ -29,8 +29,6 @@ package axl.xdef.types
 		private var eventClick:Event = new Event("clickButton",true);
 		private var isRotated:Boolean;
 		
-		
-		
 		private var trigerUrl:URLRequest;
 		private var trigerEvent:Event;
 		private var trigerExt:Array;
@@ -52,7 +50,7 @@ package axl.xdef.types
 		public var externalExecution:Boolean;
 		
 		
-		public function xButton(definition:XML=null)
+		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
 			super(definition);
 			enabled = isEnabled;
@@ -89,7 +87,7 @@ package axl.xdef.types
 				var a:Object = meta.action;
 				var b:Array = (a is Array) ? a as Array : [a];
 				for(var i:int = 0, j:int = b.length; i<j; i++)
-					actions[i] = new xAction(b[i]);
+					actions[i] = new xAction(b[i],xroot);
 			}
 		}
 		

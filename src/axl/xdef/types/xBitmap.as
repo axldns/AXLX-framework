@@ -16,12 +16,15 @@ package axl.xdef.types
 	{
 		protected var xdef:XML;
 		protected var xmeta:Object={};
+		protected var xroot:xRoot;
 		private var xtrans:ColorTransform;
 		private var xtransDef:ColorTransform;
 		private var xfilters:Array;
 		private var intervalID:uint;
-		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true)
+		
+		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xroot:xRoot=null)
 		{
+			this.xroot = xroot;
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);

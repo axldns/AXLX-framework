@@ -8,6 +8,7 @@ package axl.xdef
 	import flash.utils.getDefinitionByName;
 	import flash.utils.setInterval;
 	
+	import axl.ui.Carusele;
 	import axl.utils.AO;
 	import axl.utils.Ldr;
 	import axl.utils.U;
@@ -18,21 +19,30 @@ package axl.xdef
 	import axl.xdef.types.xCarousel;
 	import axl.xdef.types.xCarouselSelectable;
 	import axl.xdef.types.xMasked;
+	import axl.xdef.types.xRoot;
 	import axl.xdef.types.xScroll;
 	import axl.xdef.types.xSprite;
 	import axl.xdef.types.xText;
 
 	public class XSupport
 	{
-		private static var ver:Number = 0.91;
+		private static var ver:Number = 0.95;
 		public static function get version():Number { return ver}
 		
-		public static var defaultFont:String;
 		private static var additionQueue:Vector.<Function> = new Vector.<Function>();
-		private static var afterQueueVec:Vector.<Function> = new Vector.<Function>();;
-		private static var xregistry:Object = {};
-		public static function get registry():Object { return xregistry }
-		public static function registered(v:String):Object { return xregistry[v] }
+		private static var afterQueueVec:Vector.<Function> = new Vector.<Function>();
+		
+		private var smallRegistry:Object={};
+		public var defaultFont:String;
+		public var root:xRoot;
+		
+		public function get registry():Object { return smallRegistry }
+		public function registered(v:String):Object { return smallRegistry[v] }
+		
+		public function XSupport()
+		{
+		}
+		
 		public static function applyAttributes(def:XML, target:Object):Object
 		{
 			if(def == null)
@@ -60,8 +70,6 @@ package axl.xdef
 				try{target.meta = JSON.parse(String(target.meta))}
 				catch(e:Error) {throw new Error("Invalid json for element " + target + " of definition: " + def.toXMLString()  + '\nDETAILS:\n' + e + '\n '+ e.message); }
 			}
-			if(target.hasOwnProperty('name') && target.name != null)
-				xregistry[target.name] = target;
 			return target;
 		}
 		
@@ -80,7 +88,6 @@ package axl.xdef
 				else
 					ag = animNameArray;
 				var atocomplete:uint = ag.length;
-				trace("ANIM BY NAME", target, target['name'], atocomplete);
 				for(var i:int = 0; i < ag.length; i++)
 				{
 					var g:Array = [target].concat(ag[i]);
@@ -181,9 +188,9 @@ package axl.xdef
 			return tf;
 		}
 		
-		public static function getButtonFromDef(xml:XML, handler:Function,dynamicSourceLoad:Boolean=true):xButton
+		public static function getButtonFromDef(xml:XML, handler:Function,dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xButton
 		{
-			var btn:xButton = new xButton(xml);
+			var btn:xButton = new xButton(xml,xroot);
 				btn.onClick = handler;
 			if(dynamicSourceLoad)
 				checkSource(xml, buttonCallback,true);
@@ -197,9 +204,9 @@ package axl.xdef
 			return btn;
 		}
 		
-		public static function getImageFromDef(xml:XML, dynamicSourceLoad:Boolean=true):xBitmap
+		public static function getImageFromDef(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xBitmap
 		{
-			var xb:xBitmap = new xBitmap();
+			var xb:xBitmap = new xBitmap(null,'auto',true,xroot);
 			if(dynamicSourceLoad)
 				checkSource(xml, imageCallback,true);
 			else 
@@ -213,9 +220,10 @@ package axl.xdef
 			}
 			return xb;
 		}	
-		public static function getSwfFromDef(xml:XML, dynamicSourceLoad:Boolean=true):xSprite
+		
+		public function getSwfFromDef2(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xSprite
 		{
-			var spr:xSprite = new xSprite();
+			var spr:xSprite = new xSprite(null,xroot);
 			if(dynamicSourceLoad)
 				checkSource(xml, swfCallback,true);
 			else 
@@ -223,7 +231,7 @@ package axl.xdef
 			function swfCallback():xSprite
 			{
 				spr.addChild(Ldr.getAny(String(xml.@src)) as DisplayObject);
-				pushReadyTypes(xml, spr);
+				pushReadyTypes2(xml, spr);
 				spr.def = xml;
 				return spr;
 			}
@@ -291,7 +299,8 @@ package axl.xdef
 			return ct;
 		}
 		
-		public static function pushReadyTypes(def:XML, container:DisplayObjectContainer, command:String='addChildAt'):void
+		
+		public function pushReadyTypes2(def:XML, container:DisplayObjectContainer, command:String='addChildAt'):void
 		{
 			if(def == null)
 				return;
@@ -300,7 +309,7 @@ package axl.xdef
 			var i:int = -1;
 			var numC:int = celements.children().length();
 			for each(var xml:XML in celements)
-				getReadyType(xml, readyTypeCallback,true, ++i);
+			getReadyType2(xml, readyTypeCallback,true, ++i);
 			function readyTypeCallback(v:Object, index:int):void
 			{
 				if(v != null)
@@ -329,7 +338,7 @@ package axl.xdef
 			}
 		}
 		
-		private static function checkSource(xml:XML, callBack:Function, dynamicLoad:Boolean=true):void
+		private static function checkSource(xml:XML, callBack:Function, dynamicLoad:Boolean=true,sourcePrefixes:Object=null):void
 		{
 			if(xml.hasOwnProperty('@src'))
 			{
@@ -338,7 +347,10 @@ package axl.xdef
 				if(inLib != null)
 					callBack(xml);
 				else if(dynamicLoad)
-					Ldr.load(source, function():void{callBack(xml)},null,null);
+				{
+					U.log("DYNAMIC LOAD",source, 'while def pa pre', Ldr.defaultPathPrefixes);
+					Ldr.load(source, function():void{callBack(xml)});
+				}
 				else
 					callBack(xml);
 			}
@@ -369,52 +381,65 @@ package axl.xdef
 		 * @param callBack2argument - optional second argument for callback. It is in use to <code>pushReadyTypes</code> children order.
 		 * @see webFlow.MainCallback#getAdditionByName()
 		 * */
-		public static function getReadyType(xml:XML, callBack:Function, dynamicLoad:Boolean=true,callBack2argument:Object=null):void
+		
+		public function getReadyType2(xml:XML, callBack:Function, dynamicLoad:Boolean=true,callBack2argument:Object=null,xroot:xRoot=null):void
 		{
 			if(xml == null)
 				throw new Error("Undefined XML definition");
-			//U.log("REQUEST READY TYPE", xml.name(), (xml.hasOwnProperty('@name')) ? xml.@name : 'noname', 'queue state:', additionQueue.length);
 			proxyQueue(proceed);
 			function proceed():void
 			{
-				//U.log("...PRoCEED", xml.name(), (xml.hasOwnProperty('@name')) ? xml.@name : 'noname', 'queue state:', additionQueue.length);
 				var type:String = xml.name();
 				var obj:Object;
 				if(dynamicLoad)
-					checkSource(xml, readyTypeCallback, true);
+					checkSource(xml, readyTypeCallback, true, xroot ? xroot.sourcePrefixes : null);
 				else
 					readyTypeCallback();
 				function readyTypeCallback():void
 				{
 					switch(type)
 					{
-						case 'div': obj = new xSprite(xml);
+						case 'div': obj = new xSprite(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
 								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
 							break;
-						case 'txt': obj =  new xText(xml);	break;
-						case 'masked': throw new Error("use msk "  + xml.toXMLString());
+						case 'txt': obj =  new xText(xml,xroot,defaultFont);	break;
 						case 'scrollBar': obj = new xScroll(xml); break;
-						case 'msk': obj = new xMasked(xml);
+						case 'msk': obj = new xMasked(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
 								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
 							break;
-						case 'carousel' : obj = new xCarousel(xml);
+						case 'carousel' : obj = new xCarousel(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
 								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
 							break;
-						case 'carouselSelectable' : obj = new xCarouselSelectable(xml);
+						case 'carouselSelectable' : obj = new xCarouselSelectable(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
 								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
 							break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						//--- loadable
 						case 'img': obj = getImageFromDef(xml,false); break;
-						case 'btn': obj = getButtonFromDef(xml,null,false); break;
-						case 'swf': obj = getSwfFromDef(xml); break;
+						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
+						case 'swf': obj = getSwfFromDef2(xml,xroot); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml)
 						default : break;
 					}
+					if(obj is xSprite)
+					{
+						pushReadyTypes2(xml, obj as DisplayObjectContainer);
+						applyAttributes(xml, obj);
+					}
+					else if(obj is Carusele)
+					{
+						XSupport.applyAttributes(xml, obj);
+						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail');
+						Carusele(obj).movementBit(0);
+					}
+					if(obj != null && obj.hasOwnProperty('name'))
+						smallRegistry[obj.name] = obj;
+					
+					// notify
 					if(callBack2argument != null)
 						callBack(obj, callBack2argument);
 					else
@@ -431,15 +456,14 @@ package axl.xdef
 			}
 		}
 		
-		
-		public static function proxyQueue(call:Function):void
+		private static function proxyQueue(call:Function):void
 		{
 			additionQueue.push(call);
 			if(additionQueue.length == 1)
 				call();
 		}
 		
-		public static function afterQueue(callback:Function):void
+		private static function afterQueue(callback:Function):void
 		{
 			if(callback == null)
 				return;
@@ -448,5 +472,6 @@ package axl.xdef
 			else
 				afterQueueVec.push(callback);
 		}
+		
 	}
 }

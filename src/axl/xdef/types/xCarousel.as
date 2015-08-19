@@ -14,9 +14,11 @@ package axl.xdef.types
 		
 		private var xdef:XML;
 		private var xmeta:Object = {}
-		public function xCarousel(definition:XML)
+		protected var xroot:xRoot;
+		public function xCarousel(definition:XML,xroot:xRoot=null)
 		{
 			xdef = definition;
+			this.xroot = xroot;
 			super();
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			railElementsContainer.addEventListener(Event.ADDED, elementAdded);
@@ -47,7 +49,7 @@ package axl.xdef.types
 		public function set meta(v:Object):void { xmeta =v 
 			if(!(meta is String))
 				if(meta.hasOwnProperty('addedToRail'))
-					addedToRail = new xAction(meta.addedToRail);
+					addedToRail = new xAction(meta.addedToRail,xroot);
 		}
 		public function reset():void { 
 			AO.killOff(this);
@@ -65,8 +67,9 @@ package axl.xdef.types
 				return;
 			XSupport.drawFromDef(def.graphics[0], this);
 			// this is exceptional where attributes are being applied before pushed types
-			XSupport.applyAttributes(def, this);
-			XSupport.pushReadyTypes(def, this, 'addToRail');
+			//moved to XSupport
+			/*XSupport.applyAttributes(def, this);
+			XSupport.pushReadyTypes(def, this, 'addToRail');*/
 			movementBit(0);
 		}
 		

@@ -30,13 +30,13 @@ package axl.xdef.types
 		private var vX:Number=0;
 		private var vY:Number=0;
 		
-		public function xMasked(definiton:XML=null)
+		public function xMasked(definiton:XML=null,xroot:xRoot=null)
 		{
 			ctrl = new BoundBox();
 			shapeMask = new Shape();
 			container = new Sprite();
 			//container.mask = shapeMask;
-			super(definiton);
+			super(definiton,xroot);
 			super.addChild(container);
 			super.addChild(shapeMask);
 			

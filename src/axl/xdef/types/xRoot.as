@@ -3,7 +3,6 @@ package axl.xdef.types
 	import flash.display.DisplayObject;
 	import flash.utils.setTimeout;
 	
-	import axl.utils.AO;
 	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
@@ -11,17 +10,30 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		public static var instance:xRoot;
 		public var elements:Object = {};
+		protected var xsupport:XSupport;
+		public var sourcePrefixes:Object;
+		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
 		{
+			if(xsupport == null)
+				xsupport = new XSupport();
+			if(xsupport.root == null)
+				xsupport.root = this;
 			super(definition);
-		/*	if(instance != null)
-				throw new Error("SINGLETONE EXCEPTION! " + this);*/
-			instance = this;
-			
 		}
+		
+		override public function set def(value:XML):void
+		{
+			// as xRoot is not called via XSupport.getReadyType
+			// it must take care of parsing definition itself
+			super.def = value;
+			xsupport.pushReadyTypes2(value, this);
+			XSupport.applyAttributes(value, this);
+		}
+		
+		
 		// ADD - REMOVE
 		public function add(v:Object,underChild:String=null,onNotExist:Function=null,indexModificator:int=0,node:String='additions'):void
 		{
@@ -47,9 +59,6 @@ package axl.xdef.types
 				getAdditionsByName(v as Array, gotit);
 			else
 				getAdditionByName(v as String, gotit);
-			
-			trace("addRespective", v, v.name, 'UNDER',  underChild, "MOD", indexModificator, "INDEX:", i);
-		
 			function gotit(d:DisplayObject):void{
 				if(i>= this.numChildren)
 					i = this.numChildren -1;
@@ -124,7 +133,7 @@ package axl.xdef.types
 				}
 			}
 			
-			XSupport.getReadyType(xml, loaded);
+			xsupport.getReadyType2(xml, loaded);
 			function loaded(dob:DisplayObject):void
 			{
 				elements[v] =  dob;
@@ -156,7 +165,6 @@ package axl.xdef.types
 		{
 			for(var i:int = 0,j:int = args.length, v:Object; i < j; i++)
 			{	
-				trace("XROOT REMOVE", args[i]);
 				v = args[i]
 				if(v is Array)
 					removeElements(v as Array);
@@ -183,7 +191,7 @@ package axl.xdef.types
 		 * The last registered element of name defined in V will be removed */
 		public function removeRegistered(v:String):void
 		{
-			var dobj:DisplayObject = XSupport.registered(v) as DisplayObject
+			var dobj:DisplayObject = xsupport.registered[v] as DisplayObject;
 			if(dobj != null && dobj.parent != null)
 				dobj.parent.removeChild(dobj);
 		}
@@ -193,6 +201,8 @@ package axl.xdef.types
 			for(var i:int = 0; i < v.length; i++)
 				removeRegistered(v[i]);
 		}
+		
+		public function registered(v:String):Object { return  xsupport.registered(v) }
 
 		// ANIMATION UTILITIES - to comment
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
@@ -210,9 +220,8 @@ package axl.xdef.types
 		
 		public function animateAllRegisteredToScreen(screenName:String,onComplete:Function=null):void
 		{
-			trace("animateAllRegisteredToScreen", screenName);
 			var all:int=0;
-			var reg:Object = XSupport.registry;
+			var reg:Object = xsupport.registry;
 			for(var s:String in reg)
 			{
 				var c:ixDef = reg[s] as ixDef;
@@ -233,7 +242,6 @@ package axl.xdef.types
 		
 		public function animAllMetaToScreen(screenName:String,onComplete:Function=null):void
 		{
-			trace("animAllMetaToScreen", screenName);
 			var all:int=0;
 			for(var i:int = 0; i < this.numChildren; i++)
 			{

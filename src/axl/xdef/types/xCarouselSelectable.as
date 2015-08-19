@@ -36,9 +36,9 @@ package axl.xdef.types
 		public var onMovementComplete:Function;
 		public var onMovementStart:Function;
 		
-		public function xCarouselSelectable(definition:XML)
+		public function xCarouselSelectable(definition:XML,xroot:xRoot=null)
 		{
-			super(definition);
+			super(definition,xroot);
 			this.cacheAsBitmap = true;
 			railElementsContainer.addEventListener(MouseEvent.CLICK, mouseClickCarusele);
 			railElementsContainer.addEventListener(MouseEvent.MOUSE_OVER, mouseOverCarusele);
@@ -130,7 +130,7 @@ package axl.xdef.types
 			super.meta = v;
 			if(!(meta is String))
 				if(meta.hasOwnProperty('elementSelected'))
-					elementSelected = new xAction(meta.elementSelected);
+					elementSelected = new xAction(meta.elementSelected,xroot);
 		}
 		
 		override protected function elementAdded(e:Event):void

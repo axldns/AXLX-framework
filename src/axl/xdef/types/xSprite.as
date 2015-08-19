@@ -17,6 +17,8 @@ package axl.xdef.types
 		
 		protected var xdef:XML;
 		protected var xmeta:Object={};
+		protected var xroot:xRoot;
+		
 		public var onAnimationComplete:Function;
 		private var eventAnimComplete:Event = new Event(Event.COMPLETE);
 		
@@ -26,12 +28,14 @@ package axl.xdef.types
 		private var intervalID:uint;
 		public var distributeHorizontal:Number;
 		public var distributeVertical:Number;
-		public function xSprite(definition:XML=null)
+		
+		public function xSprite(definition:XML=null,xroot:xRoot=null)
 		{
 			addEventListener(Event.ADDED, elementAdded);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			xdef = definition;
+			this.xroot = xroot;
 			super();
 			parseDef();
 		}
@@ -134,8 +138,9 @@ package axl.xdef.types
 			if(xdef==null)
 				return;
 			XSupport.drawFromDef(def.graphics[0], this);
-			XSupport.pushReadyTypes(def, this);
-			XSupport.applyAttributes(def, this);
+			//moved to xsupport
+		/*	XSupport.pushReadyTypes(def, this);
+			XSupport.applyAttributes(def, this);*/
 			//xtransform = this.transform.colorTransform;
 		}
 		

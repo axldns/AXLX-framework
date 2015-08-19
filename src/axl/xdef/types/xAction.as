@@ -14,9 +14,9 @@ package axl.xdef.types
 		/** Class that allows to execute [target] functions by name. <br>
 		 *  xButton can call xRoot directly, by defining "action" object in xButton meta attribute.<br>
 		 * @param def - object that contains <code>type</code> which is funciton name, and <code>value</code>  */
-		public function xAction(def:Object)
+		public function xAction(def:Object,xroot:xRoot)
 		{
-			target = xRoot.instance;
+			target = xroot;
 			type = def.type;
 			value = def.value;
 			xdef = def;
