@@ -230,9 +230,6 @@ package axl.xdef
 			return spr;
 		}
 		
-		// --- axl.ui
-				
-		
 		public static function drawFromDef(def:XML, drawable:Sprite=null):DisplayObject
 		{
 			if(def == null)
@@ -338,12 +335,10 @@ package axl.xdef
 			{
 				var source:String = String(xml.@src);
 				var inLib:Object = Ldr.getAny(source);
-				/*if(inLib is Bitmap)
-					inLib = Ldr.getBitmapCopy(source);*/
 				if(inLib != null)
 					callBack(xml);
 				else if(dynamicLoad)
-					Ldr.load(source, function():void{callBack(xml)});
+					Ldr.load(source, function():void{callBack(xml)},null,null);
 				else
 					callBack(xml);
 			}
