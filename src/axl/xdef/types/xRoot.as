@@ -12,7 +12,9 @@ package axl.xdef.types
 	{
 		public var elements:Object = {};
 		protected var xsupport:XSupport;
+		protected var CONFIG:XML;
 		public var sourcePrefixes:Array;
+		
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
@@ -92,7 +94,7 @@ package axl.xdef.types
 		/** Returns first XML child of Config[node] which matches it name */
 		public function getAdditionDefByName(v:String,node:String='additions'):XML
 		{
-			return U.CONFIG[node].*.(@name==v)[0];
+			return this.CONFIG[node].*.(@name==v)[0];
 		}
 		/** Instantiates element from loaded config node. Instantiated / loaded / cached object
 		 * is an argument for callback. 
