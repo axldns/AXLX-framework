@@ -348,8 +348,7 @@ package axl.xdef
 					callBack(xml);
 				else if(dynamicLoad)
 				{
-					U.log("DYNAMIC LOAD",source, 'while def pa pre', Ldr.defaultPathPrefixes);
-					Ldr.load(source, function():void{callBack(xml)});
+					Ldr.load(source, function():void{callBack(xml)},null,null,sourcePrefixes);
 				}
 				else
 					callBack(xml);
@@ -442,8 +441,8 @@ package axl.xdef
 							smallRegistry[obj.name] = obj;
 						if(obj.hasOwnProperty('xroot'))
 							obj.xroot = xroot;
-						U.log("OBJ", obj, obj && obj.hasOwnProperty('name') ? obj.name : '', 'has received root of', xroot);
-						U.log((obj && obj.hasOwnProperty('xroot')) ? obj.xroot : "NO ROOT");
+						/*U.log("OBJ", obj, obj && obj.hasOwnProperty('name') ? obj.name : '', 'has received root of', xroot);
+						U.log((obj && obj.hasOwnProperty('xroot')) ? obj.xroot : "NO ROOT");*/
 					}
 					
 					// notify

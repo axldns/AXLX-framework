@@ -12,7 +12,7 @@ package axl.xdef.types
 	{
 		public var elements:Object = {};
 		protected var xsupport:XSupport;
-		public var sourcePrefixes:Object;
+		public var sourcePrefixes:Array;
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
