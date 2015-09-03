@@ -59,10 +59,7 @@ package axl.xdef.types
 				f()
 			}
 			else
-			{
-				U.log('applyuing execute', f,type);
 				f.apply(null,value);
-			}
 		}
 	}
 }
