@@ -4,6 +4,7 @@ package axl.xdef
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.filters.BitmapFilter;
+	import flash.filters.ColorMatrixFilter;
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
 	import flash.utils.setInterval;
@@ -288,7 +289,11 @@ package axl.xdef
 			if(Fclass == null)
 				throw new Error("Invalid filter class in definition: " + xml.toXMLString());
 			var filter:BitmapFilter = new Fclass();
-			applyAttributes(xml, filter);
+			
+			if(filter is ColorMatrixFilter && xml.hasOwnProperty('@matrix'))
+				ColorMatrixFilter(filter).matrix = JSON.parse(String(xml.@matrix)) as Array;
+			else
+				applyAttributes(xml, filter);
 			return filter;
 		}
 		
