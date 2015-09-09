@@ -51,33 +51,19 @@ package axl.xdef.types
 					addChild(d);
 			}
 		}
-		public function addRespective(v:Object,underChild:String=null,indexModificator:int=0,node:String='additions'):void
-		{
-			var o:DisplayObject = getChildByName(underChild);
-			var i:int = o ? this.getChildIndex(o) : -1;
-			i+=indexModificator;
-			
-			if(v is Array)
-				getAdditionsByName(v as Array, gotit);
-			else
-				getAdditionByName(v as String, gotit);
-			function gotit(d:DisplayObject):void{
-				if(i>= this.numChildren)
-					i = this.numChildren -1;
-				if(i<0)
-					i=0;
-				if(underChild != null)
-					addChildAt(d,i++);
-				else
-					addChild(d);
-			}
-		}
 		
 		public function addUnderChild(v:DisplayObject, chname:String,indexMod:int=0):void
 		{
 			var o:DisplayObject = getChildByName(chname);
+			
 			var i:int = o ? this.getChildIndex(o) : -1;
-			U.log("ADD UNDER CHILD", v, v.name, 'UNDER', chname, "INDEX:", i, '+ MOD', indexMod);
+			var j:int = contains(v) ? getChildIndex(v) : int.MAX_VALUE;
+			U.log("ADD UNDER CHILD", v, v.name, 'UNDER', chname, o, "INDEX:", i, '+ MOD', indexMod);
+			if(j < i)
+			{
+				U.log("Child", v, v.name, "already exists in this container and it is under child", o, o? o.name : null);
+				return;
+			}
 			if(i > -1)
 			{
 				i+= indexMod;
@@ -114,7 +100,7 @@ package axl.xdef.types
 			U.log('getAdditionByName', v);
 			if(elements[v] != null)
 			{
-				U.log(v, 'already exists in "METAS" cache');
+				U.log(v, 'already exists in xRoot.elements cache');
 				callback(elements[v]);
 				return;
 			}
