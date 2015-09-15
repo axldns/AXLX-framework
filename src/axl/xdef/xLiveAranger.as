@@ -3,7 +3,6 @@ package axl.xdef
 	import flash.events.MouseEvent;
 	
 	import axl.utils.LiveAranger;
-	import axl.utils.U;
 	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.types.xSprite;
 	
@@ -32,7 +31,6 @@ package axl.xdef
 		
 		private function finishMovement():void
 		{
-			U.log(this,'finish movement',cTarget);
 			var v:ixDef = cTarget as ixDef;
 			if(v == null)
 				return;
@@ -45,12 +43,10 @@ package axl.xdef
 				if(n!=d)
 					v.def.@[s] = n;
 			}
-			
 		}
 		
 		override protected function mu(e:MouseEvent):void
 		{
-			U.log(e);
 			finishMovement();
 			super.mu(e);
 			
