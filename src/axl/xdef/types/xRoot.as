@@ -26,6 +26,8 @@ package axl.xdef.types
 			super(definition);
 		}
 		
+		public function get config():XML { return CONFIG }
+		
 		override public function set def(value:XML):void
 		{
 			// as xRoot is not called via XSupport.getReadyType
