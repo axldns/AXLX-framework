@@ -1,5 +1,6 @@
 package axl.xdef
 {
+	import flash.display.Bitmap;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
@@ -401,25 +402,42 @@ package axl.xdef
 					readyTypeCallback();
 				function readyTypeCallback():void
 				{
+					var bmp:Bitmap;
 					switch(type)
 					{
 						case 'div': obj = new xSprite(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
-								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							{
+								bmp = Ldr.getBitmapCopy(String(xml.@src));
+								if(bmp != null)
+									obj.addChildAt(bmp, 0);
+							}
 							break;
 						case 'txt': obj =  new xText(xml,xroot,defaultFont);	break;
 						case 'scrollBar': obj = new xScroll(xml); break;
 						case 'msk': obj = new xMasked(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
-								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							{
+								bmp = Ldr.getBitmapCopy(String(xml.@src));
+								if(bmp != null)
+									obj.addChildAt(bmp, 0);
+							}
 							break;
 						case 'carousel' : obj = new xCarousel(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
-								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							{
+								bmp = Ldr.getBitmapCopy(String(xml.@src));
+								if(bmp != null)
+									obj.addChildAt(bmp, 0);
+							}
 							break;
 						case 'carouselSelectable' : obj = new xCarouselSelectable(xml,xroot);
 							if(xml.hasOwnProperty('@src'))
-								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);
+							{
+								bmp = Ldr.getBitmapCopy(String(xml.@src));
+								if(bmp != null)
+									obj.addChildAt(bmp, 0);
+							}
 							break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						//--- loadable
@@ -482,6 +500,16 @@ package axl.xdef
 				callback();	
 			else
 				afterQueueVec.push(callback);
+		}
+		
+		public static function simpleSourceFinder(initSource:Object, s:String):Object
+		{
+			var keys:Array = s.split('.');
+			var target:Object = initSource;
+			try{while(keys.length)
+				target = target[keys.shift()];
+			} catch(e:*){}
+			return target;
 		}
 		
 	}
