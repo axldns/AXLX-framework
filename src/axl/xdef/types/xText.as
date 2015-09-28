@@ -7,7 +7,6 @@ package axl.xdef.types
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.utils.clearInterval;
-	import flash.utils.setInterval;
 	
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
@@ -145,7 +144,39 @@ package axl.xdef.types
 				for(var i:int = 0, j:int = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
 			}
+			replaceTextFieldContents();
 		}
+		
+		private function replaceTextFieldContents():void
+		{
+			var a:Array = meta.replace as Array;
+			if(a != null)
+			{
+				for(var i:int = 0; i < a.length;i++)
+				{
+					var rep:Object = a[i];
+					var pattern:RegExp = new RegExp(rep.pattern, rep.options);
+					var source:String = XSupport.simpleSourceFinder(this.xroot, rep.source) as String;
+					
+					if(source == null)
+						source = rep.source;
+					
+					if(rep.sourceRepPattern)
+					{
+						var sourceRepPattern:RegExp = new RegExp(rep.sourceRepPattern, rep.sourceRepOptions);
+						source = source.replace(sourceRepPattern, rep.sourceReplacement);
+					}
+					this.htmlText = this.htmlText.replace(pattern, source);
+				}
+			}
+		}
+		
+		override public function set text(value:String):void
+		{
+			super.text = value;
+			replaceTextFieldContents();
+		}
+		
 		
 	}
 }
