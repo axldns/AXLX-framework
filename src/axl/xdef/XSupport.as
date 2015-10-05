@@ -20,6 +20,7 @@ package axl.xdef
 	import axl.xdef.types.xButton;
 	import axl.xdef.types.xCarousel;
 	import axl.xdef.types.xCarouselSelectable;
+	import axl.xdef.types.xForm;
 	import axl.xdef.types.xMasked;
 	import axl.xdef.types.xRoot;
 	import axl.xdef.types.xScroll;
@@ -413,6 +414,14 @@ package axl.xdef
 									obj.addChildAt(bmp, 0);
 							}
 							break;
+						case 'form': obj = new xForm(xml,xroot);
+							if(xml.hasOwnProperty('@src'))
+							{
+								bmp = Ldr.getBitmapCopy(String(xml.@src));
+								if(bmp != null)
+									obj.addChildAt(bmp, 0);
+							}
+							break;
 						case 'txt': obj =  new xText(xml,xroot,defaultFont);	break;
 						case 'scrollBar': obj = new xScroll(xml); break;
 						case 'msk': obj = new xMasked(xml,xroot);
@@ -508,9 +517,23 @@ package axl.xdef
 			var target:Object = initSource;
 			try{while(keys.length)
 				target = target[keys.shift()];
-			} catch(e:*){}
+			} catch(e:*){target=null}
 			return target;
 		}
 		
+		public static function simpleSourceFinderByArray(initSource:Object, xownerArray:Array):Object
+		{
+			var target:Object = initSource;
+			var keys:Array = xownerArray.concat();
+			try{
+				while(keys.length)
+				{
+					U.log("trying", target, '->', keys[0]);
+					target = target[keys.shift()];
+				}
+			} catch(e:*){target=null}
+			return target;
+			return null;
+		}
 	}
 }
