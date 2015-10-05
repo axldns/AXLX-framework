@@ -39,12 +39,12 @@ package axl.xdef.types
 		
 		
 		// ADD - REMOVE
-		public function add(v:Object,underChild:String=null,onNotExist:Function=null,indexModificator:int=0,node:String='additions'):void
+		public function add(v:Object,underChild:String=null,onNotExist:Function=null,indexModificator:int=0,node:String='additions',forceNewElement:Boolean=false):void
 		{
 			if(v is Array)
-				getAdditionsByName(v as Array, gotit,node,onNotExist);
+				getAdditionsByName(v as Array, gotit,node,onNotExist,forceNewElement);
 			else
-				getAdditionByName(v as String, gotit,node,onNotExist)
+				getAdditionByName(v as String, gotit,node,onNotExist,forceNewElement)
 			function gotit(d:DisplayObject):void{
 				
 				if(underChild != null)
@@ -97,10 +97,18 @@ package axl.xdef.types
 		 * @param node - name of the XML tag (not an attrubute!) that is a parent for searched element to instantiate.
 		 * @see axl.xdef.XSupport#getReadyType()
 		 */
-		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null):void
+		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
 		{
 			U.log('getAdditionByName', v);
-			if(elements[v] != null)
+			if(v == null)
+				return U.log("requesting non existing element", v);
+			if(v.charAt(0) == '$')
+			{
+				v = XSupport.simpleSourceFinder(this,v.substr(1)) as String;
+				if(v == null)
+					v='ERROR';
+			}
+			if((elements[v] != null) && !forceNewElement)
 			{
 				U.log(v, 'already exists in xRoot.elements cache');
 				callback(elements[v]);
@@ -132,14 +140,14 @@ package axl.xdef.types
 		}
 		
 		/** Executes <code>getAdditionByName</code> in a loop. @see #getAdditionByName() */
-		public function getAdditionsByName(v:Array, callback:Function,node:String='additions',onError:Function=null):void
+		public function getAdditionsByName(v:Array, callback:Function,node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
 		{
 			var i:int = 0, j:int = v.length;
 			next();
 			function next():void
 			{
 				if(i<j)
-					getAdditionByName(v[i++], ready,node,onError);
+					getAdditionByName(v[i++], ready,node,onError,forceNewElement);
 			}
 			
 			function ready(v:DisplayObject):void
@@ -192,6 +200,7 @@ package axl.xdef.types
 				removeRegistered(v[i]);
 		}
 		
+		public function get registry():Object { return xsupport.registry }
 		public function registered(v:String):Object { return  xsupport.registered(v) }
 
 		// ANIMATION UTILITIES - to comment
