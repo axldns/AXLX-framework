@@ -21,7 +21,6 @@ package axl.xdef.types
 			this.xroot = xroot;
 			super();
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			railElementsContainer.addEventListener(Event.ADDED, elementAdded);
 			parseDef();
 		}
 		public function get xroot():xRoot { return xxroot }
@@ -32,17 +31,6 @@ package axl.xdef.types
 				return;
 			this.reset();
 			XSupport.animByName(this, 'addedToStage');
-		}
-		
-		protected function elementAdded(e:Event):void
-		{
-			if(addedToRail != null)
-			{
-				addedToRail.value = e.target;
-				addedToRail.execute();
-			}
-			if(onElementAdded != null)
-				onElementAdded(e);
 		}
 		
 		public function get def():XML { return xdef }

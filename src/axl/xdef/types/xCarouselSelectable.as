@@ -35,14 +35,19 @@ package axl.xdef.types
 		public var selectValueIdle:Object;
 		public var onMovementComplete:Function;
 		public var onMovementStart:Function;
+		public var mouseClickListener:Boolean;
 		
 		public function xCarouselSelectable(definition:XML,xroot:xRoot=null)
 		{
 			super(definition,xroot);
 			this.cacheAsBitmap = true;
-			railElementsContainer.addEventListener(MouseEvent.CLICK, mouseClickCarusele);
-			railElementsContainer.addEventListener(MouseEvent.MOUSE_OVER, mouseOverCarusele);
-			railElementsContainer.addEventListener(MouseEvent.MOUSE_OUT, mouseOutCarusele);
+			if(mouseClickListener)
+			{
+				railElementsContainer.addEventListener(MouseEvent.CLICK, mouseClickCarusele);
+				railElementsContainer.addEventListener(MouseEvent.MOUSE_OVER, mouseOverCarusele);
+				railElementsContainer.addEventListener(MouseEvent.MOUSE_OUT, mouseOutCarusele);
+			}
+			
 		}
 		
 		protected function mouseClickCarusele(e:MouseEvent):void
@@ -133,10 +138,11 @@ package axl.xdef.types
 					elementSelected = new xAction(meta.elementSelected,xroot,this);
 		}
 		
-		override protected function elementAdded(e:Event):void
+		
+		override protected function onRailElementAdded():void
 		{
+			super.onRailElementAdded();
 			selectedObject = getChildClosestToCenter()[0];
-			super.elementAdded(e);
 		}
 		
 		
@@ -162,7 +168,6 @@ package axl.xdef.types
 			if(onMovementStart != null)
 				onMovementStart();
 			AO.animate(movementPoint, movementSpeed, p,onCaruseleTarget,1,false,null,true);
-			
 		}
 		
 		private function updateCarusele():void
