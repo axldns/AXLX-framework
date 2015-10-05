@@ -144,10 +144,10 @@ package axl.xdef.types
 				for(var i:int = 0, j:int = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
 			}
-			replaceTextFieldContents();
+			replaceTextFieldText();
 		}
 		
-		private function replaceTextFieldContents():void
+		private function replaceTextFieldText():void
 		{
 			var a:Array = meta.replace as Array;
 			if(a != null)
@@ -174,7 +174,7 @@ package axl.xdef.types
 		override public function set text(value:String):void
 		{
 			super.text = value;
-			replaceTextFieldContents();
+			replaceTextFieldText();
 		}
 		
 		
