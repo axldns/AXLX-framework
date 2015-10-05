@@ -119,7 +119,6 @@ package axl.xdef.types
 		
 		protected function mouseClick(e:MouseEvent):void
 		{
-			U.log(this.name, "CLICK");
 			this.dispatchEvent(eventClick);
 			if(userClickHandler != null) 
 			{
@@ -156,6 +155,7 @@ package axl.xdef.types
 				overTarget[overKey] = overVals[val];
 		}
 		// --- --- PUBLIC API --- --- //
+		public function setEnabled(v:Boolean):void { enabled =v }
 		public function get enabled():Boolean {	return isEnabled }
 		public function set enabled(v:Boolean):void
 		{
@@ -177,6 +177,7 @@ package axl.xdef.types
 			useHandCursor = isEnabled;
 			disabledTarget[disabledKey] = this.disabledVals[isEnabled ? 1 : 0];
 		}
+		
 		
 		protected function mouseUp(e:MouseEvent):void { mouseMove(e) }
 		protected function mouseMove(e:MouseEvent):void
