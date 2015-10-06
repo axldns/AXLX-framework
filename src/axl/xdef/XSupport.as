@@ -518,6 +518,8 @@ package axl.xdef
 			try{while(keys.length)
 				target = target[keys.shift()];
 			} catch(e:*){target=null}
+			if(target is String && target.charAt(0) == '$')
+				target = simpleSourceFinder(initSource, target as String);
 			return target;
 		}
 		
@@ -533,7 +535,26 @@ package axl.xdef
 				}
 			} catch(e:*){target=null}
 			return target;
-			return null;
+		}
+		
+		/** Resolves $string to find dynamic args. If it's an array - creates a copy of that array! !*/
+		public static function getDynamicArgs(v:Object,root:ixDef):Object
+		{
+			if(v is String && v.charAt(0) == '$' )
+				return simpleSourceFinder(root, v.substr(1));
+			if(v is Array)
+			{
+				var a:Array = v.concat();
+				for(var i:int = a.length; i-->0;)
+				{
+					var o:Object = a[i];
+					if(o is String && o.charAt(0) == '$')
+						a[i] = XSupport.simpleSourceFinder(root, o.substr(1));
+				}
+				return a;
+			}
+			else
+				return v;
 		}
 	}
 }

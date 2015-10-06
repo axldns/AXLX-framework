@@ -75,7 +75,7 @@ package axl.xdef.types
 			else
 			{
 				if(value is Array)
-					f.apply(null, getDynamicArgs(value as Array));
+					f.apply(null, XSupport.getDynamicArgs(value as Array, xxparent.xroot));
 				else if(value is String && value.charAt(0) == '$')
 					f.apply(null, XSupport.simpleSourceFinder(xxparent.xroot, value.substr(1)));
 				else
