@@ -11,7 +11,9 @@ package axl.xdef.types
 	import flash.utils.setInterval;
 	import flash.utils.setTimeout;
 	
+	import axl.utils.ConnectPHP;
 	import axl.utils.U;
+	import axl.xdef.XSupport;
 	
 	
 	public class xButton extends xSprite
@@ -48,6 +50,9 @@ package axl.xdef.types
 		private var sover:String; 
 		
 		public var externalExecution:Boolean;
+		private var postSendArgs:Array;
+		private var postObject:ConnectPHP;
+		private var dynamicArgs:Boolean;
 		
 		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
@@ -88,6 +93,19 @@ package axl.xdef.types
 				var b:Array = (a is Array) ? a as Array : [a];
 				for(var i:int = 0, j:int = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
+			}
+			if(meta.hasOwnProperty('post'))
+			{
+				U.log(this, this.name, "POST");
+				if(meta.post.hasOwnProperty('dynamicArgs'))
+				{
+					postSendArgs // will be asigned right before execution
+					dynamicArgs = true;
+				}
+				else
+					postSendArgs = meta.post.sendArgs;
+				postObject = new ConnectPHP();
+				U.asignProperties(postObject, meta.post.connectProperties);
 			}
 		}
 		
@@ -139,6 +157,14 @@ package axl.xdef.types
 				this.dispatchEvent(this.trigerEvent);
 			if(this.trigerExt && ExternalInterface.available)
 				ExternalInterface.call.apply(null, trigerExt);
+			if(this.postObject != null)
+			{
+				U.log(this, this.name, 'post action');
+				if(dynamicArgs)
+					this.postObject.sendData.apply(null, XSupport.getDynamicArgs(meta.post.sendArgs, this.xroot) as Array);
+				else
+					this.postObject.sendData.apply(null, this.postSendArgs);
+			}
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
 				actions[i].execute();
 		}
