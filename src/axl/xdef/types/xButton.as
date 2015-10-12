@@ -26,6 +26,8 @@ package axl.xdef.types
 		
 		public var intervalValue:int=0;
 		public var intervalDelay:int = 0;
+		public var intervalHoverValue:int=0;
+		
 		
 		private var userClickHandler:Function;
 		private var eventClick:Event = new Event("clickButton",true);
@@ -38,8 +40,10 @@ package axl.xdef.types
 		private var isDown:Boolean;
 		private var delayID:uint;
 		private var intervalID:uint;
+		private var intervalHoverID:uint;
 		
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
+		private var actionsOver:Vector.<xAction> = new Vector.<xAction>();
 		private var overTarget:Object;
 		private var overKey:String;
 		private var overVals:Object;
@@ -53,6 +57,9 @@ package axl.xdef.types
 		private var postSendArgs:Array;
 		private var postObject:ConnectPHP;
 		private var dynamicArgs:Boolean;
+		private var actionOver:Boolean;
+		private var isOver:Boolean;
+		
 		
 		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
@@ -71,6 +78,7 @@ package axl.xdef.types
 		override public function set meta(v:Object):void
 		{
 			super.meta = v;
+			var a:Object, b:Array, i:int, j:int;
 			if(meta is String)
 				return
 			if(meta.hasOwnProperty('url'))
@@ -89,10 +97,18 @@ package axl.xdef.types
 				trigerExt = meta.js;
 			if(meta.hasOwnProperty('action'))
 			{
-				var a:Object = meta.action;
-				var b:Array = (a is Array) ? a as Array : [a];
-				for(var i:int = 0, j:int = b.length; i<j; i++)
+				a = meta.action;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
+			}
+			if(meta.hasOwnProperty('actionOver'))
+			{
+				actionOver = true;
+				a = meta.actionOver;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
+					actionsOver[i] = new xAction(b[i],xroot,this);
 			}
 			if(meta.hasOwnProperty('post'))
 			{
@@ -169,16 +185,39 @@ package axl.xdef.types
 				actions[i].execute();
 		}
 		
-		protected function hover(e:MouseEvent):void
+		protected function hover(e:MouseEvent=null):void
 		{
 			if(!isEnabled)
 				return;
 			checkProperties();
-			var val:int = (e.type == MouseEvent.ROLL_OVER) ? 0 : 1;
+			
+			isOver = (e.type == MouseEvent.ROLL_OVER);
+			var val:int =  isOver ? 0 : 1;
+			
 			if(overTarget[overKey] is Function)
 				overTarget[overKey].apply(null, overVals[val]);
 			else
 				overTarget[overKey] = overVals[val];
+			executeHover();
+			if(isOver && (intervalHoverValue > 0) && intervalHoverID < 1)
+				intervalHoverID = setInterval(repeatHoverActions, intervalHoverValue,e);
+			
+			function repeatHoverActions():void { (isOver) ?  executeHover() : clearInterval(); }
+			function executeHover():void
+			{
+				if(isOver && actionOver)
+				{
+					for(var i:int = 0, j:int = actionsOver.length; i<j; i++)
+						actionsOver[i].execute();
+				}
+				else
+					clearInterval();
+			}
+			function clearInterval():void
+			{
+				flash.utils.clearInterval(intervalHoverID);
+				intervalHoverID = 0;
+			}
 		}
 		// --- --- PUBLIC API --- --- //
 		public function setEnabled(v:Boolean):void { enabled =v }
