@@ -16,6 +16,10 @@ package axl.xdef.types
 		private var dynamicOwner:Boolean;
 		private var xownerArray:Array;
 		private var dynamicArgs:Object;
+		private var stickFunction:Boolean;
+		private var stickArgs:Boolean;
+		private var func:Function;
+		private var aargs:Array;
 		/** Class that allows to execute [target] functions by name. <br>
 		 *  xButton can call xRoot directly, by defining "action" object in xButton meta attribute.<br>
 		 * @param def - object that contains <code>type</code> which is funciton name, and <code>value</code>  */
@@ -26,6 +30,8 @@ package axl.xdef.types
 			value = def.value;
 			xdef = def;
 			xowner = def.owner;
+			stickFunction = def.stickFunction;
+			stickArgs = def.stickArgs;
 			if(xowner && xowner.charAt(0) == '$')
 				xownerArray = xowner.substr(1).split('.');
 			dynamicArgs = def.dynamicArgs;
@@ -48,8 +54,56 @@ package axl.xdef.types
 		public function execute():void
 		{
 			var f:Function;
+			if(stickFunction)
+			{
+				if(func == null)
+					func = findFunc();
+				f = func;
+			}
+			else
+				f =  findFunc();
+			
+			if(f == null)
+				throw new Error("Unsupported action type: " + type);
+			if(xvalue[0] == undefined)
+				f()
+			else if(!dynamicArgs)
+				f.apply(null,value);
+			else
+			{
+				if(stickArgs)
+				{
+					if(aargs == null)
+					{
+						if(value is Array)
+							aargs = XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array;
+						else if(value is String && value.charAt(0) == '$')
+							aargs = XSupport.simpleSourceFinder(xxparent.xroot, value.substr(1)) as Array;
+						else
+							aargs = [value];
+					}
+					f.apply(null, aargs);
+				}
+				else
+				{
+					if(value is Array)
+						f.apply(null, XSupport.getDynamicArgs(value as Array, xxparent.xroot));
+					else if(value is String && value.charAt(0) == '$')
+						f.apply(null, XSupport.simpleSourceFinder(xxparent.xroot, value.substr(1)));
+					else
+						f.apply(null,value);
+				}
+			}
+		}
+		
+		private function findFunc():Function
+		{
+			var f:Function;
 			if(!xxparent)
-				return U.log('[xAction][execute] UNKNOWN ACTION PARENT!');
+			{
+				U.log('[xAction][execute] UNKNOWN ACTION PARENT!');
+				return null
+			}
 			var target:Object;
 			if(xownerArray != null)
 				target =  XSupport.simpleSourceFinderByArray(xxparent, xownerArray);
@@ -61,26 +115,11 @@ package axl.xdef.types
 			if(target && target.hasOwnProperty(type))
 			{
 				f = target[type] as Function;
-				U.log('[xAction][execute]['+xtype+']('+value+')', f);
+				U.log('[xAction][execute]['+target+']['+xtype+']('+value+')', f);
 			}
 			else 
-				U.log('[xAction][execute]['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER', xowner, 'as', target);
-			
-			if(f == null)
-				throw new Error("Unsupported action type: " + type);
-			if(xvalue[0] == undefined)
-				f()
-			else if(!dynamicArgs)
-				f.apply(null,value);
-			else
-			{
-				if(value is Array)
-					f.apply(null, XSupport.getDynamicArgs(value as Array, xxparent.xroot));
-				else if(value is String && value.charAt(0) == '$')
-					f.apply(null, XSupport.simpleSourceFinder(xxparent.xroot, value.substr(1)));
-				else
-					f.apply(null,value);
-			}
+				U.log('[xAction][execute]['+target+']['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER', xowner, 'as', target);
+			return f;
 		}
 		
 		private function getDynamicArgs(v:Array):Array
