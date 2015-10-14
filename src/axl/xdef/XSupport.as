@@ -19,6 +19,7 @@ package axl.xdef
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
 	import axl.xdef.types.xCarousel;
+	/*import axl.xdef.types.xCarouselExt;*/
 	import axl.xdef.types.xCarouselSelectable;
 	import axl.xdef.types.xForm;
 	import axl.xdef.types.xMasked;
@@ -26,6 +27,7 @@ package axl.xdef
 	import axl.xdef.types.xScroll;
 	import axl.xdef.types.xSprite;
 	import axl.xdef.types.xText;
+	import axl.xdef.types.xSwf;
 
 	public class XSupport
 	{
@@ -224,16 +226,16 @@ package axl.xdef
 			return xb;
 		}	
 		
-		public function getSwfFromDef2(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xSprite
+		public function getSwfFromDef2(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xSwf
 		{
-			var spr:xSprite = new xSprite(null,xroot);
+			var spr:xSwf = new xSwf(null,xroot);
 			if(dynamicSourceLoad)
 				checkSource(xml, swfCallback,true);
 			else 
 				return swfCallback();
-			function swfCallback():xSprite
+			function swfCallback():xSwf
 			{
-				spr.addChild(Ldr.getAny(String(xml.@src)) as DisplayObject);
+				spr.addSwf(Ldr.getAny(String(xml.@src)) as DisplayObject);
 				pushReadyTypes2(xml, spr);
 				spr.def = xml;
 				return spr;
@@ -422,6 +424,10 @@ package axl.xdef
 									obj.addChildAt(bmp, 0);
 							}
 							break;
+						/*case 'car' : obj = new xCarouselExt(xml,xroot);
+							if(xml.hasOwnProperty('@src'))
+								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);*/
+							break;
 						case 'txt': obj =  new xText(xml,xroot,defaultFont);	break;
 						case 'scrollBar': obj = new xScroll(xml); break;
 						case 'msk': obj = new xMasked(xml,xroot);
@@ -473,8 +479,6 @@ package axl.xdef
 							smallRegistry[obj.name] = obj;
 						if(obj.hasOwnProperty('xroot'))
 							obj.xroot = xroot;
-						/*U.log("OBJ", obj, obj && obj.hasOwnProperty('name') ? obj.name : '', 'has received root of', xroot);
-						U.log((obj && obj.hasOwnProperty('xroot')) ? obj.xroot : "NO ROOT");*/
 					}
 					
 					// notify
@@ -548,8 +552,7 @@ package axl.xdef
 				for(var i:int = a.length; i-->0;)
 				{
 					var o:Object = a[i];
-					if(o is String && o.charAt(0) == '$')
-						a[i] = XSupport.simpleSourceFinder(root, o.substr(1));
+					a[i] = (o is String && o.charAt(0) == '$') ? XSupport.simpleSourceFinder(root, o.substr(1)) : o;
 				}
 				return a;
 			}
