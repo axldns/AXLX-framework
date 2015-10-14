@@ -3,6 +3,7 @@ package axl.xdef.types
 	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.events.Event;
+	
 	import axl.utils.U;
 
 	public class xSwf extends xSprite
@@ -92,26 +93,14 @@ package axl.xdef.types
 			else if(yoyo)
 			{
 				n= mc.currentFrame+dir;
+				var halfed:Boolean = (dir > 0) ? (mc.currentFrame == mc.totalFrames) : (n==0);
 				mc.gotoAndStop(n);
-				if(dir > 0)
+				if(halfed)
 				{
-					if(mc.currentFrame == mc.totalFrames)
-					{
-						if(--stopOnEndAfterXcycles == 0)
-							stop();
-						else
-							dir *= -1;
-					}
-				}
-				else
-				{
-					if(n==0)
-					{
-						if(--stopOnEndAfterXcycles == 0)
-							stop();
-						else
-							dir *= -1;
-					}
+					if(--stopOnEndAfterXcycles == 0)
+						stop();
+					else
+						dir *= -1;
 				}
 			}
 			else
