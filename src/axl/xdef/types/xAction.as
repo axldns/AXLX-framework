@@ -74,24 +74,13 @@ package axl.xdef.types
 				if(stickArgs)
 				{
 					if(aargs == null)
-					{
-						if(value is Array)
-							aargs = XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array;
-						else if(value is String && value.charAt(0) == '$')
-							aargs = XSupport.simpleSourceFinder(xxparent.xroot, value.substr(1)) as Array;
-						else
-							aargs = [value];
-					}
+						aargs = (XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array) || [value];
 					f.apply(null, aargs);
 				}
 				else
 				{
-					if(value is Array)
-						f.apply(null, XSupport.getDynamicArgs(value as Array, xxparent.xroot));
-					else if(value is String && value.charAt(0) == '$')
-						f.apply(null, XSupport.simpleSourceFinder(xxparent.xroot, value.substr(1)));
-					else
-						f.apply(null,value);
+					var argsd:Array = (XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array) || [value];
+					f.apply(null,argsd);
 				}
 			}
 		}
