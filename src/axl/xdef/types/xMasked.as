@@ -2,7 +2,6 @@ package axl.xdef.types
 {
 	import flash.display.DisplayObject;
 	import flash.display.Shape;
-	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Rectangle;
@@ -25,7 +24,7 @@ package axl.xdef.types
 		private var ctrl:BoundBox;
 		private var deltaMultiply:int=1;
 		
-		public var container:Sprite;
+		public var container:xSprite;
 		public var wheelScrollAllowed:Boolean = true;
 		private var vX:Number=0;
 		private var vY:Number=0;
@@ -34,7 +33,8 @@ package axl.xdef.types
 		{
 			ctrl = new BoundBox();
 			shapeMask = new Shape();
-			container = new Sprite();
+			container = new xSprite(null,xroot);
+			container.name = "maskContainerOf_" + String((definiton != null) ? definiton.@name : "null");
 			//container.mask = shapeMask;
 			super(definiton,xroot);
 			super.addChild(container);
