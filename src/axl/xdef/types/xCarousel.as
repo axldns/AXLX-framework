@@ -30,7 +30,7 @@ package axl.xdef.types
 			if(meta.addedToStage == null)
 				return;
 			this.reset();
-			XSupport.animByName(this, 'addedToStage');
+			XSupport.animByNameExtra(this, 'addedToStage');
 		}
 		
 		public function get def():XML { return xdef }

@@ -91,7 +91,7 @@ package axl.xdef.types
 			if(c != null && c.meta.addChild != null)
 			{
 				c.reset();
-				XSupport.animByName(c, 'addChild', animComplete);
+				XSupport.animByNameExtra(c, 'addChild', animComplete);
 			}
 			return child;
 		}
@@ -103,7 +103,7 @@ package axl.xdef.types
 			if(c != null && c.meta.addChild != null)
 			{
 				c.reset();
-				XSupport.animByName(c, 'addChild',animComplete);
+				XSupport.animByNameExtra(c, 'addChild',animComplete);
 			}
 			return child;
 		}
@@ -117,7 +117,7 @@ package axl.xdef.types
 			if(c != null)
 			{
 				AO.killOff(c);
-				XSupport.animByName(c, 'removeChild', acomplete);
+				XSupport.animByNameExtra(c, 'removeChild', acomplete);
 			} else { acomplete() }
 			function acomplete():void { f(child) }
 			return child;
@@ -130,7 +130,7 @@ package axl.xdef.types
 			if(c != null)
 			{
 				AO.killOff(c);
-				XSupport.animByName(c, 'removeChild', acomplete);
+				XSupport.animByNameExtra(c, 'removeChild', acomplete);
 			} else { acomplete() } 
 			function acomplete():void { f(index) }
 			return c as DisplayObject;
