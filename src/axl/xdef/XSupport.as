@@ -19,15 +19,14 @@ package axl.xdef
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
 	import axl.xdef.types.xCarousel;
-	/*import axl.xdef.types.xCarouselExt;*/
 	import axl.xdef.types.xCarouselSelectable;
 	import axl.xdef.types.xForm;
 	import axl.xdef.types.xMasked;
 	import axl.xdef.types.xRoot;
 	import axl.xdef.types.xScroll;
 	import axl.xdef.types.xSprite;
-	import axl.xdef.types.xText;
 	import axl.xdef.types.xSwf;
+	import axl.xdef.types.xText;
 
 	public class XSupport
 	{
@@ -78,12 +77,12 @@ package axl.xdef
 			return target;
 		}
 		
-		public static function animByName(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):void
+		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):uint
 		{
 			if(reset)
 				target.reset();
 			else if(killCurrent);
-				AO.killOff(target);
+			AO.killOff(target);
 			if(target.meta.hasOwnProperty(animName))
 			{
 				var animNameArray:Array = target.meta[animName];
@@ -96,7 +95,14 @@ package axl.xdef
 				for(var i:int = 0; i < ag.length; i++)
 				{
 					var g:Array = [target].concat(ag[i]);
-					g[3] = acomplete;
+					var f:Object = XSupport.getDynamicArgs(g[3],target.xroot);
+					if(f != null)
+					{
+						U.log('[XSupport] function to execute on complete]', f);
+						g[3] = execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete)
+					}
+					else
+						g[3] = acomplete;
 					AO.animate.apply(null, g);
 				}
 			}
@@ -106,72 +112,29 @@ package axl.xdef
 			{
 				if(--atocomplete < 1 && onComplete != null)
 					onComplete();
-				//target.dispatchEvent(target.eventAnimationComplete);
 			}
+			
+			return 0;
 		}
 		
-		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):uint
+		private static function execFactory(f:Object, xrootObject:ixDisplay, args:Array=null, callback:Function=null):Function
 		{
-			if(reset)
-				target.reset();
-			else if(killCurrent);
-			AO.killOff(target);
-			var toReturn:uint;
-			if(target.meta.hasOwnProperty(animName))
+			var anonymous:Function = function():void
 			{
-				var animNameArray:Array = target.meta[animName];
-				var ag:Array = [];
-				
-				var zeroElement:Object= animNameArray[0];
-				
-				if(zeroElement is Number)
+				var dargs:Array =  XSupport.getDynamicArgs(args, xrootObject) as Array;
+				if(!(f is Array))
+					f = [f];
+				var fl:int = f.length;
+				for(var g:int =0; g < fl;g++)
+					if(f[g] is Function)
+						(args != null) ? f[g].apply(null, dargs) : f[g]();
+				if(callback != null)
 				{
-					// plain animation
-					ag[0] =  animNameArray;
-					caryOn();
-					
-				}
-				else if(zeroElement is Array)
-				{
-					//group of animations
-					ag = animNameArray
-					caryOn();
-				}
-				else if(zeroElement is Object)
-				{
-					//interval anim
-					var ag1:Array = animNameArray[1] as Array;
-					if(ag1 != null && ag1.length > 0)
-					{
-						if(ag1[0] is Array)
-							ag = ag1;
-						else
-							ag = [ag1];
-					}
-					if(zeroElement.hasOwnProperty('interval'))
-						toReturn = flash.utils.setInterval(caryOn, zeroElement.interval);
-				}
-				var atocomplete:uint = ag.length;
-				function caryOn():void
-				{
-					atocomplete = ag.length;
-					for(var i:int = 0; i < ag.length; i++)
-					{
-						var g:Array = [target].concat(ag[i]);
-						g[3] = acomplete;
-						AO.animate.apply(null, g);
-					}
+					callback();
+					callback=null
 				}
 			}
-			else if(onComplete != null)
-				onComplete();
-			function acomplete():void
-			{
-				if(--atocomplete < 1 && onComplete != null)
-					onComplete();
-				//target.dispatchEvent(target.eventAnimationComplete);
-			}
-			return toReturn;
+			return anonymous;
 		}
 		
 		public static function valueReadyTypeCoversion(val:String):*
@@ -519,9 +482,13 @@ package axl.xdef
 		{
 			var keys:Array = s.split('.');
 			var target:Object = initSource;
-			try{while(keys.length)
-				target = target[keys.shift()];
-			} catch(e:*){target=null}
+			try
+			{
+				while(keys.length)
+				{
+					target = target[keys.shift()];
+				}
+			} catch(e:*){target=null, U.log("SOURCE NOT FOUND")}
 			if(target is String && target.charAt(0) == '$')
 				target = simpleSourceFinder(initSource, target as String);
 			return target;
