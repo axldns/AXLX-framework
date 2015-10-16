@@ -5,6 +5,7 @@ package axl.xdef.types
 	import flash.events.Event;
 	
 	import axl.utils.U;
+	import axl.xdef.XSupport;
 
 	public class xSwf extends xSprite
 	{
@@ -17,8 +18,12 @@ package axl.xdef.types
 		public var stopOnEndAfterXcycles:int;
 		public var yoyo:Boolean;
 		public var dir:int=1;
+		
 		private var frameListenerAdded:Boolean;
 		private var movieClip:MovieClip;
+		private var stopFuncArgs:Boolean;
+		private var stopFunc:String;
+		
 		public function get mc():MovieClip { return movieClip }
 		public function xSwf(definition:XML=null, xroot:xRoot=null)
 		{
@@ -27,7 +32,6 @@ package axl.xdef.types
 		
 		protected function ats(event:Event):void
 		{
-			
 			if(addStarts)
 			{
 				mc.addEventListener(Event.ENTER_FRAME, mcEnterFrame);
@@ -120,11 +124,31 @@ package axl.xdef.types
 			}
 		}
 		
+		override public function set meta(v:Object):void
+		{
+			super.meta = v;
+			if(meta.onStop != null && meta.onStop.length > 0 && meta.onStop.charAt(0) == '$')
+				stopFunc = meta.onStop.substr(1);
+			if(meta.onStopFuncArgs !=null)
+				stopFuncArgs = true
+		}
+		
 		private function stop():void
 		{
 			mc.stop();
 			mc.removeEventListener(Event.ENTER_FRAME, mcEnterFrame);
 			frameListenerAdded = false;
+			if(stopFunc != null)
+			{
+				var f:Function = XSupport.simpleSourceFinder(this.xroot, stopFunc) as Function;
+				if(f != null)
+				{
+					if(stopFuncArgs)
+						f.apply(null, XSupport.getDynamicArgs(meta.onStopFuncArgs,this.xroot))
+					else
+						f();
+				}
+			}
 		}
 		public function gotoAnd(frame:int,command:String='play'):void
 		{
@@ -136,8 +160,8 @@ package axl.xdef.types
 			}
 			else
 			{
+				mc.gotoAndStop(frame);
 				stop();
-				mc.gotoAndPlay(frame);
 			}
 			
 		}
