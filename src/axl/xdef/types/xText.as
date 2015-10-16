@@ -9,6 +9,7 @@ package axl.xdef.types
 	import flash.utils.clearInterval;
 	
 	import axl.utils.AO;
+	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
@@ -156,8 +157,7 @@ package axl.xdef.types
 				{
 					var rep:Object = a[i];
 					var pattern:RegExp = new RegExp(rep.pattern, rep.options);
-					var source:String = XSupport.simpleSourceFinder(this.xroot, rep.source) as String;
-					
+					var source:Object = XSupport.simpleSourceFinder(this.xroot, rep.source);
 					if(source == null)
 						source = rep.source;
 					
@@ -166,7 +166,7 @@ package axl.xdef.types
 						var sourceRepPattern:RegExp = new RegExp(rep.sourceRepPattern, rep.sourceRepOptions);
 						source = source.replace(sourceRepPattern, rep.sourceReplacement);
 					}
-					this.htmlText = this.htmlText.replace(pattern, source);
+					super.htmlText = super.htmlText.replace(pattern, String(source));
 				}
 			}
 		}
@@ -174,6 +174,12 @@ package axl.xdef.types
 		override public function set text(value:String):void
 		{
 			super.text = value;
+			replaceTextFieldText();
+		}
+		
+		override public function set htmlText(value:String):void
+		{
+			super.htmlText = value;
 			replaceTextFieldText();
 		}
 		
