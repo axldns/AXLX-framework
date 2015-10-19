@@ -104,7 +104,7 @@ package axl.xdef.types
 			if(target && target.hasOwnProperty(type))
 			{
 				f = target[type] as Function;
-				U.log('[xAction][execute]['+target+']['+xtype+']('+value+')', f);
+				//U.log('[xAction][execute]['+target+']['+xtype+']('+value+')', f);
 			}
 			else 
 				U.log('[xAction][execute]['+target+']['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER', xowner, 'as', target);
