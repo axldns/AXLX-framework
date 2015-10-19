@@ -96,13 +96,15 @@ package axl.xdef
 				{
 					var g:Array = [target].concat(ag[i]);
 					var f:Object = XSupport.getDynamicArgs(g[3],target.xroot);
-					if(f != null)
+					
+					g[3] = (f != null) ?  execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete) : acomplete;
+					if(g[2].hasOwnProperty('onUpdate'))
 					{
-						U.log('[XSupport] function to execute on complete]', f);
-						g[3] = execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete)
+						var onUpdate:Function =  (g[2].onUpdate is Function) ? g[2].onUpdate : XSupport.simpleSourceFinder(target.xroot, g[2].onUpdate) as Function;
+						g[2].onUpdate = onUpdate;
+						if(g[2].hasOwnProperty('onUpdateArgs'))
+							g[2].onUpdateArgs =  XSupport.getDynamicArgs(g[2].onUpdateArgs,target.xroot);
 					}
-					else
-						g[3] = acomplete;
 					AO.animate.apply(null, g);
 				}
 			}
@@ -113,7 +115,6 @@ package axl.xdef
 				if(--atocomplete < 1 && onComplete != null)
 					onComplete();
 			}
-			
 			return 0;
 		}
 		
@@ -468,29 +469,20 @@ package axl.xdef
 				call();
 		}
 		
-		private static function afterQueue(callback:Function):void
-		{
-			if(callback == null)
-				return;
-			if(additionQueue.length < 1)
-				callback();	
-			else
-				afterQueueVec.push(callback);
-		}
 		
 		public static function simpleSourceFinder(initSource:Object, s:String):Object
 		{
-			var keys:Array = s.split('.');
+			if(s == null)
+				return null;
+			var keys:Array = (s.charAt(0) == '$') ? s.substr(1).split('.') : s.split('.');
 			var target:Object = initSource;
 			try
 			{
 				while(keys.length)
-				{
 					target = target[keys.shift()];
-				}
-			} catch(e:*){target=null, U.log("SOURCE NOT FOUND")}
+			} catch(e:*){target=null, U.log("[XSupport] SOURCE NOT FOUND",s)}
 			if(target is String && target.charAt(0) == '$')
-				target = simpleSourceFinder(initSource, target as String);
+				target = simpleSourceFinder(initSource, String(target).substr(1));
 			return target;
 		}
 		
@@ -500,11 +492,10 @@ package axl.xdef
 			var keys:Array = xownerArray.concat();
 			try{
 				while(keys.length)
-				{
-					U.log("trying", target, '->', keys[0]);
 					target = target[keys.shift()];
-				}
-			} catch(e:*){target=null}
+			} catch(e:*){target=null,U.log("[XSupport] SOURCE NOT FOUND",xownerArray)}
+			if(target is String && target.charAt(0) == '$')
+				target = simpleSourceFinder(initSource, String(target).substr(1));
 			return target;
 		}
 		
