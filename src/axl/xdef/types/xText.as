@@ -9,7 +9,6 @@ package axl.xdef.types
 	import flash.utils.clearInterval;
 	
 	import axl.utils.AO;
-	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	

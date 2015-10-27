@@ -127,9 +127,11 @@ package axl.xdef.types
 		override public function set meta(v:Object):void
 		{
 			super.meta = v;
-			if(meta.onStop != null && meta.onStop.length > 0 && meta.onStop.charAt(0) == '$')
+			if(meta == null)
+				return;
+			if(meta.hasOwnProperty('onStop') && meta.onStop.length > 0 && meta.onStop.charAt(0) == '$')
 				stopFunc = meta.onStop.substr(1);
-			if(meta.onStopFuncArgs !=null)
+			if(meta.hasOwnProperty('onStopFuncArgs'))
 				stopFuncArgs = true
 		}
 		
