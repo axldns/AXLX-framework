@@ -118,7 +118,7 @@ package axl.xdef.types
 			{
 				var o:Object = a[i];
 				if(o is String && o.charAt(0) == '$')
-					a[i] = XSupport.simpleSourceFinder(xxparent.xroot, o.substr(1));
+					a[i] = XSupport.simpleSourceFinder(xxparent.xroot, String(o));
 			}
 			return a;
 		}

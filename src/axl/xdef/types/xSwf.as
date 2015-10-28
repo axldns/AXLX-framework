@@ -130,7 +130,7 @@ package axl.xdef.types
 			if(meta == null)
 				return;
 			if(meta.hasOwnProperty('onStop') && meta.onStop.length > 0 && meta.onStop.charAt(0) == '$')
-				stopFunc = meta.onStop.substr(1);
+				stopFunc = meta.onStop;
 			if(meta.hasOwnProperty('onStopFuncArgs'))
 				stopFuncArgs = true
 		}

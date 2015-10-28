@@ -8,7 +8,6 @@ package axl.xdef
 	import flash.filters.ColorMatrixFilter;
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
-	import flash.utils.setInterval;
 	
 	import axl.ui.Carusele;
 	import axl.utils.AO;
@@ -474,7 +473,11 @@ package axl.xdef
 		{
 			if(s == null)
 				return null;
-			var keys:Array = (s.charAt(0) == '$') ? s.substr(1).split('.') : s.split('.');
+			var keys:Array;
+			if(s.charAt(0) == '$')
+				keys= s.substr(1).split('.');
+			else
+				return s;
 			var target:Object = initSource;
 			try
 			{
@@ -482,7 +485,7 @@ package axl.xdef
 					target = target[keys.shift()];
 			} catch(e:*){target=null, U.log("[XSupport] SOURCE NOT FOUND",s)}
 			if(target is String && target.charAt(0) == '$')
-				target = simpleSourceFinder(initSource, String(target).substr(1));
+				target = simpleSourceFinder(initSource, String(target));
 			return target;
 		}
 		
@@ -495,7 +498,7 @@ package axl.xdef
 					target = target[keys.shift()];
 			} catch(e:*){target=null,U.log("[XSupport] SOURCE NOT FOUND",xownerArray)}
 			if(target is String && target.charAt(0) == '$')
-				target = simpleSourceFinder(initSource, String(target).substr(1));
+				target = simpleSourceFinder(initSource, String(target));
 			return target;
 		}
 		
@@ -503,19 +506,21 @@ package axl.xdef
 		public static function getDynamicArgs(v:Object,root:ixDef):Object
 		{
 			if(v is String && v.charAt(0) == '$' )
-				return simpleSourceFinder(root, v.substr(1));
+				return simpleSourceFinder(root, String(v));
 			if(v is Array)
 			{
 				var a:Array = v.concat();
 				for(var i:int = a.length; i-->0;)
 				{
 					var o:Object = a[i];
-					a[i] = (o is String && o.charAt(0) == '$') ? XSupport.simpleSourceFinder(root, o.substr(1)) : o;
+					a[i] = (o is String && o.charAt(0) == '$') ? XSupport.simpleSourceFinder(root, String(o)) : o;
 				}
 				return a;
 			}
 			else
 				return v;
 		}
+		
+		
 	}
 }

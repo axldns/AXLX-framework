@@ -1,6 +1,7 @@
 package axl.xdef.types
 {
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.utils.setTimeout;
 	
 	import axl.utils.U;
@@ -54,13 +55,29 @@ package axl.xdef.types
 			}
 		}
 		
+		public function addTo(v:Object,intoChild:String,command:String='addChild',onNotExist:Function=null,node:String='additions',forceNewElement:Boolean=false):void
+		{
+			if(intoChild.charAt(0) == "$")
+				intoChild = XSupport.simpleSourceFinder(this,intoChild) as String;
+			var c:DisplayObjectContainer = xsupport.registered(intoChild) as DisplayObjectContainer;
+			if(c == null)
+			{
+				U.log(this, "[addTo][ERROR] 'intoChild' parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+				return
+			}
+				
+			if(v is Array)
+				getAdditionsByName(v as Array, c[command],node,onNotExist,forceNewElement);
+			else
+				getAdditionByName(v as String, c[command],node,onNotExist,forceNewElement);
+		}
+		
 		public function addUnderChild(v:DisplayObject, chname:String,indexMod:int=0):void
 		{
 			var o:DisplayObject = getChildByName(chname);
 			
 			var i:int = o ? this.getChildIndex(o) : -1;
 			var j:int = contains(v) ? getChildIndex(v) : int.MAX_VALUE;
-			U.log("ADD UNDER CHILD", v, v.name, 'UNDER', chname, o, "INDEX:", i, '+ MOD', indexMod);
 			if(j < i)
 			{
 				U.log("Child", v, v.name, "already exists in this container and it is under child", o, o? o.name : null);
@@ -104,7 +121,7 @@ package axl.xdef.types
 				return U.log("requesting non existing element", v);
 			if(v.charAt(0) == '$')
 			{
-				v = XSupport.simpleSourceFinder(this,v.substr(1)) as String;
+				v = XSupport.simpleSourceFinder(this,v) as String;
 				if(v == null)
 					v='ERROR';
 			}
@@ -200,6 +217,22 @@ package axl.xdef.types
 				removeRegistered(v[i]);
 		}
 		
+		public function rmv(...args):void
+		{
+			for(var i:int = 0,j:int = args.length, v:Object; i < j; i++)
+			{	
+				v = args[i]
+				if(v is String)
+					removeRegistered(v as String);
+				else if(v is Array)
+					removeRegisteredGroup(v as Array);
+				else if(v is DisplayObject)
+					removeChild(v as DisplayObject)
+				else
+					U.log(this,"[rmv][WARNING] - Can't remove: " + v + " - is unknow type");
+			}
+		}
+		
 		public function get registry():Object { return xsupport.registry }
 		public function registered(v:String):Object { return  xsupport.registered(v) }
 
@@ -257,6 +290,79 @@ package axl.xdef.types
 			{
 				if(--all == 0 && onComplete !=null)
 					onComplete();
+			}
+		}
+		
+		
+		public function assign(left:String,leftProperty:String,operand:String,right:String,target:String=null,targetProperty:String=null):void
+		{
+			var l:Object = XSupport.simpleSourceFinder(this,left);
+			var lp:String = XSupport.simpleSourceFinder(this,leftProperty) as String;
+			var r:Object = XSupport.simpleSourceFinder(this,right);
+			var t:Object = (target != null) ?  XSupport.simpleSourceFinder(this,target) : l;
+			var tp:String = (targetProperty != null) ?  XSupport.simpleSourceFinder(this,targetProperty) as String : lp;
+			
+			if(!l || !lp || !t || !tp) // right can be null or false
+			{
+				U.log(this, "[assign] INVALID ASIGNMENT:", left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '', 'vs', l,lp,r,'|',t,tp);
+				return;
+			}
+			try {
+				switch(operand)
+				{
+					case '!': t[tp] = !r; break;
+					case '+': t[tp] = l[lp] + r; break;
+					case '-':  t[tp] = l[lp] - Number(r); break;
+					case '*':  t[tp] = l[lp] * Number(r); break;
+					case '/':  t[tp] = l[lp] / Number(r); break;
+					case '%':  t[tp] = l[lp] % Number(r); break;
+					case '>>':  t[tp] = l[lp] >> Number(r); break;
+					case '<<':  t[tp] = l[lp] << Number(r); break;
+					case '>':  t[tp] = l[lp] > r; break;
+					case '<':  t[tp] = l[lp] < r; break;
+					case '<=': t[tp] = l[lp] <= r; break;
+					case '>=':  t[tp] = l[lp] >= r; break;
+					case '==':  t[tp] = l[lp] == r; break;
+					case '===':  t[tp] = l[lp] === r; break;
+					case '&&':  t[tp] = l[lp] && r; break;
+					case '||':  t[tp] = l[lp] || r; break;
+					case '+=': l[lp] += r; break;
+					case '-=': l[lp] -= r; break;
+					case '*=': l[lp] *= r; break;
+					case '/=': l[lp] /= r; break;
+					case '=': l[lp] = r; break;
+					case 'is': t[tp] = l[lp] is r.constructor; break;
+					default:
+						U.log(this, "[assign] INVALID OPERAND:", left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '');
+						break;
+				}
+			}
+			catch(e:*)
+			{
+				U.log(this, "[assign][ERROR]:",e, '\ON:', left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '');
+			}
+		}
+		
+		public function addIfMatches(sel:String,regexp:String='.*',onTrue:Object=null,onFalse:Object=null):void
+		{
+			if(sel && sel.match(new RegExp(regexp)))
+				this.add(onTrue);
+			else
+				this.add(onFalse);
+		}
+		
+		public function executeIfMatches(sel:String,regexp:String,onTrue:String,onFalse:String):void
+		{
+			if(sel && sel.match(new RegExp(regexp)))
+				this.getAdditionByName(onTrue,gotIt,'additions',gotIt);
+			else
+				this.getAdditionByName(onFalse,gotIt,'additions',gotIt);
+			function gotIt(v:Object=null):void
+			{
+				if(v && v is xButton)
+					v.execute();
+				else
+					U.log(this, "Undefined btn node:", onTrue, 'or', onFalse);
 			}
 		}
 	}
