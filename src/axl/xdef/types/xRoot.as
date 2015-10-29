@@ -4,6 +4,7 @@ package axl.xdef.types
 	import flash.display.DisplayObjectContainer;
 	import flash.utils.setTimeout;
 	
+	import axl.utils.Ldr;
 	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
@@ -292,7 +293,7 @@ package axl.xdef.types
 					onComplete();
 			}
 		}
-		
+		public function get files():Object { return Ldr.objects }
 		
 		public function assign(left:String,leftProperty:String,operand:String,right:String,target:String=null,targetProperty:String=null):void
 		{
