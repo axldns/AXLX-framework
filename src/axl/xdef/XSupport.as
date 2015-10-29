@@ -21,6 +21,7 @@ package axl.xdef
 	import axl.xdef.types.xCarouselSelectable;
 	import axl.xdef.types.xForm;
 	import axl.xdef.types.xMasked;
+	import axl.xdef.types.xObject;
 	import axl.xdef.types.xRoot;
 	import axl.xdef.types.xScroll;
 	import axl.xdef.types.xSprite;
@@ -206,6 +207,21 @@ package axl.xdef
 			return spr;
 		}
 		
+		private function getDataFromDef(xml:XML, xroot:xRoot,dynamicSourceLoad:Boolean=true):xObject
+		{
+			var o:xObject = new xObject(xml, xroot);
+			if(dynamicSourceLoad)
+				checkSource(xml, objCallback,true);
+			else 
+				return objCallback();
+			function objCallback():xObject
+			{
+				o.data = Ldr.getAny(String(xml.@src))
+				return o;
+			}
+			return o;
+		}
+		
 		public static function drawFromDef(def:XML, drawable:Sprite=null):DisplayObject
 		{
 			if(def == null)
@@ -288,6 +304,8 @@ package axl.xdef
 				{
 					if(v is Array)
 						container.filters = v as Array;
+					else if(v is xObject)
+						U.log("[XSupport]DataObject registered", v.name);
 					else if(v is ColorTransform)
 					{
 						if(container is ixDisplay)
@@ -422,7 +440,9 @@ package axl.xdef
 						case 'img': obj = getImageFromDef(xml,false,xroot); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
 						case 'swf': obj = getSwfFromDef2(xml,xroot); break;
-						case 'colorTransform' : obj = getColorTransformFromDef(xml)
+						case 'data' : obj = getDataFromDef(xml,xroot);break;
+						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
+						
 						default : break;
 					}
 					if(obj is xSprite)
@@ -460,6 +480,7 @@ package axl.xdef
 				}
 			}
 		}
+		
 		
 		private static function proxyQueue(call:Function):void
 		{
