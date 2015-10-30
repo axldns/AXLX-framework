@@ -305,10 +305,11 @@ package axl.xdef.types
 			
 			if(!l || !lp || !t || !tp) // right can be null or false
 			{
-				U.log(this, "[assign] INVALID ASIGNMENT:", left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '', 'vs', l,lp,r,'|',t,tp);
+				U.log(this, "[assign] INVALID ASIGNMENT:", left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '', 'vs', "l:",l,"lp:",lp,"r:",r,'|',"t:",t,"tp:",tp);
 				return;
 			}
 			try {
+				//U.log(this, "[assign]", "l:",l,"lp:",lp,"r:",r,'|',"t:",t,"tp:",tp);
 				switch(operand)
 				{
 					case '!': t[tp] = !r; break;
@@ -344,26 +345,61 @@ package axl.xdef.types
 			}
 		}
 		
+		public function replace(left:String,leftProperty:String,regexp:String,replacement:String,regexpProperties:String='g',target:String=null,targetProperty:String=null,replacementIsDynamic:Boolean=true):void
+		{
+			var l:Object = XSupport.simpleSourceFinder(this,left);
+			var lp:String = XSupport.simpleSourceFinder(this,leftProperty) as String;
+			var t:Object = (target != null) ?  XSupport.simpleSourceFinder(this,target) : l;
+			var tp:String = (targetProperty != null) ?  XSupport.simpleSourceFinder(this,targetProperty) as String : lp;
+			var rp:String = replacementIsDynamic ? String(XSupport.simpleSourceFinder(this,replacement)) : replacement;
+			
+			if(!l || !lp || !t || !tp || rp==null) // right can be null or false
+			{
+				U.log(this, "[replace] INVALID ARGUMENTS:", left, leftProperty, regexp,replacement,regexpProperties,'|', target ? target : '', targetProperty ? targetProperty : '', 
+					'vs', l,lp,regexp,rp,regexpProperties,'|',t,tp);
+				return;
+			}
+			var r:RegExp = new RegExp(regexp, regexpProperties);
+			try { 
+				//U.log("[REPLACE] TARGET:", t, tp,'('+t[tp]+')', "LEFT:", l, lp, '('+l[lp]+')','REGEXP:', r, "REPLACEMENT:", rp);
+				t[tp] = l[lp].replace(r,rp) 
+			
+			}
+			catch(e:*) { U.log(this, '[replace]ERROR',e,' ON:\n',left, leftProperty, regexp,replacement,regexpProperties,'|', target ? target : '', targetProperty ? targetProperty : '', 
+				'vs', l,lp,regexp,rp,regexpProperties,'|',t,tp) }
+		}
+		
 		public function addIfMatches(sel:String,regexp:String='.*',onTrue:Object=null,onFalse:Object=null):void
 		{
 			if(sel && sel.match(new RegExp(regexp)))
-				this.add(onTrue);
+			{
+				try { add.apply(null, (onTrue is Array) ? onTrue : [onTrue]) }
+				catch(e:*) { U.log(this, "[addIfMatches]ERROR: invalid argument onTrue:", onTrue) }
+			}
 			else
-				this.add(onFalse);
+			{
+				try { add.apply(null, (onFalse is Array) ? onFalse : [onFalse]) }
+				catch(e:*) { U.log(this, "[addIfMatches]ERROR: invalid argument onFalse:", onFalse) }
+			}
 		}
 		
-		public function executeIfMatches(sel:String,regexp:String,onTrue:String,onFalse:String):void
+		public function executeIfMatches(sel:String,regexp:String,onTrue:String,onFalse:String,node:String='additions'):void
 		{
 			if(sel && sel.match(new RegExp(regexp)))
-				this.getAdditionByName(onTrue,gotIt,'additions',gotIt);
+				executeFromXML(onTrue)
 			else
-				this.getAdditionByName(onFalse,gotIt,'additions',gotIt);
-			function gotIt(v:Object=null):void
+				executeFromXML(onFalse)
+		}
+		
+		public function executeFromXML(name:String,node:String='additions'):void
+		{
+			this.getAdditionByName(name, gotIt,node, gotIt);
+			function gotIt(v:*):void
 			{
 				if(v && v is xButton)
 					v.execute();
 				else
-					U.log(this, "Undefined btn node:", onTrue, 'or', onFalse);
+					U.log("NO >>"+name+"<< btn defined in", node);
 			}
 		}
 	}
