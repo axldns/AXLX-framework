@@ -39,6 +39,7 @@ package axl.xdef
 		private var smallRegistry:Object={};
 		public var defaultFont:String;
 		public var root:xRoot;
+		private static var userTypes:Object={}
 		
 		public function get registry():Object { return smallRegistry }
 		public function registered(v:String):Object { return smallRegistry[v] }
@@ -46,7 +47,7 @@ package axl.xdef
 		public function XSupport()
 		{
 		}
-		
+		public static function registerUserType(xmlTagName:String, instantiator:Function):void { userTypes[xmlTagName] = instantiator }
 		public static function applyAttributes(def:XML, target:Object):Object
 		{
 			if(def == null)
@@ -313,8 +314,10 @@ package axl.xdef
 						else
 							container.transform.colorTransform = v as  ColorTransform;
 					}
-					else if(command == 'addChildAt')
+					else if(command == 'addChildAt' || command == 'addChild')
 					{
+						if(!(container is DisplayObjectContainer))
+							return
 						if(index < container.numChildren-1)
 							container[command](v, index);
 						else
@@ -443,7 +446,10 @@ package axl.xdef
 						case 'data' : obj = getDataFromDef(xml,xroot);break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						
-						default : break;
+						default : 
+							if(userTypes[type] is Function)
+								obj = userTypes[type](xml,xroot);
+							break;
 					}
 					if(obj is xSprite)
 					{
@@ -494,19 +500,26 @@ package axl.xdef
 		{
 			if(s == null)
 				return null;
+			//U.log('[XSupport][simpleSourceFinder]', initSource, initSource.hasOwnProperty('name') ? ('['+ initSource.name +']') : '', s);
 			var keys:Array;
 			if(s.charAt(0) == '$')
 				keys= s.substr(1).split('.');
 			else
 				return s;
 			var target:Object = initSource;
+			//U.log("KEYS", keys);
 			try
 			{
+				//U.log("KEYS.len", keys.length);
 				while(keys.length)
+				{
+					//U.log("trying:", target, '->',  keys[0]);
 					target = target[keys.shift()];
+				}
 			} catch(e:*){target=null, U.log("[XSupport] SOURCE NOT FOUND",s)}
 			if(target is String && target.charAt(0) == '$')
 				target = simpleSourceFinder(initSource, String(target));
+			//U.log("[XSupport][simpleSourceFinder] returning:", target);
 			return target;
 		}
 		
