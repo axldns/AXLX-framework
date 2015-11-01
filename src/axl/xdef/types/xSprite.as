@@ -29,12 +29,12 @@ package axl.xdef.types
 		public var distributeHorizontal:Number;
 		public var distributeVertical:Number;
 		
-		public function xSprite(definition:XML=null,xroot:xRoot=null)
+		public function xSprite(definition:XML=null,xrootObj:xRoot=null)
 		{
 			addEventListener(Event.ADDED, elementAdded);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
-			this.xroot = xroot;
+			this.xroot = xrootObj || this.xroot;
 			xdef = definition;
 			super();
 			parseDef();
@@ -72,7 +72,7 @@ package axl.xdef.types
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void { xmeta =v }
 		public function get eventAnimationComplete():Event {return eventAnimComplete }
-		public function reset():void { 
+		public function reset():void {
 			AO.killOff(this);
 			XSupport.applyAttributes(def, this);	
 		}
