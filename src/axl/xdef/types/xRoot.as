@@ -6,6 +6,7 @@ package axl.xdef.types
 	
 	import axl.utils.Ldr;
 	import axl.utils.U;
+	import axl.utils.binAgent.RootFinder;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
 
@@ -16,6 +17,7 @@ package axl.xdef.types
 		protected var xsupport:XSupport;
 		protected var CONFIG:XML;
 		public var sourcePrefixes:Array;
+		private var rootFinder:RootFinder;
 		
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
@@ -25,6 +27,10 @@ package axl.xdef.types
 				xsupport = new XSupport();
 			if(xsupport.root == null)
 				xsupport.root = this;
+			this.xroot = this;
+			
+			if(rootFinder == null)
+				rootFinder = new RootFinder(this,XSupport);
 			super(definition);
 		}
 		
@@ -34,6 +40,8 @@ package axl.xdef.types
 		{
 			// as xRoot is not called via XSupport.getReadyType
 			// it must take care of parsing definition itself
+			if(value == null || super.def != null)
+				return;
 			super.def = value;
 			xsupport.pushReadyTypes2(value, this,'addChildAt',this);
 			XSupport.applyAttributes(value, this);
@@ -117,9 +125,9 @@ package axl.xdef.types
 		 */
 		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
 		{
-			U.log('getAdditionByName', v);
+			U.log('[xRoot][getAdditionByName]', v);
 			if(v == null)
-				return U.log("requesting non existing element", v);
+				return U.log("[xRoot][getAdditionByName] requesting non existing element", v);
 			if(v.charAt(0) == '$')
 			{
 				v = XSupport.simpleSourceFinder(this,v) as String;
@@ -128,7 +136,7 @@ package axl.xdef.types
 			}
 			if((elements[v] != null) && !forceNewElement)
 			{
-				U.log(v, 'already exists in xRoot.elements cache');
+				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.elements cache');
 				callback(elements[v]);
 				return;
 			}
@@ -136,7 +144,7 @@ package axl.xdef.types
 			var xml:XML = getAdditionDefByName(v,node);
 			if(xml== null)
 			{
-				U.log('---@---@---@---@---@ [WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE @---@---@---@---@---');
+				U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
 				if(onError == null) 
 					throw new Error(v + ' does not exist in additions node');
 				else
@@ -230,7 +238,7 @@ package axl.xdef.types
 				else if(v is DisplayObject)
 					removeChild(v as DisplayObject)
 				else
-					U.log(this,"[rmv][WARNING] - Can't remove: " + v + " - is unknow type");
+					U.log("[xRoot][rmv][WARNING] - Can't remove: " + v + " - is unknow type");
 			}
 		}
 		
@@ -241,7 +249,7 @@ package axl.xdef.types
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
 		{
 			c = c || this.getChildByName(objName) as ixDef;
-			U.log("singleAnimByMetaName [", screenName, '] - ', objName, c);
+			U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
 				XSupport.animByNameExtra(c, screenName, onComplete);
 			else
@@ -343,6 +351,20 @@ package axl.xdef.types
 			{
 				U.log(this, "[assign][ERROR]:",e, '\ON:', left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '');
 			}
+		}
+		
+		public function binCommand(v:Object):*
+		{
+			if(rootFinder != null)
+			{
+				if(!(v is Array))
+					return rootFinder.parseInput(v as String);
+				for(var i:int =0,j:int=v.length;i<j;i++)
+					U.log("binCommand", rootFinder.parseInput(v[i]), 'result of:', v[i]);
+			}
+			else
+				U.log("Parser not available");
+			return null;
 		}
 		
 		public function replace(left:String,leftProperty:String,regexp:String,replacement:String,regexpProperties:String='g',target:String=null,targetProperty:String=null,replacementIsDynamic:Boolean=true):void
