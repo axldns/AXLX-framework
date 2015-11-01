@@ -5,7 +5,6 @@ package axl.xdef
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.filters.BitmapFilter;
-	import flash.filters.ColorMatrixFilter;
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
 	
@@ -31,15 +30,14 @@ package axl.xdef
 	public class XSupport
 	{
 		private static var ver:Number = 0.95;
-		public static function get version():Number { return ver}
-		
 		private static var additionQueue:Vector.<Function> = new Vector.<Function>();
-		private static var afterQueueVec:Vector.<Function> = new Vector.<Function>();
-		
+		private static var userTypes:Object={};
+		public static function get version():Number { return ver}
+			
 		private var smallRegistry:Object={};
 		public var defaultFont:String;
 		public var root:xRoot;
-		private static var userTypes:Object={}
+		
 		
 		public function get registry():Object { return smallRegistry }
 		public function registered(v:String):Object { return smallRegistry[v] }
@@ -66,15 +64,18 @@ package axl.xdef
 				while(keyArray.length)
 					deepTarget = deepTarget[keyArray.shift()];
 				val = attribs[i].valueOf();
-				val = valueReadyTypeCoversion(val);
+				if(target.hasOwnProperty('xroot') && val.charAt(0) == '$' )
+				{
+					val = target.xroot.binCommand(val.substr(1));
+					U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', val, '<==', attribs[i].valueOf());
+				}
+				else
+					val = valueReadyTypeCoversion(val);
 				if(key in deepTarget)
 					deepTarget[key] = val;
 			}
-			if(def.hasOwnProperty('@meta') && target.hasOwnProperty('meta'))
-			{
-				try{target.meta = JSON.parse(String(target.meta))}
-				catch(e:Error) {throw new Error("Invalid json for element " + target + " of definition: " + def.toXMLString()  + '\nDETAILS:\n' + e + '\n '+ e.message); }
-			}
+			if(target.hasOwnProperty('meta') && target.meta is String)
+				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
 			return target;
 		}
 		
@@ -141,13 +142,10 @@ package axl.xdef
 		
 		public static function valueReadyTypeCoversion(val:String):*
 		{
-			switch(val)
-			{
-				case 'null': return null;
-				case 'true': return true;
-				case 'false': return false;
-			}
-			return val;
+			var ret:*;
+			try{ret = JSON.parse(String(val))}
+			catch(e:Error) {ret=val}
+			return ret;
 		}
 		
 		public static function getTextFieldFromDef(def:XML):xText
@@ -207,7 +205,20 @@ package axl.xdef
 			}
 			return spr;
 		}
-		
+		/**
+		 * XML tag name <b><code>data</code></b> expects no children.<br>
+		 * By attribute "src" allows to load any type of data
+		 *  <pre>
+		 * &lt;graphics&gt;
+		 * 	&lt;command color='0x9bde43' alpha='0.7'&gt;beginFill&lt;/command&gt;
+		 * 	&lt;command x='0' y='0' width='148' height='44'&gt;drawRect&lt;/command&gt;
+		 * &lt;/graphics&gt;
+		 * </pre>
+		 * is equivalent of
+		 * <pre>
+		 * drawable.graphics.beginFill(0x9bde43,0.7);
+		 * drawable.graphics.drawRect(0,0,148,44);
+		 * </pre> */
 		private function getDataFromDef(xml:XML, xroot:xRoot,dynamicSourceLoad:Boolean=true):xObject
 		{
 			var o:xObject = new xObject(xml, xroot);
@@ -222,7 +233,22 @@ package axl.xdef
 			}
 			return o;
 		}
-		
+		/**
+		 * XML tag name <b><code>graphics</code></b> expects <code>command</code> children only.<br>
+		 * Draws on canvas of drawable DisplayObject (if flash.display.graphics Class is in its scope).
+		 * Each <code>command</code> node represents one instruction to flash.display.Graphics class instance
+		 * where node's value is the name of the class function and node's attrubutes are arguments for that function Eg.
+		 *  <pre>
+		 * &lt;graphics&gt;
+		 * 	&lt;command color='0x9bde43' alpha='0.7'&gt;beginFill&lt;/command&gt;
+		 * 	&lt;command x='0' y='0' width='148' height='44'&gt;drawRect&lt;/command&gt;
+		 * &lt;/graphics&gt;
+		 * </pre>
+		 * is equivalent of
+		 * <pre>
+		 * drawable.graphics.beginFill(0x9bde43,0.7);
+		 * drawable.graphics.drawRect(0,0,148,44);
+		 * </pre> */
 		public static function drawFromDef(def:XML, drawable:Sprite=null):DisplayObject
 		{
 			if(def == null)
@@ -251,10 +277,21 @@ package axl.xdef
 				}
 				drawable.graphics[directive].apply(null, vals);
 			}
-			applyAttributes(def, drawable);
+			//applyAttributes(def, drawable);
 			return drawable;
 		}
 		
+		/**
+		 * XML tag name <b><code>filters</code></b> expects only <code>filter</code> children.<br>
+		 * Returns array of BitmapFilters from XML definiton. 
+		 * Name of the BitmapFilter class descendand shoould be specified as "type" attribute Eg.
+		 *  <pre>
+		 * &lt;filters&gt;
+		 *	&lt;filter type="DropShadowFilter" alpha="0.4" angle="45" /&gt;
+		 *	&lt;filter type="ColorMatrixFilter" matrix="[0.33,0.33,0.33,0,0,0.33,0.33,0.33,0,0,0.33,0.33,0.33,0,0,0,0,0,1,0]" /&gt;
+		 * &lt;/filters&gt;
+		 * </pre>
+		 */
 		public static function filtersFromDef(xml:XML):Array
 		{
 			var fl:XMLList = xml.filter;
@@ -265,6 +302,11 @@ package axl.xdef
 			return ar.length > 0 ? ar : null;
 		}
 		
+		/**
+		 * XML tag name <b><code>filter</code></b><br>
+		 * Returns BitmapFilter object from XML definiton.
+		 * Name of the BitmapFilter class descendand shoould be specified as "type" attribute Eg.
+		 *  <pre>&lt;filter type="DropShadowFilter" alpha="0.4" angle="45"/&gt;</pre> */
 		public static function filterFromDef(xml:XML):BitmapFilter
 		{
 			var type:String = 'flash.filters.'+String(xml.@type);
@@ -274,13 +316,16 @@ package axl.xdef
 				throw new Error("Invalid filter class in definition: " + xml.toXMLString());
 			var filter:BitmapFilter = new Fclass();
 			
-			if(filter is ColorMatrixFilter && xml.hasOwnProperty('@matrix'))
-				ColorMatrixFilter(filter).matrix = JSON.parse(String(xml.@matrix)) as Array;
+			if(xml.hasOwnProperty('@matrix'))
+				filter['matrix'] = JSON.parse(String(xml.@matrix)) as Array;
 			else
 				applyAttributes(xml, filter);
 			return filter;
 		}
 		
+		/**
+		 * Returns ColorTransform object from XML definiton Eg.
+		 *  <pre>&lt;colorTransform greenOffset="-50" alphaMultiplier="0.4"/&gt;</pre> */
 		public static function getColorTransformFromDef(xml:XML):ColorTransform
 		{
 			var ct:ColorTransform = new ColorTransform();
@@ -288,8 +333,17 @@ package axl.xdef
 			return ct;
 		}
 		
-		
-		public function pushReadyTypes2(def:XML, container:DisplayObjectContainer, command:String='addChildAt',xroot:xRoot=null):void
+		/** 
+		 * Processes children of the XML parent node;
+		 * <ul><li>Creates DisplayObjects and DisplayObjectContainers and adds it to the <b>container</b>'s display list</li>
+		 * <li>Applies filters and ColorTransforms on <b>container</b></li>
+		 * </ul>
+		 * @param def - XML node which children are to be parsed
+		 * @param container - DisplayObject to process (DisplayObjectContainer for adding children)
+		 * @command - for DisplayObjectContainer its typically 'addChild', for axl.ui.Carousel it's 'addToRail'
+		 * @xroot - root of all XML based objects (stage equivalent)
+		 * */
+		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChildAt',xroot:xRoot=null):void
 		{
 			if(def == null)
 				return;
@@ -298,7 +352,7 @@ package axl.xdef
 			var i:int = -1;
 			var numC:int = celements.children().length();
 			for each(var xml:XML in celements)
-			getReadyType2(xml, readyTypeCallback,true, ++i,xroot);
+				getReadyType2(xml, readyTypeCallback,true, ++i,xroot);
 			function readyTypeCallback(v:Object, index:int):void
 			{
 				if(v != null)
@@ -318,7 +372,7 @@ package axl.xdef
 					{
 						if(!(container is DisplayObjectContainer))
 							return
-						if(index < container.numChildren-1)
+						if(command == 'addChildAt' && index < container['numChildren']-1)
 							container[command](v, index);
 						else
 							container['addChild'](v);
@@ -330,7 +384,12 @@ package axl.xdef
 				}
 			}
 		}
-		
+		/** Loads resource specified as "src" attribute of xml object. Executes callback with xml as attribute.
+		 * <ul><li>If xml does not have "src" attribute - callback is executed right away</li>
+		 * <li>If resource is already loaded (available <code>Ldr</code> class pool - callback is executed right away</li>
+		 * <li>If xml has "src" attribute but <code>dynamicLoad=false</code> - calback is executed right away</li>
+		 * <li>If xml has "src" attribute and <code>dynamicLoad=true</code> - callback is executed only when resource is loaded or failed loading.</li>
+		 * </ul> */
 		private static function checkSource(xml:XML, callBack:Function, dynamicLoad:Boolean=true,sourcePrefixes:Object=null):void
 		{
 			if(xml.hasOwnProperty('@src'))
@@ -373,7 +432,6 @@ package axl.xdef
 		 * @param callBack2argument - optional second argument for callback. It is in use to <code>pushReadyTypes</code> children order.
 		 * @see webFlow.MainCallback#getAdditionByName()
 		 * */
-		
 		public function getReadyType2(xml:XML, callBack:Function, dynamicLoad:Boolean=true,callBack2argument:Object=null,xroot:xRoot=null):void
 		{
 			if(xml == null)
@@ -389,71 +447,37 @@ package axl.xdef
 					readyTypeCallback();
 				function readyTypeCallback():void
 				{
-					var bmp:Bitmap;
+					var bmp:Bitmap = xml.hasOwnProperty('@src') ? Ldr.getBitmapCopy(String(xml.@src)) : null;
 					switch(type)
 					{
-						case 'div': obj = new xSprite(xml,xroot);
-							if(xml.hasOwnProperty('@src'))
-							{
-								bmp = Ldr.getBitmapCopy(String(xml.@src));
-								if(bmp != null)
-									obj.addChildAt(bmp, 0);
-							}
-							break;
-						case 'form': obj = new xForm(xml,xroot);
-							if(xml.hasOwnProperty('@src'))
-							{
-								bmp = Ldr.getBitmapCopy(String(xml.@src));
-								if(bmp != null)
-									obj.addChildAt(bmp, 0);
-							}
-							break;
-						/*case 'car' : obj = new xCarouselExt(xml,xroot);
-							if(xml.hasOwnProperty('@src'))
-								obj.addChildAt(Ldr.getBitmapCopy(String(xml.@src)), 0);*/
-							break;
-						case 'txt': obj =  new xText(xml,xroot,defaultFont);	break;
+						case 'div': obj = new xSprite(xml,xroot); break;
+						case 'form': obj = new xForm(xml,xroot); break;
+						case 'txt': obj =  new xText(xml,xroot,defaultFont); break;
 						case 'scrollBar': obj = new xScroll(xml); break;
-						case 'msk': obj = new xMasked(xml,xroot);
-							if(xml.hasOwnProperty('@src'))
-							{
-								bmp = Ldr.getBitmapCopy(String(xml.@src));
-								if(bmp != null)
-									obj.addChildAt(bmp, 0);
-							}
-							break;
-						case 'carousel' : obj = new xCarousel(xml,xroot);
-							if(xml.hasOwnProperty('@src'))
-							{
-								bmp = Ldr.getBitmapCopy(String(xml.@src));
-								if(bmp != null)
-									obj.addChildAt(bmp, 0);
-							}
-							break;
-						case 'carouselSelectable' : obj = new xCarouselSelectable(xml,xroot);
-							if(xml.hasOwnProperty('@src'))
-							{
-								bmp = Ldr.getBitmapCopy(String(xml.@src));
-								if(bmp != null)
-									obj.addChildAt(bmp, 0);
-							}
-							break;
+						case 'msk': obj = new xMasked(xml,xroot); break;
+						case 'carousel' : obj = new xCarousel(xml,xroot); break;
+						case 'carouselSelectable' : obj = new xCarouselSelectable(xml,xroot);break;
 						case 'filters': obj = filtersFromDef(xml); break;
-						//--- loadable
 						case 'img': obj = getImageFromDef(xml,false,xroot); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
 						case 'swf': obj = getSwfFromDef2(xml,xroot); break;
 						case 'data' : obj = getDataFromDef(xml,xroot);break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
-						
-						default : 
+						default: 
 							if(userTypes[type] is Function)
 								obj = userTypes[type](xml,xroot);
 							break;
 					}
+					if(obj is DisplayObjectContainer &&  xml.hasOwnProperty('@src'))
+					{
+						var n:String = String(xml.@src);
+						var b:Object = Ldr.getAny(n); 
+						if(b is Bitmap)
+							obj.addChildAt(Ldr.getBitmapCopy(n),0);
+					}
 					if(obj is xSprite)
 					{
-						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChildAt',xroot);
+						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 						applyAttributes(xml, obj);
 					}
 					else if(obj is Carusele)
@@ -478,16 +502,12 @@ package axl.xdef
 					additionQueue.shift();
 					if(additionQueue.length > 0)
 						additionQueue[0]();
-					else
-					{
-						while(afterQueueVec.length > 0)
-							afterQueueVec.shift()();
-					}
 				}
 			}
 		}
 		
-		
+		/** Private function to support objects instantiation in order. Hold's delegates 
+		 * in <code>additionQueue</code> */
 		private static function proxyQueue(call:Function):void
 		{
 			additionQueue.push(call);
@@ -495,7 +515,19 @@ package axl.xdef
 				call();
 		}
 		
-		
+		/** Resolves address/reference string [starting with $ (dolar symbol)] in order to return object. AS3 hierarchy.
+		 * @param initSource - first element of the chain from which inner properties are being looked for. Typically your "xroot".
+		 * @param s - dot-style address - refference to your object. E.g.:
+		 * <br><code> $stage.align.length </code> would return string length of your
+		 * stage align mode. <br>Array's and Vector's elements can be accesed by wraping element index with dots. 
+		 * <br> E.g. <code>$stage.stageVideos.0.viewPort</code> would return viewPort Rectangle of first stageVideo element if available.
+		 * @return <ul><li><code>null</code> if init string is null</li>
+		 * <li>Your <code>s:String</code> param if it doesn't start with "$" symbol</li>
+		 * <li><code>null</code> and logs SOURCE NOT FOUND if address can not be resolved</li>
+		 * <li>referenced object if address is resolved. If referenced object is also a $ reference string - function processes recursively
+		 * and returns object from last recursion.
+		 * </ul>
+		 *  */
 		public static function simpleSourceFinder(initSource:Object, s:String):Object
 		{
 			if(s == null)
@@ -513,7 +545,7 @@ package axl.xdef
 				//U.log("KEYS.len", keys.length);
 				while(keys.length)
 				{
-					//U.log("trying:", target, '->',  keys[0]);
+					U.log("trying:", target, '->',  keys[0]);
 					target = target[keys.shift()];
 				}
 			} catch(e:*){target=null, U.log("[XSupport] SOURCE NOT FOUND",s)}
@@ -523,21 +555,35 @@ package axl.xdef
 			return target;
 		}
 		
+		/** Resolves  reference to object usign ordered address chunks in an array.
+		 *  For optimizaiton purposes you may want to keep your address paths already split in array.
+		 * @see #simpleSourceFinder() */
 		public static function simpleSourceFinderByArray(initSource:Object, xownerArray:Array):Object
 		{
 			var target:Object = initSource;
 			var keys:Array = xownerArray.concat();
 			try{
 				while(keys.length)
+				{
+					//U.log("trying:", target, '->',  keys[0]);
 					target = target[keys.shift()];
+				}
 			} catch(e:*){target=null,U.log("[XSupport] SOURCE NOT FOUND",xownerArray)}
 			if(target is String && target.charAt(0) == '$')
 				target = simpleSourceFinder(initSource, String(target));
 			return target;
 		}
 		
-		/** Resolves $string to find dynamic args. If it's an array - creates a copy of that array! !*/
-		public static function getDynamicArgs(v:Object,root:ixDef):Object
+		/**  Resolves one ore more address/reference strings [starting with $ (dolar symbol)] in order to return object. AS3 hierarchy.
+		 * @param v - string or array
+		 * @param root - initial resource - first element of chain to look from for deeper references.
+		 * @return <ul>
+		 * <li><code>simpleSourceFinder</code> result if v is String</li>
+		 * <li><code>Array</code> of resolved elements accodrding to <code>simpleSourceFinder</code> rules. 
+		 * (non-reference array elements remain untouched, reference strings are resolved)</li>
+		 * <li>your <code>v</code> parameter if it's neither string nor array</li></ul>
+		 * @see #simpleSourceFinder() */
+		public static function getDynamicArgs(v:Object,root:Object):Object
 		{
 			if(v is String && v.charAt(0) == '$' )
 				return simpleSourceFinder(root, String(v));
@@ -554,7 +600,5 @@ package axl.xdef
 			else
 				return v;
 		}
-		
-		
 	}
 }
