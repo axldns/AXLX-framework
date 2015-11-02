@@ -22,9 +22,9 @@ package axl.xdef.types
 		private var xfilters:Array;
 		private var intervalID:uint;
 		
-		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xroot:xRoot=null)
+		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null)
 		{
-			this.xroot = xroot;
+			this.xroot = xrootObj || xroot;
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);

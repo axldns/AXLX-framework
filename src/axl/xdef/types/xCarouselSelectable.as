@@ -3,7 +3,6 @@ package axl.xdef.types
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
-	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
@@ -47,7 +46,6 @@ package axl.xdef.types
 				railElementsContainer.addEventListener(MouseEvent.MOUSE_OVER, mouseOverCarusele);
 				railElementsContainer.addEventListener(MouseEvent.MOUSE_OUT, mouseOutCarusele);
 			}
-			
 		}
 		
 		protected function mouseClickCarusele(e:MouseEvent):void

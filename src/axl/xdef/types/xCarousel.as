@@ -15,10 +15,10 @@ package axl.xdef.types
 		private var xdef:XML;
 		private var xmeta:Object = {}
 		private var xxroot:xRoot;
-		public function xCarousel(definition:XML,xroot:xRoot=null)
+		public function xCarousel(definition:XML,xrootObj:xRoot=null)
 		{
 			xdef = definition;
-			this.xroot = xroot;
+			this.xroot = xrootObj || xroot;
 			super();
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			parseDef();

@@ -9,6 +9,7 @@ package axl.xdef.types
 	import flash.utils.clearInterval;
 	
 	import axl.utils.AO;
+	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
@@ -29,10 +30,10 @@ package axl.xdef.types
 		private var defaultFont:String;
 	
 		
-		public function xText(definition:XML=null,xroot:xRoot=null,xdefaultFont:String=null)
+		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
 		{
 			xdef = definition;
-			this.xroot = xroot;
+			this.xroot = xrootObj || this.xroot;
 			defaultFont = xdefaultFont;
 			tff = new TextFormat();
 			super();
@@ -150,6 +151,7 @@ package axl.xdef.types
 		private function replaceTextFieldText():void
 		{
 			var a:Array = meta.replace as Array;
+			var s:String = this.htmlText;
 			if(a != null)
 			{
 				for(var i:int = 0; i < a.length;i++)
@@ -165,8 +167,9 @@ package axl.xdef.types
 						var sourceRepPattern:RegExp = new RegExp(rep.sourceRepPattern, rep.sourceRepOptions);
 						source = source.replace(sourceRepPattern, rep.sourceReplacement);
 					}
-					super.htmlText = super.htmlText.replace(pattern, String(source));
+					s= s.replace(pattern, String(source));
 				}
+				super.htmlText = s;
 			}
 		}
 		

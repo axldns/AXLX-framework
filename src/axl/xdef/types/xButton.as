@@ -64,7 +64,7 @@ package axl.xdef.types
 		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
-			super(definition);
+			super(definition,xroot);
 			enabled = isEnabled;
 		}
 		
