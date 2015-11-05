@@ -75,23 +75,33 @@ package axl.xdef.types
 		
 		private function addListeners():void {
 			ctrl.addEventListener(Event.CHANGE, maskedMovement);
-				this.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent) }
+			this.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent) }
 		
 		protected function wheelEvent(e:MouseEvent):void {
+			U.log(this, this.name, e,  wheelScrollAllowed);
 			if(!wheelScrollAllowed) return;
 			ctrl.movementVer(e.delta * deltaMultiply);
 			ctrl.dispatchEvent(eventChange);
 		}
 		
-		protected function scrollBarMovement(e:Event):void
+		protected function scrollBarMovement(e:Event=null):void
 		{
 			ctrl.percentageVertical = 1 - scrollBar.controller.percentageVertical;
 		}
 		
-		protected function maskedMovement(e:Event):void
+		protected function maskedMovement(e:Event=null):void
 		{
 			if(scrollBar != null)
 				scrollBar.controller.percentageVertical = 1 - ctrl.percentageVertical;
+		}
+		
+		public function refreshToScrollBar():void
+		{
+			scrollBarMovement();
+		}
+		public function refreshToContent():void
+		{
+			maskedMovement()
 		}
 		
 		override public function addChildAt(child:DisplayObject, index:int):DisplayObject
