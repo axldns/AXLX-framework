@@ -14,6 +14,7 @@ package axl.xdef.types
 		public var stopOnEnd:Boolean = false;
 		public var startedFromFrame:int = 0;
 		public var stoppedFromFrame:int = 0;
+		public var stopOnFrame:int = -1;
 		public var reverse:Boolean;
 		public var stopOnEndAfterXcycles:int;
 		public var yoyo:Boolean;
@@ -81,7 +82,7 @@ package axl.xdef.types
 			{
 				n = mc.currentFrame-1;
 				mc.gotoAndStop(n);
-				if(n == 0)
+				if(n == 0 || mc.currentFrame == stopOnFrame)
 				{
 					if(stopOnEnd)
 						stop();
@@ -109,7 +110,7 @@ package axl.xdef.types
 			}
 			else
 			{
-				if(mc.currentFrame == mc.totalFrames)
+				if(mc.currentFrame == mc.totalFrames || mc.currentFrame == stopOnFrame)
 				{
 					if(stopOnEnd)
 						stop();
