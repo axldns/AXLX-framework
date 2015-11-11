@@ -8,6 +8,7 @@ package axl.xdef.types
 	import flash.utils.setInterval;
 	
 	import axl.utils.AO;
+	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
@@ -21,6 +22,10 @@ package axl.xdef.types
 		private var xtransDef:ColorTransform;
 		private var xfilters:Array;
 		private var intervalID:uint;
+		public var resetOnAddedToStage:Boolean = true;
+		public var reparseMetaEverytime:Boolean=false;
+		public var reparsDefinitionEverytime:Boolean=false;
+		private var metaAlreadySet:Boolean;
 		
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null)
 		{
@@ -28,6 +33,7 @@ package axl.xdef.types
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);
+			
 		}
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -40,24 +46,43 @@ package axl.xdef.types
 		
 		protected function addedToStageHandler(e:Event):void
 		{
+			if(resetOnAddedToStage)
+				this.reset();
 			if(meta.addedToStage != null)
 			{
-				this.reset();
 				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
 			}
 		}
 	
 		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void { xmeta =v }
+		public function set meta(v:Object):void { 
+			if(metaAlreadySet && !reparseMetaEverytime)
+				return;
+			if(v is String)
+				return
+			xmeta =v;
+			metaAlreadySet = true;
+		}
+		
 		
 		public function get def():XML { return xdef }
 		public function set def(value:XML):void { 
+			if(value == null)
+				return;
+			else if(xdef != null && xdef is XML && !reparsDefinitionEverytime)
+				return;
 			xdef = value;
 			parseDef();
 		}
-		public function reset():void { parseDef()}
+		public function reset():void { 
+			AO.killOff(this);
+			parseDef()
+		}
 		
-		protected function parseDef():void { XSupport.applyAttributes(def, this)}
+		protected function parseDef():void 
+		{ 
+			XSupport.applyAttributes(def, this);
+		}
 		
 		public function get xtransform():ColorTransform { return xtrans }
 		public function set xtransform(v:ColorTransform):void { xtrans =v; this.transform.colorTransform = v;

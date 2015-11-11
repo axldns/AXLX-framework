@@ -28,7 +28,11 @@ package axl.xdef.types
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		private var intervalID:uint;
 		private var defaultFont:String;
-	
+		
+		public var resetOnAddedToStage:Boolean = true;
+		public var reparseMetaEverytime:Boolean=false;
+		public var reparsDefinitionEverytime:Boolean=false;
+		private var metaAlreadySet:Boolean;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
 		{
@@ -63,9 +67,10 @@ package axl.xdef.types
 		
 		protected function addedToStageHandler(e:Event):void
 		{
+			if(resetOnAddedToStage)
+				this.reset();
 			if(meta.addedToStage != null)
 			{
-				this.reset();
 				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
 			}
 		}
@@ -77,7 +82,11 @@ package axl.xdef.types
 		}
 		
 		public function get def():XML { return xdef }
-		public function set def(value:XML):void { 
+		public function set def(value:XML):void {
+			if(value == null)
+				return;
+			else if(xdef != null && xdef is XML && !reparsDefinitionEverytime)
+				return;
 			xdef = value;
 			parseDef();
 		}
@@ -103,7 +112,11 @@ package axl.xdef.types
 				this.height = textHeight + 5;
 		}
 		
-		public function reset():void { parseDef() }
+		public function reset():void { 
+			AO.killOff(this);
+			parseDef()
+		}
+		
 		public function get meta():Object { return xmeta }
 		
 		public function get xtransform():ColorTransform { return xtrans }
@@ -133,9 +146,12 @@ package axl.xdef.types
 		//-- internal
 		public function set meta(v:Object):void
 		{
-			xmeta =v;
+			if(metaAlreadySet && !reparseMetaEverytime)
+				return;
 			if(v is String)
 				return
+			xmeta =v;
+			metaAlreadySet = true;
 			if(meta.hasOwnProperty('js'))
 				trigerExt = meta.js;
 			if(meta.hasOwnProperty('action'))

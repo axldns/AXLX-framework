@@ -66,6 +66,7 @@ package axl.xdef
 				val = attribs[i].valueOf();
 				if(target.hasOwnProperty('xroot') && val.charAt(0) == '$' )
 				{
+					U.log("target.xroot", target.xroot, target.hasOwnProperty('name') ? target.name : null, target);
 					val = target.xroot.binCommand(val.substr(1));
 					U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', val, '<==', attribs[i].valueOf());
 				}
@@ -545,7 +546,7 @@ package axl.xdef
 				//U.log("KEYS.len", keys.length);
 				while(keys.length)
 				{
-					U.log("trying:", target, '->',  keys[0]);
+					//U.log("trying:", target, '->',  keys[0]);
 					target = target[keys.shift()];
 				}
 			} catch(e:*){target=null, U.log("[XSupport] SOURCE NOT FOUND",s)}

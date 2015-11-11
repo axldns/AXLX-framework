@@ -28,6 +28,10 @@ package axl.xdef.types
 		private var intervalID:uint;
 		public var distributeHorizontal:Number;
 		public var distributeVertical:Number;
+		private var metaAlreadySet:Boolean;
+		public var reparseMetaEverytime:Boolean;
+		public var reparsDefinitionEverytime:Boolean;
+		public var resetOnAddedToStage:Boolean=true;
 		
 		public function xSprite(definition:XML=null,xrootObj:xRoot=null)
 		{
@@ -51,9 +55,10 @@ package axl.xdef.types
 		
 		protected function addedToStageHandler(e:Event):void
 		{
+			if(resetOnAddedToStage)
+				this.reset();
 			if(meta.addedToStage != null)
 			{
-				this.reset();
 				intervalID = XSupport.animByNameExtra(this, 'addedToStage', animComplete);
 			}
 		}
@@ -68,16 +73,26 @@ package axl.xdef.types
 				onElementAdded(e);
 		}
 		
-		public function get def():XML { return xdef }
+		
 		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void { xmeta =v }
+		public function set meta(v:Object):void 
+		{
+			if((v is String) || (metaAlreadySet && !reparseMetaEverytime))
+				return;
+			xmeta =v;
+			metaAlreadySet = true;
+		
+		}
 		public function get eventAnimationComplete():Event {return eventAnimComplete }
 		public function reset():void {
 			AO.killOff(this);
 			XSupport.applyAttributes(def, this);	
 		}
-
-		public function set def(value:XML):void { 
+		public function get def():XML { return xdef }
+		public function set def(value:XML):void 
+		{ 
+			if((value == null) || (xdef != null && xdef is XML && !reparsDefinitionEverytime))
+				return;
 			xdef = value;
 			parseDef();
 		}
@@ -141,10 +156,6 @@ package axl.xdef.types
 			if(xdef==null)
 				return;
 			XSupport.drawFromDef(def.graphics[0], this);
-			//moved to xsupport
-		/*	XSupport.pushReadyTypes(def, this);
-			XSupport.applyAttributes(def, this);*/
-			//xtransform = this.transform.colorTransform;
 		}
 		
 		public function get xtransform():ColorTransform { return xtrans }

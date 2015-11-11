@@ -4,6 +4,7 @@ package axl.xdef.types
 	
 	import axl.ui.Carusele;
 	import axl.utils.AO;
+	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
 	
@@ -15,6 +16,12 @@ package axl.xdef.types
 		private var xdef:XML;
 		private var xmeta:Object = {}
 		private var xxroot:xRoot;
+		
+		public var resetOnAddedToStage:Boolean = true;
+		public var reparseMetaEverytime:Boolean=false;
+		public var reparsDefinitionEverytime:Boolean=false;
+		private var metaAlreadySet:Boolean;
+		
 		public function xCarousel(definition:XML,xrootObj:xRoot=null)
 		{
 			xdef = definition;
@@ -27,18 +34,23 @@ package axl.xdef.types
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		protected function addedToStageHandler(e:Event):void
 		{
+			if(resetOnAddedToStage)
+				this.reset();
 			if(meta.addedToStage == null)
 				return;
-			this.reset();
 			XSupport.animByNameExtra(this, 'addedToStage');
 		}
 		
 		public function get def():XML { return xdef }
 		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void { xmeta =v 
-			if(!(meta is String))
-				if(meta.hasOwnProperty('addedToRail'))
-					addedToRail = new xAction(meta.addedToRail,xroot,this);
+		public function set meta(v:Object):void {
+			if(metaAlreadySet && !reparseMetaEverytime)
+				return;
+			if(v is String)
+				return;
+			xmeta =v;
+			metaAlreadySet = true;
+			
 		}
 		public function reset():void { 
 			AO.killOff(this);

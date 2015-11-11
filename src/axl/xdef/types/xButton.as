@@ -112,7 +112,6 @@ package axl.xdef.types
 			}
 			if(meta.hasOwnProperty('post'))
 			{
-				U.log(this, this.name, "POST");
 				if(meta.post.hasOwnProperty('dynamicArgs'))
 				{
 					postSendArgs // will be asigned right before execution
@@ -175,7 +174,6 @@ package axl.xdef.types
 				ExternalInterface.call.apply(null, trigerExt);
 			if(this.postObject != null)
 			{
-				U.log(this, this.name, 'post action');
 				if(dynamicArgs)
 					this.postObject.sendData.apply(null, XSupport.getDynamicArgs(meta.post.sendArgs, this.xroot) as Array);
 				else
