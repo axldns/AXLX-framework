@@ -1,6 +1,7 @@
 package axl.xdef.types
 {
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	
@@ -51,7 +52,7 @@ package axl.xdef.types
 				mc.stop();
 		}
 		
-		public function addSwf(main:DisplayObject):void
+		public function addSwf(main:DisplayObject,parent:DisplayObject=null):*
 		{
 			if(mc != null)
 			{
@@ -69,10 +70,17 @@ package axl.xdef.types
 				
 				mc.addEventListener(Event.ADDED_TO_STAGE, ats);
 				mc.addEventListener(Event.REMOVED_FROM_STAGE, rfs);
-				this.addChild(movieClip);
+				this.addChild(parent || main);
+			}
+			else if(main is DisplayObjectContainer)
+			{
+				for(var i:int = 0, j:int = main['numChildren']; i < j; i++)
+					if(main['getChildAt'](i) is MovieClip)
+						addSwf(main['getChildAt'](i), main);
 			}
 			else
 				U.log("loaded swf is not MovieClip");
+			return mc;
 		}
 		
 		protected function mcEnterFrame(e:Event):void
