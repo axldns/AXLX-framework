@@ -140,6 +140,12 @@ package axl.xdef.types
 				callback(elements[v]);
 				return;
 			}
+			else if((registry[v] != null) && !forceNewElement)
+			{
+				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
+				callback(registry[v]);
+				return;
+			}
 			
 			var xml:XML = getAdditionDefByName(v,node);
 			if(xml== null)
@@ -216,6 +222,7 @@ package axl.xdef.types
 		public function removeRegistered(v:String):void
 		{
 			var dobj:DisplayObject = xsupport.registered(v) as DisplayObject;
+			U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
 			if(dobj != null && dobj.parent != null)
 				dobj.parent.removeChild(dobj);
 		}
