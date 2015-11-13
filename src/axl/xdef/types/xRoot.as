@@ -71,14 +71,18 @@ package axl.xdef.types
 			var c:DisplayObjectContainer = xsupport.registered(intoChild) as DisplayObjectContainer;
 			if(c == null)
 			{
-				U.log(this, "[addTo][ERROR] 'intoChild' parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+				U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
 				return
 			}
 				
 			if(v is Array)
-				getAdditionsByName(v as Array, c[command],node,onNotExist,forceNewElement);
+				getAdditionsByName(v as Array, gotIt,node,onNotExist,forceNewElement);
 			else
-				getAdditionByName(v as String, c[command],node,onNotExist,forceNewElement);
+				getAdditionByName(v as String, gotIt,node,onNotExist,forceNewElement);
+			function gotIt(o:Object):void {
+				U.log(this, o, o.name, '[addTo]', c, c.name, 'via', command);
+				c[command](o);
+			}
 		}
 		
 		public function addUnderChild(v:DisplayObject, chname:String,indexMod:int=0):void
@@ -134,13 +138,13 @@ package axl.xdef.types
 				if(v == null)
 					v='ERROR';
 			}
-			if((elements[v] != null) && !forceNewElement)
+			if((elements[v] is DisplayObject) && !forceNewElement)
 			{
 				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.elements cache');
 				callback(elements[v]);
 				return;
 			}
-			else if((registry[v] != null) && !forceNewElement)
+			else if((registry[v] is DisplayObject) && !forceNewElement)
 			{
 				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
 				callback(registry[v]);
