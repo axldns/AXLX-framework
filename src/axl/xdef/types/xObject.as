@@ -12,6 +12,10 @@ package axl.xdef.types
 		private var xdef:XML;
 		private var xmeta:Object = {};
 		private var xname:String='unnamedObject';
+		public var resetOnAddedToStage:Boolean = true;
+		public var reparseMetaEverytime:Boolean=false;
+		public var reparsDefinitionEverytime:Boolean=false;
+		private var metaAlreadySet:Boolean;
 		public function xObject(xml:XML,xroot:xRoot)
 		{
 			xxroot = xroot;
@@ -23,7 +27,14 @@ package axl.xdef.types
 		
 		
 		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void { xmeta =v }
+		public function set meta(v:Object):void {
+			if(v is String)
+				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
+			if((metaAlreadySet && !reparseMetaEverytime))
+				return;
+			xmeta =v;
+			metaAlreadySet = true;
+		}
 		
 		public function get name():String { return xname }
 		public function set name(v:String):void { xname = v}
