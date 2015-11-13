@@ -44,6 +44,7 @@ package axl.xdef.types
 		
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		private var actionsOver:Vector.<xAction> = new Vector.<xAction>();
+		private var actionsOut:Vector.<xAction> = new Vector.<xAction>();
 		private var overTarget:Object;
 		private var overKey:String;
 		private var overVals:Object;
@@ -59,7 +60,9 @@ package axl.xdef.types
 		private var dynamicArgs:Boolean;
 		private var actionOver:Boolean;
 		private var isOver:Boolean;
+		private var addedToStageActions:Vector.<xAction>
 		
+		private var actionOut:Boolean;
 		
 		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
@@ -109,6 +112,14 @@ package axl.xdef.types
 				b = (a is Array) ? a as Array : [a];
 				for(i = 0, j = b.length; i<j; i++)
 					actionsOver[i] = new xAction(b[i],xroot,this);
+			}
+			if(meta.hasOwnProperty('actionOut'))
+			{
+				actionOut = true;
+				a = meta.actionOver;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
+					actionsOut[i] = new xAction(b[i],xroot,this);
 			}
 			if(meta.hasOwnProperty('post'))
 			{
@@ -181,6 +192,7 @@ package axl.xdef.types
 			}
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
 				actions[i].execute();
+			U.log(this, this.name, '[executed]', j, 'actions');
 		}
 		
 		protected function hover(e:MouseEvent=null):void
@@ -210,6 +222,12 @@ package axl.xdef.types
 				}
 				else
 					clearInterval();
+				
+				if(!isOver && actionOut)
+				{
+					for(var k:int = 0,l:int = actionsOver.length; k<l; k++)
+						actionsOut[k].execute();
+				}
 			}
 			function clearInterval():void
 			{

@@ -26,6 +26,7 @@ package axl.xdef.types
 		public var reparseMetaEverytime:Boolean=false;
 		public var reparsDefinitionEverytime:Boolean=false;
 		private var metaAlreadySet:Boolean;
+		private var addedToStageActions:Vector.<xAction>;
 		
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null)
 		{
@@ -52,16 +53,30 @@ package axl.xdef.types
 			{
 				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
 			}
+			if(addedToStageActions != null)
+			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
+				addedToStageActions[i].execute();
+				U.log(this, this.name, '[addedToStage]', j, 'actions');
+			}
 		}
 	
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void { 
-			if(metaAlreadySet && !reparseMetaEverytime)
-				return;
 			if(v is String)
-				return
+				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
+			if((metaAlreadySet && !reparseMetaEverytime))
+				return;
 			xmeta =v;
 			metaAlreadySet = true;
+			var a:Object, b:Array, i:int, j:int;
+			if(meta.hasOwnProperty('addedToStageAction'))
+			{
+				addedToStageActions = new Vector.<xAction>();
+				a = meta.addedToStageAction;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
+					addedToStageActions[i] = new xAction(b[i],xroot,this);
+			}
 		}
 		
 		

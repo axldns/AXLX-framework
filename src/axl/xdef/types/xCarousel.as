@@ -21,6 +21,7 @@ package axl.xdef.types
 		public var reparseMetaEverytime:Boolean=false;
 		public var reparsDefinitionEverytime:Boolean=false;
 		private var metaAlreadySet:Boolean;
+		private var addedToStageActions:Vector.<xAction>;
 		
 		public function xCarousel(definition:XML,xrootObj:xRoot=null)
 		{
@@ -36,21 +37,33 @@ package axl.xdef.types
 		{
 			if(resetOnAddedToStage)
 				this.reset();
-			if(meta.addedToStage == null)
-				return;
-			XSupport.animByNameExtra(this, 'addedToStage');
+			if(meta.addedToStage != null)
+				XSupport.animByNameExtra(this, 'addedToStage');
+			if(addedToStageActions != null)
+			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
+				addedToStageActions[i].execute();
+				U.log(this, this.name, '[addedToStage]', j, 'actions');
+			}
 		}
 		
 		public function get def():XML { return xdef }
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void {
-			if(metaAlreadySet && !reparseMetaEverytime)
-				return;
 			if(v is String)
+				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
+			if((metaAlreadySet && !reparseMetaEverytime))
 				return;
 			xmeta =v;
 			metaAlreadySet = true;
-			
+			var a:Object, b:Array, i:int, j:int;
+			if(meta.hasOwnProperty('addedToStageAction'))
+			{
+				addedToStageActions = new Vector.<xAction>();
+				a = meta.addedToStageAction;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
+					addedToStageActions[i] = new xAction(b[i],xroot,this);
+			}
 		}
 		public function reset():void { 
 			AO.killOff(this);

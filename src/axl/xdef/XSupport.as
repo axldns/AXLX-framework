@@ -66,7 +66,7 @@ package axl.xdef
 				val = attribs[i].valueOf();
 				if(target.hasOwnProperty('xroot') && val.charAt(0) == '$' )
 				{
-					U.log("target.xroot", target.xroot, target.hasOwnProperty('name') ? target.name : null, target);
+					U.log("[apply attributes]", target.xroot, target.hasOwnProperty('name') ? target.name : null, target);
 					val = target.xroot.binCommand(val.substr(1));
 					U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', val, '<==', attribs[i].valueOf());
 				}
@@ -75,8 +75,7 @@ package axl.xdef
 				if(key in deepTarget)
 					deepTarget[key] = val;
 			}
-			if(target.hasOwnProperty('meta') && target.meta is String)
-				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
+				
 			return target;
 		}
 		
@@ -99,7 +98,6 @@ package axl.xdef
 				{
 					var g:Array = [target].concat(ag[i]);
 					var f:Object = XSupport.getDynamicArgs(g[3],target.xroot);
-					
 					g[3] = (f != null) ?  execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete) : acomplete;
 					if(g[2].hasOwnProperty('onUpdate'))
 					{
@@ -135,7 +133,6 @@ package axl.xdef
 				if(callback != null)
 				{
 					callback();
-					callback=null
 				}
 			}
 			return anonymous;

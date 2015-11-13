@@ -26,6 +26,7 @@ package axl.xdef.types
 		private var xtransDef:ColorTransform;
 		private var trigerExt:Object;
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
+		private var addedToStageActions:Vector.<xAction>;
 		private var intervalID:uint;
 		private var defaultFont:String;
 		
@@ -72,6 +73,11 @@ package axl.xdef.types
 			if(meta.addedToStage != null)
 			{
 				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
+			}
+			if(addedToStageActions != null)
+			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
+					addedToStageActions[i].execute();
+				U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
 		
@@ -146,10 +152,10 @@ package axl.xdef.types
 		//-- internal
 		public function set meta(v:Object):void
 		{
-			if(metaAlreadySet && !reparseMetaEverytime)
-				return;
 			if(v is String)
-				return
+				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
+			if((metaAlreadySet && !reparseMetaEverytime))
+				return;
 			xmeta =v;
 			metaAlreadySet = true;
 			if(meta.hasOwnProperty('js'))
@@ -160,6 +166,14 @@ package axl.xdef.types
 				var b:Array = (a is Array) ? a as Array : [a];
 				for(var i:int = 0, j:int = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
+			}
+			if(meta.hasOwnProperty('addedToStageAction'))
+			{
+				addedToStageActions = new Vector.<xAction>();
+				a = meta.addedToStageAction;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
+					addedToStageActions[i] = new xAction(b[i],xroot,this);
 			}
 			replaceTextFieldText();
 		}
