@@ -106,6 +106,12 @@ package axl.xdef.types
 			parseDef();
 		}
 		
+		override public function set name(v:String):void
+		{
+			super.name = v;
+			if(this.xroot != null)
+				this.xroot.registry.v = this;
+		}
 		
 		protected function parseDef():void
 		{

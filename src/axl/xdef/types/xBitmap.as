@@ -88,6 +88,12 @@ package axl.xdef.types
 			}
 		}
 		
+		override public function set name(v:String):void
+		{
+			super.name = v;
+			if(this.xroot != null)
+				this.xroot.registry.v = this;
+		}
 		
 		public function get def():XML { return xdef }
 		public function set def(value:XML):void { 

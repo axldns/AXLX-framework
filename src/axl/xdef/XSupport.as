@@ -75,9 +75,9 @@ package axl.xdef
 				val = attribs[i].valueOf();
 				if(target.hasOwnProperty('xroot') && val.charAt(0) == '$' )
 				{
-					U.log("[apply attributes]", target.xroot, target.hasOwnProperty('name') ? target.name : null, target);
+					//U.log("[apply attributes]", target.xroot, target.hasOwnProperty('name') ? target.name : null, target);
 					val = target.xroot.binCommand(val.substr(1));
-					U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', val, '<==', attribs[i].valueOf());
+					//U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', val, '<==', attribs[i].valueOf());
 				}
 				else
 					val = valueReadyTypeCoversion(val);
@@ -475,6 +475,17 @@ package axl.xdef
 								obj = userTypes[type](xml,xroot);
 							break;
 					}
+					if(obj != null)
+					{
+						if(obj.hasOwnProperty('name') && xml.hasOwnProperty('@name'))
+						{
+							obj.name = String(xml.@name);
+							smallRegistry[obj.name] = obj;
+						}
+						if(obj.hasOwnProperty('xroot'))
+							obj.xroot = xroot;
+					}
+					
 					if(obj is DisplayObjectContainer &&  xml.hasOwnProperty('@src'))
 					{
 						var n:String = String(xml.@src);
@@ -492,13 +503,6 @@ package axl.xdef
 						XSupport.applyAttributes(xml, obj);
 						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
 						Carusele(obj).movementBit(0);
-					}
-					if(obj != null)
-					{
-						if(obj.hasOwnProperty('name'))
-							smallRegistry[obj.name] = obj;
-						if(obj.hasOwnProperty('xroot'))
-							obj.xroot = xroot;
 					}
 					
 					// notify

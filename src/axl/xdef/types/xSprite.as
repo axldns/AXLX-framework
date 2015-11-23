@@ -57,6 +57,13 @@ package axl.xdef.types
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
+		override public function set name(v:String):void
+		{
+			super.name = v;
+			if(this.xroot != null)
+				this.xroot.registry.v = this;
+		}
+		
 		protected function removeFromStageHandler(e:Event):void
 		{
 			AO.killOff(this);
