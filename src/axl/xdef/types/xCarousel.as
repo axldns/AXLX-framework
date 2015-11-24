@@ -31,6 +31,7 @@ package axl.xdef.types
 		public var reparsDefinitionEverytime:Boolean=false;
 		private var metaAlreadySet:Boolean;
 		private var addedToStageActions:Vector.<xAction>;
+		private var childrenCreatedAction:Vector.<xAction>;
 		
 		public function xCarousel(definition:XML,xrootObj:xRoot=null)
 		{
@@ -55,6 +56,15 @@ package axl.xdef.types
 			}
 		}
 		
+		public function onChildrenCreated():void
+		{
+			if(childrenCreatedAction != null)
+			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
+				childrenCreatedAction[i].execute();
+				U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
+			}
+		}
+		
 		public function get def():XML { return xdef }
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void {
@@ -72,6 +82,14 @@ package axl.xdef.types
 				b = (a is Array) ? a as Array : [a];
 				for(i = 0, j = b.length; i<j; i++)
 					addedToStageActions[i] = new xAction(b[i],xroot,this);
+			}
+			if(meta.hasOwnProperty('childrenCreatedAction'))
+			{
+				childrenCreatedAction = new Vector.<xAction>();
+				a = meta.childrenCreatedAction;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
+					childrenCreatedAction[i] = new xAction(b[i],xroot,this);
 			}
 		}
 		public function reset():void { 

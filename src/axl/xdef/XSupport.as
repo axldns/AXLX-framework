@@ -13,6 +13,7 @@ package axl.xdef
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.filters.BitmapFilter;
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
@@ -46,6 +47,7 @@ package axl.xdef
 		private var smallRegistry:Object={};
 		public var defaultFont:String;
 		public var root:xRoot;
+		private var parentFilledEvent:Event = new Event(Event.COMPLETE);
 		
 		
 		public function get registry():Object { return smallRegistry }
@@ -206,7 +208,6 @@ package axl.xdef
 			function swfCallback():xSwf
 			{
 				spr.addSwf(Ldr.getAny(String(xml.@src)) as DisplayObject);
-				pushReadyTypes2(xml, spr);
 				spr.def = xml;
 				return spr;
 			}
@@ -350,7 +351,7 @@ package axl.xdef
 		 * @command - for DisplayObjectContainer its typically 'addChild', for axl.ui.Carousel it's 'addToRail'
 		 * @xroot - root of all XML based objects (stage equivalent)
 		 * */
-		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChildAt',xroot:xRoot=null):void
+		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChildAt',xroot:xRoot=null,onChildrenCreated:Function=null):void
 		{
 			if(def == null)
 				return;
@@ -362,6 +363,8 @@ package axl.xdef
 				getReadyType2(xml, readyTypeCallback,true, ++i,xroot);
 			function readyTypeCallback(v:Object, index:int):void
 			{
+				numC-=1;
+				U.log('[XSupport][' + container.name + '][pushReadyTypes2]',numC);
 				if(v != null)
 				{
 					if(v is Array)
@@ -378,7 +381,11 @@ package axl.xdef
 					else if(command == 'addChildAt' || command == 'addChild')
 					{
 						if(!(container is DisplayObjectContainer))
+						{
+							if((numC == 0) && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
+								onChildrenCreated();
 							return
+						}
 						if(command == 'addChildAt' && index < container['numChildren']-1)
 							container[command](v, index);
 						else
@@ -389,6 +396,8 @@ package axl.xdef
 					else
 						container[command](v);
 				}
+				if((numC == 0) && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
+					container['onChildrenCreated']();
 			}
 		}
 		/** Loads resource specified as "src" attribute of xml object. Executes callback with xml as attribute.
@@ -495,12 +504,12 @@ package axl.xdef
 					}
 					if(obj is xSprite)
 					{
-						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 						applyAttributes(xml, obj);
+						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 					}
 					else if(obj is Carusele)
 					{
-						XSupport.applyAttributes(xml, obj);
+						applyAttributes(xml, obj);
 						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
 						Carusele(obj).movementBit(0);
 					}
