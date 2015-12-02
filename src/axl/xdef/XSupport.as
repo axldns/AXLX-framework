@@ -353,18 +353,25 @@ package axl.xdef
 		 * */
 		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChildAt',xroot:xRoot=null,onChildrenCreated:Function=null):void
 		{
+			
 			if(def == null)
-				return;
+				return finishPushing();
 			var celements:XMLList = def.children();
 			var type:String;
 			var i:int = -1;
-			var numC:int = celements.children().length();
+			var numC:int = celements.length();
+			U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] PUSHING:',numC, "children");
+			if(numC < 1)
+				return finishPushing();
 			for each(var xml:XML in celements)
+			{
+				U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] pushing', xml.@name, 'now');
 				getReadyType2(xml, readyTypeCallback,true, ++i,xroot);
+			}
 			function readyTypeCallback(v:Object, index:int):void
 			{
 				numC-=1;
-				U.log('[XSupport][' + container.name + '][pushReadyTypes2]',numC);
+				U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2]',numC);
 				if(v != null)
 				{
 					if(v is Array)
@@ -381,23 +388,30 @@ package axl.xdef
 					else if(command == 'addChildAt' || command == 'addChild')
 					{
 						if(!(container is DisplayObjectContainer))
-						{
-							if((numC == 0) && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
-								onChildrenCreated();
-							return
-						}
+							return finishPushing();
 						if(command == 'addChildAt' && index < container['numChildren']-1)
 							container[command](v, index);
 						else
 							container['addChild'](v);
 					}
 					else if(command == 'addToRail')
+					{
+						U.log('doing ad to rail', container, container.name);
 						container[command](v,false);
+					}
 					else
 						container[command](v);
 				}
-				if((numC == 0) && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
-					container['onChildrenCreated']();
+				finishPushing();
+			}
+			function finishPushing():void
+			{
+				if(numC != 0)
+					return
+				U.log('finished pushing for', container, container.name,container , container.hasOwnProperty('onChildrenCreated') , container['onChildrenCreated'] is Function);
+				/*if(onChildrenCreated != null)*/
+					if(container && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
+						container['onChildrenCreated']();
 			}
 		}
 		/** Loads resource specified as "src" attribute of xml object. Executes callback with xml as attribute.

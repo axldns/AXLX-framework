@@ -100,7 +100,7 @@ package axl.xdef.types
 		{
 			if(childrenCreatedAction != null)
 			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
-				childrenCreatedAction[i].execute();
+					childrenCreatedAction[i].execute();
 				U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
 			}
 		}

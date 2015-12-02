@@ -56,11 +56,13 @@ package axl.xdef.types
 			}
 		}
 		
+		
 		public function onChildrenCreated():void
 		{
+			U.log(this, this.name, 'onChildrenCreated', childrenCreatedAction, childrenCreatedAction ? onChildrenCreated.length : 0);
 			if(childrenCreatedAction != null)
 			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
-				childrenCreatedAction[i].execute();
+					childrenCreatedAction[i].execute();
 				U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
 			}
 		}
