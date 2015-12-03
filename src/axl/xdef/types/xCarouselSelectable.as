@@ -179,7 +179,11 @@ package axl.xdef.types
 		
 		private function updateCarusele():void
 		{
+			var dif:Number = movementPoint[mod.a] - movementPoint[modA.a];
+			var bug:Number =  this.railElementsContainer.x + dif;
+			U.log('upd', this.railElementsContainer.x, '+', dif);
 			movementBit(movementPoint[mod.a] - movementPoint[modA.a]);
+			U.log('results in', this.railElementsContainer.x, 'which gives', bug - this.railElementsContainer.x, "BUG!");
 			movementPoint[modA.a] = movementPoint[mod.a];
 		}
 		
