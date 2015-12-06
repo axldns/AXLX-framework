@@ -34,78 +34,16 @@ package axl.xdef.types
 		private var skel:Rectangle = new Rectangle();
 		private var elementSelected:xAction;
 		
-		public var hoveredObject:DisplayObject;
-		private var hoverProperty:String;
-		public var hoverValue:Object;
-		public var hoverValueIdle:Object;
-		private var selectProperty:String;
-		public var selectValue:Object;
-		public var selectValueIdle:Object;
 		public var onMovementComplete:Function;
 		public var onMovementStart:Function;
 		public var mouseClickListener:Boolean;
+		public var autoSort:Boolean;
 		
 		public function xCarouselSelectable(definition:XML,xroot:xRoot=null)
 		{
 			super(definition,xroot);
 			this.cacheAsBitmap = true;
-			if(mouseClickListener)
-			{
-				railElementsContainer.addEventListener(MouseEvent.CLICK, mouseClickCarusele);
-				railElementsContainer.addEventListener(MouseEvent.MOUSE_OVER, mouseOverCarusele);
-				railElementsContainer.addEventListener(MouseEvent.MOUSE_OUT, mouseOutCarusele);
-			}
 		}
-		
-		protected function mouseClickCarusele(e:MouseEvent):void
-		{
-			var newSelected:DisplayObject = e.target as DisplayObject;
-			if(selectProperty)
-			{
-				if(newSelected == selectedObject)
-				{
-					selectedObject[selectProperty] = selectValueIdle;
-					selectedObject = null;
-				}
-				else
-				{
-					if(selectedObject != null)
-						selectedObject[selectProperty] = selectValueIdle;
-					selectedObject = newSelected;
-					selectedObject[selectProperty] = selectValue;
-				}
-			}
-			else
-				selectedObject = newSelected;
-			if(btnSelect == null)
-				if(onSelect != null)
-					onSelect();
-		}
-		
-		protected function mouseOutCarusele(e:MouseEvent):void
-		{
-			if(hoverProperty && hoveredObject != null && hoveredObject != selectedObject)
-			{
-				hoveredObject[hoverProperty] = hoverValueIdle;
-			}
-		}
-		
-		protected function mouseOverCarusele(e:MouseEvent):void
-		{
-			if(hoverProperty)
-			{
-				hoveredObject = e.target as DisplayObject;
-				if(hoveredObject != null && hoveredObject != selectedObject)
-					hoveredObject[hoverProperty] = hoverValue;
-			}
-		}
-		
-		public function get selectedObjectProperty():String	{ return selectProperty }
-		public function set selectedObjectProperty(value:String):void {	 selectProperty = value }
-		
-		public function get hoverObjectProperty():String	{ return hoverProperty }
-		public function set hoverObjectProperty(value:String):void { hoverProperty = value }
-		
 		
 		override public function addToRail(obj:DisplayObject, seemles:Boolean=false):void
 		{
@@ -152,7 +90,6 @@ package axl.xdef.types
 			selectedObject = getChildClosestToCenter()[0];
 		}
 		
-		
 		private function btnSelectHandler(e:MouseEvent):void
 		{
 			if(onSelect != null) onSelect();
@@ -160,11 +97,6 @@ package axl.xdef.types
 		
 		private function poolDirectionEvent(e:MouseEvent):void
 		{
-			if(selectedObject == null)
-				selectedObject = getChildClosestToCenter()[0];
-			if(selectedObject == null)
-				return;
-			
 			poolMovement((e.target.name.match(/(left|up)/i)) ? 1 : -1);
 		}
 		
@@ -172,6 +104,8 @@ package axl.xdef.types
 		{	
 			var p:Object = {onUpdate : updateCarusele};
 				p[mod.a] = (selectedObject.width+GAP) * dir;
+			if(autoSort)
+				sortEvery = selectedObject.width;
 			if(onMovementStart != null)
 				onMovementStart();
 			AO.animate(movementPoint, movementSpeed, p,onCaruseleTarget,1,false,null,true);
@@ -179,11 +113,7 @@ package axl.xdef.types
 		
 		private function updateCarusele():void
 		{
-			var dif:Number = movementPoint[mod.a] - movementPoint[modA.a];
-			var bug:Number =  this.railElementsContainer.x + dif;
-			U.log('upd', this.railElementsContainer.x, '+', dif);
 			movementBit(movementPoint[mod.a] - movementPoint[modA.a]);
-			U.log('results in', this.railElementsContainer.x, 'which gives', bug - this.railElementsContainer.x, "BUG!");
 			movementPoint[modA.a] = movementPoint[mod.a];
 		}
 		

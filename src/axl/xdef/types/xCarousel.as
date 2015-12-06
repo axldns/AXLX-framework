@@ -99,7 +99,9 @@ package axl.xdef.types
 			XSupport.applyAttributes(def, this);	
 		}
 		
-		public function set def(value:XML):void { 
+		public function set def(value:XML):void {
+			if(xdef != null || value == null)
+				return;
 			xdef = value;
 			parseDef();
 		}
@@ -116,15 +118,7 @@ package axl.xdef.types
 			if(xdef==null)
 				return;
 			XSupport.drawFromDef(def.graphics[0], this);
-			// this is exceptional where attributes are being applied before pushed types
-			//moved to XSupport
-			/*XSupport.applyAttributes(def, this);
-			XSupport.pushReadyTypes(def, this, 'addToRail');*/
 			movementBit(0);
 		}
-
-	
-
-		
 	}
 }
