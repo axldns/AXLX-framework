@@ -100,7 +100,7 @@ package axl.xdef.types
 			poolMovement((e.target.name.match(/(left|up)/i)) ? 1 : -1);
 		}
 		
-		private function poolMovement(dir:int):void
+		public function poolMovement(dir:int):void
 		{	
 			var p:Object = {onUpdate : updateCarusele};
 				p[mod.a] = (selectedObject.width+GAP) * dir;
