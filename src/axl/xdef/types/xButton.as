@@ -221,7 +221,7 @@ package axl.xdef.types
 			if(isOver && (intervalHoverValue > 0) && intervalHoverID < 1)
 				intervalHoverID = setInterval(repeatHoverActions, intervalHoverValue,e);
 			
-			function repeatHoverActions():void { (isOver) ?  executeHover() : clearInterval(); }
+			function repeatHoverActions():void { (isOver) ?  executeHover() : clearHoverInterval(); }
 			function executeHover():void
 			{
 				if(isOver && actionOver)
@@ -230,7 +230,7 @@ package axl.xdef.types
 						actionsOver[i].execute();
 				}
 				else
-					clearInterval();
+					clearHoverInterval();
 				
 				if(!isOver && actionOut)
 				{
@@ -238,7 +238,7 @@ package axl.xdef.types
 						actionsOut[k].execute();
 				}
 			}
-			function clearInterval():void
+			function clearHoverInterval():void
 			{
 				flash.utils.clearInterval(intervalHoverID);
 				intervalHoverID = 0;

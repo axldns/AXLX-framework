@@ -94,8 +94,8 @@ package axl.xdef
 		{
 			if(reset)
 				target.reset();
-			else if(killCurrent);
-			AO.killOff(target);
+			else if(killCurrent)
+				AO.killOff(target);
 			if(target.meta.hasOwnProperty(animName))
 			{
 				var animNameArray:Array = target.meta[animName];
@@ -157,6 +157,17 @@ package axl.xdef
 			return ret;
 		}
 		
+		/**
+		 * XML tag name <b><code>txt</code></b> can't contain any children<br>
+		 * Allows to instantiate <code>axl.xdef.types.xText</code> which is descendandt of merged flash TextField and 
+		 * TextFormat classes.
+		 * If <code>html</code> flag is set to true, you may need to wrap contents inside CDATA block in order to use html tags.
+		 * <pre>
+		 * &lt;txt name='btnTerms' embedFonts='true' multiline='true' html='true'>&lt;![CDATA[Terms&lt;br>and&lt;br>Conditions]]>&lt;/txt>
+		 * </pre>
+		 * If fontName is not set, related xsupport instance default font is applied.
+		 * @see axl.xdef.types.xText
+		 * */
 		public static function getTextFieldFromDef(def:XML):xText
 		{
 			if(def == null)
@@ -165,6 +176,17 @@ package axl.xdef
 			return tf;
 		}
 		
+		/**
+		 * XML tag name <b><code>btn</code></b> can contain children<br>
+		 * Allows to instantiate <code>axl.xdef.types.xButton</code>. 
+		 * Buttons as a common use-case can have no <code>src</code> attribute no <code>graphics</code>nodes defined
+		 *  and still be valid and handy action holders.
+		 * <pre>
+		 *&lt;btn name='COMPLETE' meta='{"action":[{"type":"rmv","value":"anything"},{"type":"add","value":"anything2"}]}'/>
+		 *&lt;img name='1' src='1.jpg' meta='{"addedToStage":[25,{"y":500},"$registry.COMPLETE.execute"]}'/>
+		 * </pre>
+		 * @see axl.xdef.types.xButton
+		 * */
 		public static function getButtonFromDef(xml:XML, handler:Function,dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xButton
 		{
 			var btn:xButton = new xButton(xml,xroot);
@@ -181,12 +203,28 @@ package axl.xdef
 			return btn;
 		}
 		
+		/**
+		 * XML tag name <b><code>img</code></b> can contain children<br>
+		 * Allows to instantiate <code>axl.xdef.types.xBitmap</code> class whcich is equivalent of regular flash Bitmap.
+		 * Method returns xBitmap instance immediately but actual drawing into it is done when available. 
+		 * Displaying more than one image of the same src does not cause subsequent loadings.
+		 * Once bitmap source is loaded, all other requests to that source are being re-drawn (copy) from root one.
+		 * <pre>
+		 * &lt;img name='tick1'  x='5' src='../tick.png'/>;
+		 * *&lt;img name='tick2' x='10'  src='../tick.png'/>;
+		 * *&lt;img name='tick3' x='15' src='../tick.png'/>;
+		 * *&lt;img name='tick4' x='20' src='../tick.png'/>;
+		 * *&lt;img name='tick5' x='25' src='../tick.png'/>;
+		 * </pre>
+		 * This will display five differently positioned Bitmaps. Loading of tick.png occures just once. 
+		 * @see axl.xdef.types.xBitmap
+		 * */
 		public static function getImageFromDef(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xBitmap
 		{
 			var xb:xBitmap = new xBitmap(null,'auto',true,xroot);
 			if(dynamicSourceLoad)
 				checkSource(xml, imageCallback,true);
-			else 
+			else
 				return imageCallback();
 			function imageCallback():xBitmap
 			{
@@ -197,13 +235,21 @@ package axl.xdef
 			}
 			return xb;
 		}	
-		
+		/**
+		 * XML tag name <b><code>swf</code></b> can contain children<br>
+		 * Allows to instantiate <code>axl.xdef.types.xSwf</code> class whcich supports controlling MovieClips.
+		 * Method returns xSwf instance immediately but actual swf is being added once loaded.
+		 * <pre>
+		 *&lt;swf name='animation src='../anim.swf' addStarts='true' stopOnEnd='true' />;
+		 * </pre>
+		 * @see axl.xdef.types.xSwf
+		 * */
 		public function getSwfFromDef2(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xSwf
 		{
 			var spr:xSwf = new xSwf(null,xroot);
 			if(dynamicSourceLoad)
 				checkSource(xml, swfCallback,true);
-			else 
+			else
 				return swfCallback();
 			function swfCallback():xSwf
 			{
@@ -215,18 +261,19 @@ package axl.xdef
 		}
 		/**
 		 * XML tag name <b><code>data</code></b> expects no children.<br>
-		 * By attribute "src" allows to load any type of data
-		 *  <pre>
-		 * &lt;graphics&gt;
-		 * 	&lt;command color='0x9bde43' alpha='0.7'&gt;beginFill&lt;/command&gt;
-		 * 	&lt;command x='0' y='0' width='148' height='44'&gt;drawRect&lt;/command&gt;
-		 * &lt;/graphics&gt;
+		 * By attribute "src" allows to load any type of data - XML, JSON, MP3, JPG, PNG, SWF, other.<br>
+		 * Loaded data is attempted to turn it to usable type (according to <code>axl.utils.Ldr</code>)
+		 * and asigned to <code>data</code> property of freshly instantiated <code><b>xObject</b></code> .
+		 *<pre>
+		 *&lt;data name='myMp3 src='../audio.mp3'/>;
 		 * </pre>
-		 * is equivalent of
+		 * Can be then refferenced
 		 * <pre>
-		 * drawable.graphics.beginFill(0x9bde43,0.7);
-		 * drawable.graphics.drawRect(0,0,148,44);
-		 * </pre> */
+		 * &lt;btn name='btnPlay meta='{"action":[{"type":"binCommand","value":"registry.myMp3.data.play()"}]}'/>
+		 * </pre> 
+		 * @see axl.xdef.types.xObject
+		 * @see axl.utils.Ldr
+		 * */
 		private function getDataFromDef(xml:XML, xroot:xRoot,dynamicSourceLoad:Boolean=true):xObject
 		{
 			var o:xObject = new xObject(xml, xroot);
@@ -256,7 +303,9 @@ package axl.xdef
 		 * <pre>
 		 * drawable.graphics.beginFill(0x9bde43,0.7);
 		 * drawable.graphics.drawRect(0,0,148,44);
-		 * </pre> */
+		 * </pre> 
+		 * <strong>Attribute names are not important, unlike it's order.</strong>
+		 * */
 		public static function drawFromDef(def:XML, drawable:Sprite=null):DisplayObject
 		{
 			if(def == null)
@@ -355,14 +404,20 @@ package axl.xdef
 		{
 			
 			if(def == null)
-				return finishPushing();
+			{
+				 finishPushing();
+				 return
+			}
 			var celements:XMLList = def.children();
 			var type:String;
 			var i:int = -1;
 			var numC:int = celements.length();
 			U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] PUSHING:',numC, "children");
 			if(numC < 1)
-				return finishPushing();
+			{
+				finishPushing();
+				return;
+			}
 			for each(var xml:XML in celements)
 			{
 				U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] pushing', xml.@name, 'now');
@@ -388,7 +443,10 @@ package axl.xdef
 					else if(command == 'addChildAt' || command == 'addChild')
 					{
 						if(!(container is DisplayObjectContainer))
-							return finishPushing();
+						{
+							finishPushing();
+							return;
+						}
 						if(command == 'addChildAt' && index < container['numChildren']-1)
 							container[command](v, index);
 						else
@@ -408,8 +466,6 @@ package axl.xdef
 			{
 				if(numC != 0)
 					return
-				U.log('finished pushing for', container, container.name,container , container.hasOwnProperty('onChildrenCreated') , container['onChildrenCreated'] is Function);
-				/*if(onChildrenCreated != null)*/
 					if(container && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
 						container['onChildrenCreated']();
 			}
@@ -440,13 +496,16 @@ package axl.xdef
 		}
 		/** Translates xml node to an ActionScript object within predefined types and their equivalents:
 		 * <ul>
-		 * <li><b>img</b> - <code>axl.xdef.xBitmap</code> extends flash Bitmap </li>
-		 * <li><b>div</b> - <code>axl.xdef.xSprite</code> - extends flash Sprite </li>
-		 * <li><b>txt</b> - <code>axl.xdef.xText</code> - extends flash TextField </li>
-		 * <li><b>btn</b> - <code>axl.xdef.xButton</code>- extends xSprite </li>
-		 * <li><b>msk</b> - <code>axl.xdef.xMasked</code> - extends xSprite </li>
-		 * <li><b>swf</b> - <code>axl.xdef.xSprite</code> - loaded flash DisplayObject is added to xSprite as a child </li>
-		 * <li><b>scrollBar</b> - <code>axl.xdef.xScroll</code> - extends xSprite </li>
+		 * <li><b>img</b> - <code>axl.xdef.types.xBitmap</code> extends flash Bitmap </li>
+		 * <li><b>div</b> - <code>axl.xdef.types.xSprite</code> - extends flash Sprite </li>
+		 * <li><b>txt</b> - <code>axl.xdef.types.xText</code> - extends flash TextField </li>
+		 * <li><b>btn</b> - <code>axl.xdef.types.xButton</code>- extends xSprite </li>
+		 * <li><b>msk</b> - <code>axl.xdef.types.xMasked</code> - extends xSprite </li>
+		 * <li><b>swf</b> - <code>axl.xdef.types.xSprite</code> - loaded flash DisplayObject is added to xSprite as a child </li>
+		 * <li><b>data</b> - <code>axl.xdef.types.xObject</code> - loaded data is being analyzed and can be instantiated as XML 
+		 * ('xml'), Object ('json'), Sound ('mp3','mpeg'), DisplayObject ('jpg','png','gif','swf') or raw data (ByteArray, String). 
+		 * Regardles of it's contents, instantiated axl.xdef.types.xObject assigns the result to it's own <code> data </code> property.
+		 * <li><b>scrollBar</b> - <code>axl.xdef.types.xScroll</code> - extends xSprite </li>
 		 * <li><b>carousel</b> - <code>axl.ui.Carusele</code> extends flash Sprite </li>
 		 * </ul>
 		 * @param xml - XML object  which tag name matches one of the listed elements.
@@ -490,7 +549,7 @@ package axl.xdef
 						case 'filters': obj = filtersFromDef(xml); break;
 						case 'img': obj = getImageFromDef(xml,false,xroot); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
-						case 'swf': obj = getSwfFromDef2(xml,xroot); break;
+						case 'swf': obj = getSwfFromDef2(xml,false,xroot); break;
 						case 'data' : obj = getDataFromDef(xml,xroot);break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						default: 
@@ -542,11 +601,11 @@ package axl.xdef
 		
 		/** Private function to support objects instantiation in order. Hold's delegates 
 		 * in <code>additionQueue</code> */
-		private static function proxyQueue(call:Function):void
+		private static function proxyQueue(qcall:Function):void
 		{
-			additionQueue.push(call);
+			additionQueue.push(qcall);
 			if(additionQueue.length == 1)
-				call();
+				qcall();
 		}
 		
 		/** Resolves address/reference string [starting with $ (dolar symbol)] in order to return object. AS3 hierarchy.
