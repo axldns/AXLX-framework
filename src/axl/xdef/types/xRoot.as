@@ -323,55 +323,7 @@ package axl.xdef.types
 		}
 		public function get files():Object { return Ldr.objects }
 		
-		public function assign(left:String,leftProperty:String,operand:String,right:String,target:String=null,targetProperty:String=null):void
-		{
-			var l:Object = XSupport.simpleSourceFinder(this,left);
-			var lp:String = XSupport.simpleSourceFinder(this,leftProperty) as String;
-			var r:Object = XSupport.simpleSourceFinder(this,right);
-			var t:Object = (target != null) ?  XSupport.simpleSourceFinder(this,target) : l;
-			var tp:String = (targetProperty != null) ?  XSupport.simpleSourceFinder(this,targetProperty) as String : lp;
-			
-			if(!l || !lp || !t || !tp) // right can be null or false
-			{
-				U.log(this, "[assign] INVALID ASIGNMENT:", left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '', 'vs', "l:",l,"lp:",lp,"r:",r,'|',"t:",t,"tp:",tp);
-				return;
-			}
-			try {
-				//U.log(this, "[assign]", "l:",l,"lp:",lp,"r:",r,'|',"t:",t,"tp:",tp);
-				switch(operand)
-				{
-					case '!': t[tp] = !r; break;
-					case '+': t[tp] = l[lp] + r; break;
-					case '-':  t[tp] = l[lp] - Number(r); break;
-					case '*':  t[tp] = l[lp] * Number(r); break;
-					case '/':  t[tp] = l[lp] / Number(r); break;
-					case '%':  t[tp] = l[lp] % Number(r); break;
-					case '>>':  t[tp] = l[lp] >> Number(r); break;
-					case '<<':  t[tp] = l[lp] << Number(r); break;
-					case '>':  t[tp] = l[lp] > r; break;
-					case '<':  t[tp] = l[lp] < r; break;
-					case '<=': t[tp] = l[lp] <= r; break;
-					case '>=':  t[tp] = l[lp] >= r; break;
-					case '==':  t[tp] = l[lp] == r; break;
-					case '===':  t[tp] = l[lp] === r; break;
-					case '&&':  t[tp] = l[lp] && r; break;
-					case '||':  t[tp] = l[lp] || r; break;
-					case '+=': l[lp] += r; break;
-					case '-=': l[lp] -= r; break;
-					case '*=': l[lp] *= r; break;
-					case '/=': l[lp] /= r; break;
-					case '=': l[lp] = r; break;
-					case 'is': t[tp] = l[lp] is r.constructor; break;
-					default:
-						U.log(this, "[assign] INVALID OPERAND:", left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '');
-						break;
-				}
-			}
-			catch(e:*)
-			{
-				U.log(this, "[assign][ERROR]:",e, '\ON:', left, leftProperty, operand, right,'|', target ? target : '', targetProperty ? targetProperty : '');
-			}
-		}
+	
 		
 		public function binCommand(v:Object):*
 		{
@@ -387,29 +339,6 @@ package axl.xdef.types
 			return null;
 		}
 		
-		public function replace(left:String,leftProperty:String,regexp:String,replacement:String,regexpProperties:String='g',target:String=null,targetProperty:String=null,replacementIsDynamic:Boolean=true):void
-		{
-			var l:Object = XSupport.simpleSourceFinder(this,left);
-			var lp:String = XSupport.simpleSourceFinder(this,leftProperty) as String;
-			var t:Object = (target != null) ?  XSupport.simpleSourceFinder(this,target) : l;
-			var tp:String = (targetProperty != null) ?  XSupport.simpleSourceFinder(this,targetProperty) as String : lp;
-			var rp:String = replacementIsDynamic ? String(XSupport.simpleSourceFinder(this,replacement)) : replacement;
-			
-			if(!l || !lp || !t || !tp || rp==null) // right can be null or false
-			{
-				U.log(this, "[replace] INVALID ARGUMENTS:", left, leftProperty, regexp,replacement,regexpProperties,'|', target ? target : '', targetProperty ? targetProperty : '', 
-					'vs', l,lp,regexp,rp,regexpProperties,'|',t,tp);
-				return;
-			}
-			var r:RegExp = new RegExp(regexp, regexpProperties);
-			try { 
-				//U.log("[REPLACE] TARGET:", t, tp,'('+t[tp]+')', "LEFT:", l, lp, '('+l[lp]+')','REGEXP:', r, "REPLACEMENT:", rp);
-				t[tp] = l[lp].replace(r,rp) 
-			
-			}
-			catch(e:*) { U.log(this, '[replace]ERROR',e,' ON:\n',left, leftProperty, regexp,replacement,regexpProperties,'|', target ? target : '', targetProperty ? targetProperty : '', 
-				'vs', l,lp,regexp,rp,regexpProperties,'|',t,tp) }
-		}
 		
 		public function addIfMatches(sel:String,regexp:String='.*',onTrue:Object=null,onFalse:Object=null):void
 		{
