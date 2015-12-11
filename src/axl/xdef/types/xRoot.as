@@ -130,7 +130,9 @@ package axl.xdef.types
 		 * xml attribute <b>name</b> is key for it. 
 		 * @param v - name of the object (must match any child of <code>node</code>). Objects
 		 * are being looked up by <b>name</b> attribute. E.g. v= 'foo' for
-		 *  <pre> < node>< div name="foo"/>< /node>  </pre> 
+		 *  <pre>
+		 * &lt;node>&lt;div name="foo"/>&lt;/node>
+		 * </pre> 
 		 * @param callback - Function of one argument - loaded element. Function will be executed 
 		 * once element is available (elements with <code>src</code> attribute may need to require loading of their contents).
 		 * @param node - name of the XML tag (not an attrubute!) that is a parent for searched element to instantiate.

@@ -57,6 +57,38 @@ package axl.xdef
 		{
 		}
 		public static function registerUserType(xmlTagName:String, instantiator:Function):void { userTypes[xmlTagName] = instantiator }
+		/** 
+		 * Maps XML attributes to <code><b>target</b></code> properties.
+		 * If target (any object) does not own property specified as attribute in XML definition,
+		 * then property is not assigned.
+		 * If it does, value of attribute is *parsed* and assigned to the target's property.
+		 * If object is dynamic and property of given attribute name does not exist, new property on target
+		 * <b>is not created</b>.
+		 * <h3>Parsing attribute values</h3>
+		 * Generally all XML attribute values are recoginzed as String values (ActionScript),<br>
+		 * and this is an ultimate value assigned to the target <b>IF</b> parsing fails.<br>
+		 * 
+		 * There are two ways of parsing attributes available:
+		 * <ul>
+		 * <li><b>dolar sign prefixed parsing</b> - value of the attribute is evaluated by 
+		 * <code>axl.utils.RootFinder.parseInput</code> method</li>
+		 * <li><b>JSON parsing</b> - value assigned to a target is an output of JSON.parse on attribute value </li>
+		 * </ul>
+		 * <pre>
+		 * &lt;div name='sample' x='10' y='$stage.stageHeight/2' mouseChildren='false'/>
+		 * </pre>
+		 * is equivalent of
+		 * <pre>
+		 * var any:xSprite = new xSprite()
+		 * any.name = 'sample';
+		 * any.x = 10;
+		 * any.u = stage.stageHeight/2;
+		 * any.mouseChildren = false;
+		 * </pre>
+		 * 
+		 * The order of the attributes matters - they're being processed from left to right.<br>
+		 * Attributes can reffer to object's deeper properties.
+		 * */
 		public static function applyAttributes(def:XML, target:Object):Object
 		{
 			if(def == null)
@@ -163,7 +195,7 @@ package axl.xdef
 		 * TextFormat classes.
 		 * If <code>html</code> flag is set to true, you may need to wrap contents inside CDATA block in order to use html tags.
 		 * <pre>
-		 * &lt;txt name='btnTerms' embedFonts='true' multiline='true' html='true'>&lt;![CDATA[Terms&lt;br>and&lt;br>Conditions]]>&lt;/txt>
+		 * &lt;txt name='btnTerms' embedFonts='true' multiline='true' html='true'>Terms&lt;br>and&lt;br>Conditions>&lt;/txt>
 		 * </pre>
 		 * If fontName is not set, related xsupport instance default font is applied.
 		 * @see axl.xdef.types.xText
@@ -182,8 +214,8 @@ package axl.xdef
 		 * Buttons as a common use-case can have no <code>src</code> attribute no <code>graphics</code>nodes defined
 		 *  and still be valid and handy action holders.
 		 * <pre>
-		 *&lt;btn name='COMPLETE' meta='{"action":[{"type":"rmv","value":"anything"},{"type":"add","value":"anything2"}]}'/>
-		 *&lt;img name='1' src='1.jpg' meta='{"addedToStage":[25,{"y":500},"$registry.COMPLETE.execute"]}'/>
+		 * &lt;btn name='COMPLETE' meta='{"action":[{"type":"rmv","value":"anything"},{"type":"add","value":"anything2"}]}'/>
+		 * &lt;img name='1' src='1.jpg' meta='{"addedToStage":[25,{"y":500},"$registry.COMPLETE.execute"]}'/>
 		 * </pre>
 		 * @see axl.xdef.types.xButton
 		 * */
@@ -210,11 +242,11 @@ package axl.xdef
 		 * Displaying more than one image of the same src does not cause subsequent loadings.
 		 * Once bitmap source is loaded, all other requests to that source are being re-drawn (copy) from root one.
 		 * <pre>
-		 * &lt;img name='tick1'  x='5' src='../tick.png'/>;
-		 * *&lt;img name='tick2' x='10'  src='../tick.png'/>;
-		 * *&lt;img name='tick3' x='15' src='../tick.png'/>;
-		 * *&lt;img name='tick4' x='20' src='../tick.png'/>;
-		 * *&lt;img name='tick5' x='25' src='../tick.png'/>;
+		 *	&lt;img name='tick1'  x='5' src='../tick.png'/>
+		 *	&lt;img name='tick2' x='10'  src='../tick.png'/>
+		 *	&lt;img name='tick3' x='15' src='../tick.png'/>
+		 *	&lt;img name='tick4' x='20' src='../tick.png'/>
+		 *	&lt;img name='tick5' x='25' src='../tick.png'/>
 		 * </pre>
 		 * This will display five differently positioned Bitmaps. Loading of tick.png occures just once. 
 		 * @see axl.xdef.types.xBitmap
@@ -412,7 +444,7 @@ package axl.xdef
 			var type:String;
 			var i:int = -1;
 			var numC:int = celements.length();
-			U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] PUSHING:',numC, "children");
+			//U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] PUSHING:',numC, "children");
 			if(numC < 1)
 			{
 				finishPushing();
@@ -420,13 +452,13 @@ package axl.xdef
 			}
 			for each(var xml:XML in celements)
 			{
-				U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] pushing', xml.@name, 'now');
+				//U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] pushing', xml.@name, 'now');
 				getReadyType2(xml, readyTypeCallback,true, ++i,xroot);
 			}
 			function readyTypeCallback(v:Object, index:int):void
 			{
 				numC-=1;
-				U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2]',numC);
+				//U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2]',numC);
 				if(v != null)
 				{
 					if(v is Array)
@@ -454,7 +486,6 @@ package axl.xdef
 					}
 					else if(command == 'addToRail')
 					{
-						U.log('doing ad to rail', container, container.name);
 						container[command](v,false);
 					}
 					else
@@ -504,7 +535,7 @@ package axl.xdef
 		 * <li><b>swf</b> - <code>axl.xdef.types.xSprite</code> - loaded flash DisplayObject is added to xSprite as a child </li>
 		 * <li><b>data</b> - <code>axl.xdef.types.xObject</code> - loaded data is being analyzed and can be instantiated as XML 
 		 * ('xml'), Object ('json'), Sound ('mp3','mpeg'), DisplayObject ('jpg','png','gif','swf') or raw data (ByteArray, String). 
-		 * Regardles of it's contents, instantiated axl.xdef.types.xObject assigns the result to it's own <code> data </code> property.
+		 * Regardles of it's contents, instantiated axl.xdef.types.xObject assigns the result to it's own <code> data </code> property.</li>
 		 * <li><b>scrollBar</b> - <code>axl.xdef.types.xScroll</code> - extends xSprite </li>
 		 * <li><b>carousel</b> - <code>axl.ui.Carusele</code> extends flash Sprite </li>
 		 * </ul>
@@ -618,7 +649,7 @@ package axl.xdef
 		 * <li>Your <code>s:String</code> param if it doesn't start with "$" symbol</li>
 		 * <li><code>null</code> and logs SOURCE NOT FOUND if address can not be resolved</li>
 		 * <li>referenced object if address is resolved. If referenced object is also a $ reference string - function processes recursively
-		 * and returns object from last recursion.
+		 * and returns object from last recursion.</li>
 		 * </ul>
 		 *  */
 		public static function simpleSourceFinder(initSource:Object, s:String):Object
