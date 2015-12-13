@@ -37,6 +37,10 @@ package axl.xdef.types
 		{
 			xdef = definition;
 			this.xroot = xrootObj || xroot;
+			if(this.xroot != null && definition != null)
+				xroot.registry[String(definition.@name)] = this;
+			else
+				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
 			super();
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			parseDef();

@@ -72,8 +72,6 @@ package axl.xdef.types
 		private var addedToStageActions:Vector.<xAction>
 		
 		private var actionOut:Boolean;
-		
-		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
 			super(definition,xroot);

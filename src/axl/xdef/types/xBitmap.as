@@ -37,9 +37,14 @@ package axl.xdef.types
 		private var metaAlreadySet:Boolean;
 		private var addedToStageActions:Vector.<xAction>;
 		
-		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null)
+		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null,definition:XML=null)
 		{
 			this.xroot = xrootObj || xroot;
+			if(this.xroot != null && definition != null)
+				xroot.registry[String(definition.@name)] = this;
+			else
+				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF");
+			
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);
@@ -102,7 +107,6 @@ package axl.xdef.types
 			else if(xdef != null && xdef is XML && !reparsDefinitionEverytime)
 				return;
 			xdef = value;
-			parseDef();
 		}
 		public function reset():void { 
 			AO.killOff(this);

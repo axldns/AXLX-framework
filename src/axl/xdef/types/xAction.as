@@ -44,8 +44,6 @@ package axl.xdef.types
 			if(xowner && xowner.charAt(0) == '$')
 				xownerArray = xowner.substr(1).split('.');
 			dynamicArgs = def.dynamicArgs;
-			
-				
 		}
 		/** Owner of the function to execute. By Default main class of the project. */
 		public function get xparent():ixDef { return xxparent } 

@@ -50,6 +50,10 @@ package axl.xdef.types
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			this.xroot = xrootObj || this.xroot;
+			if(this.xroot != null && definition != null)
+				xroot.registry[String(definition.@name)] = this;
+			else
+				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
 			xdef = definition;
 			super();
 			parseDef();
@@ -110,7 +114,7 @@ package axl.xdef.types
 		{
 			if(v is String)
 				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
-			if((metaAlreadySet && !reparseMetaEverytime))
+			if(!v || (metaAlreadySet && !reparseMetaEverytime))
 				return;
 			xmeta =v;
 			metaAlreadySet = true;

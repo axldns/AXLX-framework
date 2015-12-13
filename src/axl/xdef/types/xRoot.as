@@ -155,7 +155,7 @@ package axl.xdef.types
 				callback(elements[v]);
 				return;
 			}
-			else if((registry[v] is DisplayObject) && !forceNewElement)
+			else if((registry[v] != null ) && !forceNewElement)
 			{
 				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
 				callback(registry[v]);
@@ -327,18 +327,38 @@ package axl.xdef.types
 		
 	
 		
-		public function binCommand(v:Object):*
+		public function binCommand(v:Object,debug:int=1):*
 		{
 			if(rootFinder != null)
 			{
-				if(!(v is Array))
-					return rootFinder.parseInput(v as String);
-				for(var i:int =0,j:int=v.length;i<j;i++)
-					U.log("binCommand", rootFinder.parseInput(v[i]), 'result of:', v[i]);
+				var i:int =0,r:*,a:Array = (v is Array) ? v as Array: [v],j:int = a.length;
+				switch (debug)
+				{
+					case 1:
+						for(;i<j;i++)
+						{
+							r = rootFinder.parseInput(a[i]);
+							if(r is Error)
+								U.log("ERROR BIN COMMAND", a[i], '\n' + r);
+						}
+						return r;
+					case 2:
+						for(;i<j;i++)
+						{
+							r=rootFinder.parseInput(a[i])
+							U.log("binCommand", r, 'result of:', a[i]);
+						}
+						return r;
+					default:
+						for(;i<j;i++)
+							r = rootFinder.parseInput(a[i]);
+						return r;
+				}
+				
 			}
 			else
 				U.log("Parser not available");
-			return null;
+			return r;
 		}
 		
 		
@@ -369,10 +389,10 @@ package axl.xdef.types
 			this.getAdditionByName(name, gotIt,node, gotIt);
 			function gotIt(v:*):void
 			{
-				if(v && v is xButton)
+				if(v && v.hasOwnProperty('execute'))
 					v.execute();
 				else
-					U.log("NO >>"+name+"<< btn defined in", node);
+					U.log("EXECUTE >>"+name+"<< NOT AVAILABLE", node);
 			}
 		}
 	}

@@ -9,11 +9,9 @@
  */
 package axl.xdef.interfaces
 {
-	import flash.events.IEventDispatcher;
-	
 	import axl.xdef.types.xRoot;
 
-	public interface ixDef extends IEventDispatcher
+	public interface ixDef
 	{
 		function get def():XML;
 		function set def(v:XML):void;

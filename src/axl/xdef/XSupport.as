@@ -24,6 +24,7 @@ package axl.xdef
 	import axl.utils.U;
 	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.interfaces.ixDisplay;
+	import axl.xdef.types.xActionSet;
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
 	import axl.xdef.types.xCarousel;
@@ -111,7 +112,7 @@ package axl.xdef
 				{
 					//U.log("[apply attributes]", target.xroot, target.hasOwnProperty('name') ? target.name : null, target);
 					val = target.xroot.binCommand(val.substr(1));
-					//U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', val, '<==', attribs[i].valueOf());
+					//U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', key, '<==', val, '\t from', attribs[i].valueOf());
 				}
 				else
 					val = valueReadyTypeCoversion(val);
@@ -253,7 +254,7 @@ package axl.xdef
 		 * */
 		public static function getImageFromDef(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xBitmap
 		{
-			var xb:xBitmap = new xBitmap(null,'auto',true,xroot);
+			var xb:xBitmap = new xBitmap(null,'auto',true,xroot,xml);
 			if(dynamicSourceLoad)
 				checkSource(xml, imageCallback,true);
 			else
@@ -262,7 +263,6 @@ package axl.xdef
 			{
 				xb.bitmapData = U.getBitmapData(Ldr.getBitmap(String(xml.@src)));
 				xb.smoothing = true;
-				xb.def = xml;
 				return xb;
 			}
 			return xb;
@@ -474,7 +474,7 @@ package axl.xdef
 					}
 					else if(command == 'addChildAt' || command == 'addChild')
 					{
-						if(!(container is DisplayObjectContainer))
+						if(!(container is DisplayObjectContainer) || !(v is DisplayObject))
 						{
 							finishPushing();
 							return;
@@ -556,9 +556,11 @@ package axl.xdef
 		{
 			if(xml == null)
 				throw new Error("Undefined XML definition");
+			//U.log("OBJECT REQUEST", xml.name(), xml.@name);
 			proxyQueue(proceed);
 			function proceed():void
 			{
+				//U.log("OBJECT PROCEED", xml.name(), xml.@name);
 				var type:String = xml.name();
 				var obj:Object;
 				if(dynamicLoad)
@@ -568,6 +570,7 @@ package axl.xdef
 				function readyTypeCallback():void
 				{
 					var bmp:Bitmap = xml.hasOwnProperty('@src') ? Ldr.getBitmapCopy(String(xml.@src)) : null;
+					//U.log("OBJECT BUILD", type, xml.@name);
 					switch(type)
 					{
 						case 'div': obj = new xSprite(xml,xroot); break;
@@ -582,6 +585,7 @@ package axl.xdef
 						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
 						case 'swf': obj = getSwfFromDef2(xml,false,xroot); break;
 						case 'data' : obj = getDataFromDef(xml,xroot);break;
+						case 'act' : obj = getActionFromDef(xml,xroot);break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						default: 
 							if(userTypes[type] is Function)
@@ -606,14 +610,14 @@ package axl.xdef
 						if(b is Bitmap)
 							obj.addChildAt(Ldr.getBitmapCopy(n),0);
 					}
+					applyAttributes(xml, obj);
+					
 					if(obj is xSprite)
 					{
-						applyAttributes(xml, obj);
 						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 					}
 					else if(obj is Carusele)
 					{
-						applyAttributes(xml, obj);
 						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
 						Carusele(obj).movementBit(0);
 					}
@@ -628,6 +632,11 @@ package axl.xdef
 						additionQueue[0]();
 				}
 			}
+		}
+		
+		private function getActionFromDef(xml:XML, xroot:xRoot):xActionSet
+		{
+			return new xActionSet(xml,xroot);
 		}
 		
 		/** Private function to support objects instantiation in order. Hold's delegates 
