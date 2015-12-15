@@ -108,19 +108,33 @@ package axl.xdef
 				while(keyArray.length)
 					deepTarget = deepTarget[keyArray.shift()];
 				val = attribs[i].valueOf();
-				if(target.hasOwnProperty('xroot') && val.charAt(0) == '$' )
+				val = resolveValue(val,target);
+				if(key in deepTarget)
 				{
-					//U.log("[apply attributes]", target.xroot, target.hasOwnProperty('name') ? target.name : null, target);
-					val = target.xroot.binCommand(val.substr(1));
-					//U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', key, '<==', val, '\t from', attribs[i].valueOf());
+					//U.log('[applyAttributes]', target, target.hasOwnProperty('name') ? target.name : '','applying', key, '<==', val, '\t from', attribs[i].valueOf());
+					deepTarget[key] = val;
 				}
 				else
-					val = valueReadyTypeCoversion(val);
-				if(key in deepTarget)
-					deepTarget[key] = val;
+				{
+					//U.log('[applyAttributes]',target, target.hasOwnProperty('name') ? target.name : '','does not have ', key, 'property. Value', val, '\t from', attribs[i].valueOf(), 'not assigned');
+				}
 			}
-				
 			return target;
+		}
+		
+		public static function resolveValue(val:String, target:Object=null):*
+		{
+			var output:*;
+			if(val.charAt(0) == '$' && target && target.hasOwnProperty('xroot') && target.xroot != null )
+			{
+				//U.log("[resolveValue][", target.hasOwnProperty('name') ? target.name : null, target,']:', val);
+				output = target.xroot.binCommand(val.substr(1));
+				//U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', key, '<==', val, '\t from', attribs[i].valueOf());
+			}
+			else
+				output = valueReadyTypeCoversion(val);
+			//U.log("[resolveValue]["+val+"]:", output);
+			return output;
 		}
 		
 		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):uint
@@ -355,13 +369,13 @@ package axl.xdef
 				directive = command.toString();
 				var attribs:XMLList = command.attributes();
 				var al:int = attribs.length();
-				var val:String;
+				var val:*;
 				var key:String;
 				vals = [];
 				for(var i:int = 0; i < al; i++)
 				{
 					key = attribs[i].name();
-					val = attribs[i].valueOf();
+					val = resolveValue(attribs[i].valueOf(), drawable);
 					vals[i] = val;
 				}
 				drawable.graphics[directive].apply(null, vals);
@@ -405,10 +419,7 @@ package axl.xdef
 				throw new Error("Invalid filter class in definition: " + xml.toXMLString());
 			var filter:BitmapFilter = new Fclass();
 			
-			if(xml.hasOwnProperty('@matrix'))
-				filter['matrix'] = JSON.parse(String(xml.@matrix)) as Array;
-			else
-				applyAttributes(xml, filter);
+			applyAttributes(xml, filter);
 			return filter;
 		}
 		
