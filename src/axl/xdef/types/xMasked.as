@@ -78,8 +78,6 @@ package axl.xdef.types
 				U.distribute(container,distributeHorizontal,true);
 			if(!isNaN(distributeVertical))
 				U.distribute(container,distributeVertical,false);
-			if(onElementAdded != null)
-				onElementAdded(e);
 		}
 		
 		private function addListeners():void {

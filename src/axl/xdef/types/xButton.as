@@ -13,6 +13,7 @@ package axl.xdef.types
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.external.ExternalInterface;
+	import flash.geom.ColorTransform;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	import flash.utils.clearInterval;
@@ -350,6 +351,13 @@ package axl.xdef.types
 				texture.x = 0;
 				texture.y =0;
 			}
+		}
+		
+		public function ctransform(prop:String,val:Number):void {
+			if(!xtrans)
+				xtrans = new ColorTransform();
+			xtrans[prop] = val;
+			this.transform.colorTransform = xtrans;
 		}
 	}
 }

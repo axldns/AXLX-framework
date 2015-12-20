@@ -13,7 +13,6 @@ package axl.xdef
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
-	import flash.events.Event;
 	import flash.filters.BitmapFilter;
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
@@ -37,23 +36,40 @@ package axl.xdef
 	import axl.xdef.types.xSprite;
 	import axl.xdef.types.xSwf;
 	import axl.xdef.types.xText;
-
+	
+	/** Factory class for XML defined elements.<br>
+	 * <ul>
+	 * <li> Creates, registers, decorates and animates all objects</li>
+	 * <li> Allows to extend functionality by registering user defined elements.</li>
+	 * <li> Provides set of utility functions to work with xml nodes / xml defined objects.</li>
+	 * </ul>
+	 * */
 	public class XSupport
 	{
-		private static var ver:Number = 0.95;
 		private static var additionQueue:Vector.<Function> = new Vector.<Function>();
 		private static var userTypes:Object={};
-		public static function get version():Number { return ver}
 			
 		private var smallRegistry:Object={};
+		/** Default font to apply on xText if <code>font</code> attribute is not specifed @see axl.xdef.types.xText */
 		public var defaultFont:String;
+		/** @see axl.xdef.types.xRoot */
 		public var root:xRoot;
-		private var parentFilledEvent:Event = new Event(Event.COMPLETE);
-		
-		
+		/** Object that contains references to all instantiated and <b>uniquely</b> named objects 
+		 * created within <code>getReadyType</code> method (all auto xml additions and executions).
+		 * <br>Object without name property defined are not registered.
+		 * <br>Multiple object registered under the same name will cause registry to return only the 
+		 * most recent ones*/
 		public function get registry():Object { return smallRegistry }
+		/** @param v - name of the object (xml "name" attribute) @see #registry() */
 		public function registered(v:String):Object { return smallRegistry[v] }
 		
+		/** Factory class for XML defined elements.<br>
+		 * <ul>
+		 * <li> Creates, registers, decorates and animates all objects</li>
+		 * <li> Allows to extend functionality by registering user defined elements.</li>
+		 * <li> Provides set of utility functions to work with xml nodes / xml defined objects.</li>
+		 * </ul>
+		 * */
 		public function XSupport()
 		{
 		}
@@ -65,30 +81,10 @@ package axl.xdef
 		 * If it does, value of attribute is *parsed* and assigned to the target's property.
 		 * If object is dynamic and property of given attribute name does not exist, new property on target
 		 * <b>is not created</b>.
-		 * <h3>Parsing attribute values</h3>
-		 * Generally all XML attribute values are recoginzed as String values (ActionScript),<br>
-		 * and this is an ultimate value assigned to the target <b>IF</b> parsing fails.<br>
-		 * 
-		 * There are two ways of parsing attributes available:
-		 * <ul>
-		 * <li><b>dolar sign prefixed parsing</b> - value of the attribute is evaluated by 
-		 * <code>axl.utils.RootFinder.parseInput</code> method</li>
-		 * <li><b>JSON parsing</b> - value assigned to a target is an output of JSON.parse on attribute value </li>
-		 * </ul>
-		 * <pre>
-		 * &lt;div name='sample' x='10' y='$stage.stageHeight/2' mouseChildren='false'/>
-		 * </pre>
-		 * is equivalent of
-		 * <pre>
-		 * var any:xSprite = new xSprite()
-		 * any.name = 'sample';
-		 * any.x = 10;
-		 * any.u = stage.stageHeight/2;
-		 * any.mouseChildren = false;
-		 * </pre>
-		 * 
+		 * Parsing attribute values is proceed by <code>resolveValue</code> function
 		 * The order of the attributes matters - they're being processed from left to right.<br>
 		 * Attributes can reffer to object's deeper properties.
+		 * @see #resolveValue()
 		 * */
 		public static function applyAttributes(def:XML, target:Object):Object
 		{
@@ -121,7 +117,29 @@ package axl.xdef
 			}
 			return target;
 		}
-		
+		/**
+		 * Generally all XML attribute values are recoginzed as String values (ActionScript),<br>
+		 * and this is an ultimate value returned <b>IF</b> parsing fails.<br>
+		 * There are two ways of parsing <code>val</code> available:
+		 * <ul>
+		 * <li><b>dolar sign prefixed parsing</b> - value is evaluated by 
+		 * <code>axl.utils.RootFinder.parseInput</code> method</li>
+		 * <li><b>JSON parsing</b> - value assigned to a target is an output of JSON.parse on attribute value </li>
+		 * </ul>
+		 * <pre>
+		 * &lt;div name='sample' x='10' y='$stage.stageHeight/2' mouseChildren='false'/>
+		 * </pre>
+		 * is equivalent of
+		 * <pre>
+		 * var any:xSprite = new xSprite()
+		 * any.name = 'sample';
+		 * any.x = 10;
+		 * any.u = stage.stageHeight/2;
+		 * any.mouseChildren = false;
+		 * </pre>
+		 * @see #valueReadyTypeCoversion()
+		 * @see axl.utils.binAgent.RootFinder#parseInput()
+		 * */
 		public static function resolveValue(val:String, target:Object=null):*
 		{
 			var output:*;
@@ -136,7 +154,22 @@ package axl.xdef
 			//U.log("[resolveValue]["+val+"]:", output);
 			return output;
 		}
-		
+		/** Executes animation on <code>meta[animName]</code> owners. Lenient.
+		 * General format of an animation is an array of arguments for <code>axl.utils.AO.animate</code>
+		 * function with difference that first parameter (target) is ommited, as it is passed to this function
+		 * directly. Following example is the shortest example of animating object from whichever position to x 10 in 0.3sec every
+		 * time object is added to stage.
+		 * <pre>
+		 * &lt;div name='a' meta='{addedToStage:[0.3,{"x":10}]}'/>
+		 * </pre>
+		 * <br> Mapped properties of inner animation object: onUpdate, onUpdateArgs
+		 * @param target - object to animate and look <code>meta[animName]</code> for
+		 * @param animName - animation key/identifier
+		 * @param onComplete - callback to execute once animation is completd
+		 * @param killCurrent - kills ANY existing animations proceeding on <code>target</code> befeore executing this one
+		 * @param reset can execute ixDef <code>reset</code> interface function before animation
+		 * @see axl.utils.AO#animate() 
+		 * @see axl.xdef.interfaces.ixDef#reset() */
 		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):uint
 		{
 			if(reset)
@@ -176,7 +209,8 @@ package axl.xdef
 			}
 			return 0;
 		}
-		
+		/** used for onComplete + onCompleteArgs animByNameExtra args
+		 * @see #animByNameExtra() */
 		private static function execFactory(f:Object, xrootObject:ixDisplay, args:Array=null, callback:Function=null):Function
 		{
 			var anonymous:Function = function():void
@@ -195,7 +229,8 @@ package axl.xdef
 			}
 			return anonymous;
 		}
-		
+		/** Parses String via JSON parse method, returns its result if successful 
+		 * or back input <code>val</code> if it failed @see JSON#parse() */
 		public static function valueReadyTypeCoversion(val:String):*
 		{
 			var ret:*;
@@ -405,6 +440,14 @@ package axl.xdef
 			return ar.length > 0 ? ar : null;
 		}
 		
+		/** XML tag name <b><code>act</code></b> expects no children.<br>
+		 * Returns lightweight, non-displayable Function equivalent, ready to call "execute" on
+		 * @see axl.xdef.xtypes.xActionSet
+		 * @see axl.xdef.xtypes.xAction */
+		private function getActionFromDef(xml:XML, xroot:xRoot):xActionSet
+		{
+			return new xActionSet(xml,xroot);
+		}
 		/**
 		 * XML tag name <b><code>filter</code></b><br>
 		 * Returns BitmapFilter object from XML definiton.
@@ -440,8 +483,9 @@ package axl.xdef
 		 * </ul>
 		 * @param def - XML node which children are to be parsed
 		 * @param container - DisplayObject to process (DisplayObjectContainer for adding children)
-		 * @command - for DisplayObjectContainer its typically 'addChild', for axl.ui.Carousel it's 'addToRail'
-		 * @xroot - root of all XML based objects (stage equivalent)
+		 * @param command - for DisplayObjectContainer its typically 'addChild', for axl.ui.Carousel it's 'addToRail'
+		 * @param xroot - root of all XML based objects (stage equivalent)
+		 * @see #getReadyType2()
 		 * */
 		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChildAt',xroot:xRoot=null,onChildrenCreated:Function=null):void
 		{
@@ -508,8 +552,8 @@ package axl.xdef
 			{
 				if(numC != 0)
 					return
-					if(container && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
-						container['onChildrenCreated']();
+				if(container && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
+					container['onChildrenCreated']();
 			}
 		}
 		/** Loads resource specified as "src" attribute of xml object. Executes callback with xml as attribute.
@@ -543,7 +587,7 @@ package axl.xdef
 		 * <li><b>txt</b> - <code>axl.xdef.types.xText</code> - extends flash TextField </li>
 		 * <li><b>btn</b> - <code>axl.xdef.types.xButton</code>- extends xSprite </li>
 		 * <li><b>msk</b> - <code>axl.xdef.types.xMasked</code> - extends xSprite </li>
-		 * <li><b>swf</b> - <code>axl.xdef.types.xSprite</code> - loaded flash DisplayObject is added to xSprite as a child </li>
+		 * <li><b>swf</b> - <code>axl.xdef.types.xSwf</code> - loaded flash DisplayObject is added to xSwf as a child</li>
 		 * <li><b>data</b> - <code>axl.xdef.types.xObject</code> - loaded data is being analyzed and can be instantiated as XML 
 		 * ('xml'), Object ('json'), Sound ('mp3','mpeg'), DisplayObject ('jpg','png','gif','swf') or raw data (ByteArray, String). 
 		 * Regardles of it's contents, instantiated axl.xdef.types.xObject assigns the result to it's own <code> data </code> property.</li>
@@ -643,11 +687,6 @@ package axl.xdef
 						additionQueue[0]();
 				}
 			}
-		}
-		
-		private function getActionFromDef(xml:XML, xroot:xRoot):xActionSet
-		{
-			return new xActionSet(xml,xroot);
 		}
 		
 		/** Private function to support objects instantiation in order. Hold's delegates 

@@ -38,10 +38,20 @@ package axl.xdef.types
 		private var addedToStageActions:Vector.<xAction>;
 		private var intervalID:uint;
 		private var defaultFont:String;
-		
-		public var resetOnAddedToStage:Boolean = true;
-		public var reparseMetaEverytime:Boolean=false;
-		public var reparsDefinitionEverytime:Boolean=false;
+		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
+		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
+		public var reparseMetaEverytime:Boolean;
+		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
+		 * affects graphics drawing only. Pushing children inside happens only once per existence in
+		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
+		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
+		public var reparsDefinitionEverytime:Boolean;
+		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
+		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
+		 * and killing all animations @see #reset() */
+		public var resetOnAddedToStage:Boolean=true;
+		/** Distributes  children horizontaly with gap specified by this property. 
+		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
 		private var metaAlreadySet:Boolean;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
@@ -124,7 +134,6 @@ package axl.xdef.types
 			if(def == null)
 				throw new Error("Undefined definition for " + this);
 			XSupport.applyAttributes(def, this);
-			XSupport.applyAttributes(def, tff);
 			
 			if(!def.hasOwnProperty('@font'))
 				tff.font = defaultFont;
@@ -170,7 +179,31 @@ package axl.xdef.types
 			this.transform.colorTransform = xtrans;
 		}
 		
-		//-- internal
+		/**
+		 * <h3>xSprite meta keywords</h3>
+		 * <ul>
+		 * <li>"replace" - array of Objects with following keys
+		 * <ol>
+		 * <li>"pattern" - Regexp to find inside xText.text string</li>
+		 * <li>"source" - replacement or reference to replacement (start with $) String for found pattern</li>
+		 * <li>(optional) "options" - pattern Regexp options (e.g. flags /gi)</li>
+		 * <li>(optional) "sourceRepPattern" - source can be also replaced by this parameter - regexp</li>
+		 * <li>(optional) "sourceRepOptions" - sourceRepPattern regexp options</li>
+		 * </ol>
+		 * If replace array is set, every time xTimer.text or htmlText is set, text is scanned and replaced
+		 * against all regular expressions in "replace" array.
+		 * </li>
+		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
+		 * <li>"addedToStageAction" - action(s) to execute when added to stage</li>
+		 * instantiated and added to this instance</li>
+		 * <li>"action" - action(s) to execute when html link is clicked</li>
+		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method</li>
+		 * when htmlText hyperLink is clicked 
+		 * </ul>
+		 * @see axl.xdef.types.xAction
+		 * @see axl.xdef.XSupport#animByNameExtra()
+		 * @see axl.utils.AO#animate()
+		 */
 		public function set meta(v:Object):void
 		{
 			if(v is String)
@@ -235,5 +268,43 @@ package axl.xdef.types
 			super.htmlText = value;
 			replaceTextFieldText();
 		}
+		
+		public function get align():String { return tff.align }
+		public function set align(v:String):void { tff.align = v }
+		public function get blockIndent():Object { return tff.blockIndent }
+		public function set blockIndent(v:Object):void { tff.blockIndent = v }
+		public function get bold():Object { return tff.bold }
+		public function set bold(v:Object):void { tff.bold = v }
+		public function get bullet():Object { return tff.bullet }
+		public function set bullet(v:Object):void { tff.bullet = v }
+		public function get color():Object { return tff.color }
+		public function set color(v:Object):void { tff.color = v }
+		public function get font():String { return tff.font }
+		public function set font(v:String):void { tff.font = v }
+		public function get indent():Object { return tff.indent }
+		public function set indent(v:Object):void { tff.indent = v }
+		public function get italic():Object { return tff.italic }
+		public function set italic(v:Object):void { tff.italic = v }
+		public function get kerning():Object { return tff.kerning }
+		public function set kerning(v:Object):void { tff.kerning = v }
+		public function get leading():Object { return tff.leading }
+		public function set leading(v:Object):void { tff.leading = v }
+		public function get leftMargin():Object { return tff.leftMargin }
+		public function set leftMargin(v:Object):void { tff.leftMargin = v }
+		public function get letterSpacing():Object { return tff.letterSpacing }
+		public function set letterSpacing(v:Object):void { tff.letterSpacing = v }
+		public function get rightMargin():Object { return tff.rightMargin }
+		public function set rightMargin(v:Object):void { tff.rightMargin = v }
+		public function get size():Object { return tff.size }
+		public function set size(v:Object):void { tff.size = v }
+		public function get tabStops():Array { return tff.tabStops }
+		public function set tabStops(v:Array):void { tff.tabStops = v }
+		public function get target():String { return tff.target }
+		public function set target(v:String):void { tff.target = v }
+		public function get underline():Object { return tff.underline }
+		public function set underline(v:Object):void { tff.underline = v }
+		public function get url():String { return tff.url }
+		public function set url(v:String):void { tff.url = v }
+
 	}
 }

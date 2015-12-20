@@ -99,5 +99,16 @@ package axl.xdef.types
 		/** determines scroll efficiency default 1. Passing font size + spacing */
 		public function get deltaMultiplier():int { return deltaMultiply }
 		public function set deltaMultiplier(value:int):void	{ deltaMultiply = value }
+		
+		public function linkButton(xmlName:String, onClick:Function):xButton
+		{
+			var b:xButton = getChildByName(xmlName) as xButton;
+			if(b != null)
+			{
+				b.onClick = onClick;
+				this.setChildIndex(b, this.numChildren-1);
+			}
+			return b;
+		}
 	}
 }

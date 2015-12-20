@@ -13,7 +13,6 @@ package axl.xdef.types
 	import flash.display.DisplayObjectContainer;
 	import flash.utils.setTimeout;
 	
-	import axl.utils.Ldr;
 	import axl.utils.U;
 	import axl.utils.binAgent.RootFinder;
 	import axl.xdef.XSupport;
@@ -22,12 +21,13 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		public var elements:Object = {};
 		protected var xsupport:XSupport;
 		protected var CONFIG:XML;
-		public var sourcePrefixes:Array;
 		private var rootFinder:RootFinder;
-		
+		/** General  loading resources PREFIX.<br><code>pathPrefixes</code> argument for <code>Ldr.load</code> method.
+		 * All elements with "src" attribute are using this.
+		 * @see axl.utils.Ldr#load()*/
+		public var sourcePrefixes:Array;
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
@@ -42,9 +42,12 @@ package axl.xdef.types
 				rootFinder = new RootFinder(this,XSupport);
 			super(definition);
 		}
-		
+		/** Returns reference to XML config - the project definition */
 		public function get config():XML { return CONFIG }
-		
+		/** &lt;root> element definition. Setting it up for the first time fires up chain
+		 * of instantiation all sub elements 
+		 * @see axl.xdef.XSupport#pushReadyTypes2() 
+		 * @see axl.xdef.XSupport#applyAttributes() */
 		override public function set def(value:XML):void
 		{
 			// as xRoot is not called via XSupport.getReadyType
@@ -58,6 +61,16 @@ package axl.xdef.types
 		
 		
 		// ADD - REMOVE
+		/** Adds or removes one or more elements (config xml nodes) to stage (xml root node).
+		 * @param v - String or Array of Strings - must reffer to <code>name</code> attribute of requested config node
+		 * @param underChild - depth controll -name of existing element under which addition will occur
+		 * @param onNotExist - Function to execute if one or more elements does not exist
+		 * in specified node. By default it throws Error. Passiong function helps treat it gracefully
+		 * @param indexModificator - depth controll - modifes addition index when "underChild" specified
+		 * @param node - config xml node within which elements of <code>v</code> name are searched for
+		 * @param forceNewElement - if object(s) of v name are already instantiated (available within <code>registry</code>),
+		 * no new object will be instantiated unless <code>forceNewElement</code> flag is set to <code>true</code>
+		 * */
 		public function add(v:Object,underChild:String=null,onNotExist:Function=null,indexModificator:int=0,node:String='additions',forceNewElement:Boolean=false):void
 		{
 			if(v is Array)
@@ -72,12 +85,23 @@ package axl.xdef.types
 					addChild(d);
 			}
 		}
-		
-		public function addTo(v:Object,intoChild:String,command:String='addChild',onNotExist:Function=null,node:String='additions',forceNewElement:Boolean=false):void
+		/** Adds or removes one or more elements (config xml nodes) to any instantiated DisplayObjectContainer descendants.
+		 * @param v - String or Array of Strings - must reffer to <code>name</code> attribute of requested config node
+		 * @param intoChild - target DisplayObjectContainer ("name", "$refference" or DisplayObjectContainer itself) to add "v" to.
+		 * @param onNotExist - Function to execute if one or more elements does not exist
+		 * in specified node. By default it throws Error. Passiong function helps treat it gracefully
+		 * @param node - config xml node within which elements of <code>v</code> name are searched for
+		 * @param forceNewElement - if object(s) of v name are already instantiated (available within <code>registry</code>),
+		 * no new object will be instantiated unless <code>forceNewElement</code> flag is set to <code>true</code>
+		 * */
+		public function addTo(v:Object,intoChild:Object,command:String='addChild',onNotExist:Function=null,node:String='additions',forceNewElement:Boolean=false):void
 		{
-			if(intoChild.charAt(0) == "$")
-				intoChild = XSupport.simpleSourceFinder(this,intoChild) as String;
-			var c:DisplayObjectContainer = xsupport.registered(intoChild) as DisplayObjectContainer;
+			if(intoChild is String && intoChild.charAt(0) == "$")
+				intoChild = binCommand(intoChild.substr(1));
+			if(intoChild is String)
+				intoChild =  xsupport.registered(String(intoChild));
+				
+			var c:DisplayObjectContainer = intoChild as DisplayObjectContainer;
 			if(c == null)
 			{
 				U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
@@ -93,7 +117,10 @@ package axl.xdef.types
 				c[command](o);
 			}
 		}
-		
+		/** Adds DisplayObject underneath another child specified by it's name
+		 * @v - DisplayObject to add
+		 * @param chname - depth controll -name of existing element under which addition will occur
+		 * */
 		public function addUnderChild(v:DisplayObject, chname:String,indexMod:int=0):void
 		{
 			var o:DisplayObject = getChildByName(chname);
@@ -125,8 +152,8 @@ package axl.xdef.types
 		}
 		/** Instantiates element from loaded config node. Instantiated / loaded / cached object
 		 * is an argument for callback. 
-		 * <br>All objects are being created within <code>XSupport.getReadyType</code> function. 
-		 * <br>All objects are being cached within <code>XSupport.elements</code> dictionary where
+		 * <br>All objects are being created within <code>XSupport.getReadyType2</code> function. 
+		 * <br>All objects are being cached within <code>registry</code> dictionary where
 		 * xml attribute <b>name</b> is key for it. 
 		 * @param v - name of the object (must match any child of <code>node</code>). Objects
 		 * are being looked up by <b>name</b> attribute. E.g. v= 'foo' for
@@ -136,7 +163,7 @@ package axl.xdef.types
 		 * @param callback - Function of one argument - loaded element. Function will be executed 
 		 * once element is available (elements with <code>src</code> attribute may need to require loading of their contents).
 		 * @param node - name of the XML tag (not an attrubute!) that is a parent for searched element to instantiate.
-		 * @see axl.xdef.XSupport#getReadyType()
+		 * @see axl.xdef.XSupport#getReadyType2()
 		 */
 		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
 		{
@@ -148,12 +175,6 @@ package axl.xdef.types
 				v = XSupport.simpleSourceFinder(this,v) as String;
 				if(v == null)
 					v='ERROR';
-			}
-			if((elements[v] is DisplayObject) && !forceNewElement)
-			{
-				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.elements cache');
-				callback(elements[v]);
-				return;
 			}
 			else if((registry[v] != null ) && !forceNewElement)
 			{
@@ -177,13 +198,7 @@ package axl.xdef.types
 					return;
 				}
 			}
-			
-			xsupport.getReadyType2(xml, loaded,true,null,this);
-			function loaded(dob:DisplayObject):void
-			{
-				elements[v] =  dob;
-				callback(dob);
-			}
+			xsupport.getReadyType2(xml, callback,true,null,this);
 		}
 		
 		/** Executes <code>getAdditionByName</code> in a loop. @see #getAdditionByName() */
@@ -204,22 +219,11 @@ package axl.xdef.types
 			}
 		}
 		
-		/** Removes elements from display list. Accepts arrays of display objects, their names and
-		 * mixes of it. Skipps objects which are not part of the display list. */
+		/** Removes elements from the display list. Accepts arrays of display objects, their names and mixes of it.
+		 * Skipps objects which are not part of the display list. */
 		public function remove(...args):void
 		{
-			for(var i:int = 0,j:int = args.length, v:Object; i < j; i++)
-			{	
-				v = args[i]
-				if(v is Array)
-					removeElements(v as Array);
-				else if(v is String)
-					removeByName(v as String);
-				else if(v is DisplayObject)
-					removeChild(v as DisplayObject)
-				else
-					throw new Error("Can't remove: " + v + " - is unknow type");
-			}
+			rmv.apply(args);
 		}
 		/** If child of name specified in argument exists - removes it. All animtions are performed
 		 * based on individual class settings (xBitmap, xSprite, xText, etc)*/
@@ -248,6 +252,8 @@ package axl.xdef.types
 				removeRegistered(v[i]);
 		}
 		
+		/** Removes elements from the display list. Accepts arrays of display objects, their names and mixes of it.
+		 * Skipps objects which are not part of the display list. */
 		public function rmv(...args):void
 		{
 			for(var i:int = 0,j:int = args.length, v:Object; i < j; i++)
@@ -263,11 +269,18 @@ package axl.xdef.types
 					U.log("[xRoot][rmv][WARNING] - Can't remove: " + v + " - is unknow type");
 			}
 		}
-		
+		/** Dictionary of all <b>instantiated</b> objects which can be identified by <code>name</code> attribute*/
 		public function get registry():Object { return xsupport.registry }
+		/** Returns any <b>instantiated</b> object which <code>name</code> equals <code>v</code>*/
 		public function registered(v:String):Object { return  xsupport.registered(v) }
 
-		// ANIMATION UTILITIES - to comment
+		/** Animates an object if it owns an animation definition defined by <code>screenName</code> 
+		 * @param objName - name of animatable object on the displaylist if param <code>c</code> is null
+		 * @param screenName - name of the animation definition
+		 * @param onComplete callback to call when all animations are complete
+		 * @param c -any animatable object that contains meta property
+		 * @see axl.xdef.XSupport#animByNameExtra()
+		 * */
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
 		{
 			c = c || this.getChildByName(objName) as ixDef;
@@ -280,7 +293,12 @@ package axl.xdef.types
 					setTimeout(onComplete, 5);
 			}
 		}
-		
+		/** Scans through all registered objects and executes animation on these which own <code>screenName</code>
+		 * defined animation in their meta property
+		 * @param screenName - name of the animation definition
+		 * @param onComplete callback to call when all animations are complete
+		 * @see #singleAnimByMetaName()
+		 * */
 		public function animateAllRegisteredToScreen(screenName:String,onComplete:Function=null):void
 		{
 			var all:int=0;
@@ -303,30 +321,16 @@ package axl.xdef.types
 			}
 		}
 		
-		public function animAllMetaToScreen(screenName:String,onComplete:Function=null):void
-		{
-			var all:int=0;
-			for(var i:int = 0; i < this.numChildren; i++)
-			{
-				var c:ixDef = this.getChildAt(i) as ixDef;
-				if(c != null && c.meta.hasOwnProperty(screenName))
-				{
-					all++;
-					singleAnimByMetaName(c.name,screenName,singleComplete,c);
-				}
-			}
-			if(all < 1 && onComplete != null)
-				onComplete();
-			function singleComplete():void
-			{
-				if(--all == 0 && onComplete !=null)
-					onComplete();
-			}
-		}
-		public function get files():Object { return Ldr.objects }
-		
-	
-		
+		/** Executes function(s) from string (eval style)
+		 * @param v - string or array of strings to evaluate
+		 * @param debug <ul>
+		 * <li>1 -logs errors only</li>
+		 * <li>2 -logs result of every command</li>
+		 * <li>other -no logging at all</li>
+		 * </ul>
+		 * @return - latest result of evaluation (last element of array if so)
+		 * @see axl.utils.binAgent.RootFinder#parseInput()
+		 * */
 		public function binCommand(v:Object,debug:int=1):*
 		{
 			if(rootFinder != null)
@@ -354,14 +358,14 @@ package axl.xdef.types
 							r = rootFinder.parseInput(a[i]);
 						return r;
 				}
-				
 			}
 			else
 				U.log("Parser not available");
 			return r;
 		}
 		
-		
+		/** If Regexp(regexp) matches <code>sel</code> executes <code>add</code> with <code>onTrue</code> as an argument, otherwise
+		 * executes it with onFalse. @see #add() */
 		public function addIfMatches(sel:String,regexp:String='.*',onTrue:Object=null,onFalse:Object=null):void
 		{
 			if(sel && sel.match(new RegExp(regexp)))
@@ -375,15 +379,17 @@ package axl.xdef.types
 				catch(e:*) { U.log(this, "[addIfMatches]ERROR: invalid argument onFalse:", onFalse) }
 			}
 		}
-		
+		/** Depending on if Regexp(regexp) matches <code>sel</code> executes <code>executeFromXML</code> 
+		 * with onTrue or onFalse arguments @see #executeFromXML() */
 		public function executeIfMatches(sel:String,regexp:String,onTrue:String,onFalse:String,node:String='additions'):void
 		{
 			if(sel && sel.match(new RegExp(regexp)))
-				executeFromXML(onTrue)
+				executeFromXML(onTrue,node)
 			else
-				executeFromXML(onFalse)
+				executeFromXML(onFalse,node)
 		}
-		
+		/** Gets instantiated object from registry or instantiates new from <code>node</code> and
+		 * calls <code>execute()</code> method on it if objects owns it (<code>&lt;btn>, &lt;act></code>)*/
 		public function executeFromXML(name:String,node:String='additions'):void
 		{
 			this.getAdditionByName(name, gotIt,node, gotIt);

@@ -13,37 +13,57 @@ package axl.xdef.types
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
-	import flash.utils.clearInterval;
 	
 	import axl.utils.AO;
 	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
+	/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.
+	 * Overrides standard addChild, addChildAt, removeChild, removeChildAt methods in order
+	 * to maintain meta-keyword-defined animations before removing children or after adding them to display list.
+	 * Self-listens for adding and removing from stage in order to maintain meta.addedToStage defined animation
+	 * and to kill all existing animations when removed.
+	 * @see #meta() */
 	public class xSprite extends Sprite implements ixDisplay
 	{
-		public var onElementAdded:Function;
-		
 		protected var xdef:XML;
 		protected var xmeta:Object={};
 		private var xxroot:xRoot;
 		
-		public var onAnimationComplete:Function;
-		private var eventAnimComplete:Event = new Event(Event.COMPLETE);
-		
 		protected var xfilters:Array
 		protected var xtrans:ColorTransform;
-		protected var xtransDef:ColorTransform;
 		private var intervalID:uint;
-		public var distributeHorizontal:Number;
-		public var distributeVertical:Number;
+		
 		private var metaAlreadySet:Boolean;
-		public var reparseMetaEverytime:Boolean;
-		public var reparsDefinitionEverytime:Boolean;
-		public var resetOnAddedToStage:Boolean=true;
 		private var addedToStageActions:Vector.<xAction>;
 		private var childrenCreatedAction:Vector.<xAction>;
 		
+		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
+		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
+		public var reparseMetaEverytime:Boolean;
+		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
+		 * affects graphics drawing only. Pushing children inside happens only once per existence in
+		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
+		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
+		public var reparsDefinitionEverytime:Boolean;
+		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
+		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
+		 * and killing all animations @see #reset() */
+		public var resetOnAddedToStage:Boolean=true;
+		/** Distributes  children horizontaly with gap specified by this property. 
+		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
+		public var distributeHorizontal:Number;
+		/** Distributes  children verticaly with gap specified by this property. 
+		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
+		public var distributeVertical:Number;
+		
+		/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.
+		 * Overrides standard addChild, addChildAt, removeChild, removeChildAt methods in order
+		 * to maintain meta-keyword-defined animations before removing children or after adding them to display list.
+		 * Self-listens for adding and removing from stage in order to maintain meta.addedToStage defined animation
+		 * and to kill all existing animations when removed.
+		 * @see #meta() */
 		public function xSprite(definition:XML=null,xrootObj:xRoot=null)
 		{
 			addEventListener(Event.ADDED, elementAdded);
@@ -58,10 +78,11 @@ package axl.xdef.types
 			super();
 			parseDef();
 		}
-		
+		/** reference to parent xRoot object @see axl.xdef.types.xRoot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
+		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
 		override public function set name(v:String):void
 		{
 			super.name = v;
@@ -69,20 +90,14 @@ package axl.xdef.types
 				this.xroot.registry.v = this;
 		}
 		
-		protected function removeFromStageHandler(e:Event):void
-		{
-			AO.killOff(this);
-			clearInterval(intervalID);
-		}
+		protected function removeFromStageHandler(e:Event):void	{ AO.killOff(this) }
 		
 		protected function addedToStageHandler(e:Event):void
 		{
 			if(resetOnAddedToStage)
 				this.reset();
 			if(meta.addedToStage != null)
-			{
-				intervalID = XSupport.animByNameExtra(this, 'addedToStage', animComplete);
-			}
+				XSupport.animByNameExtra(this, 'addedToStage');
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 				addedToStageActions[i].execute();
@@ -96,11 +111,9 @@ package axl.xdef.types
 				U.distribute(this,distributeHorizontal,true);
 			if(!isNaN(distributeVertical))
 				U.distribute(this,distributeVertical,false);
-			if(onElementAdded != null)
-				onElementAdded(e);
 		}
 		
-		public function onChildrenCreated():void
+		private function onChildrenCreated():void
 		{
 			if(childrenCreatedAction != null)
 			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
@@ -108,7 +121,20 @@ package axl.xdef.types
 				U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
 			}
 		}
-		
+		/**
+		 * <h3>xSprite meta keywords</h3>
+		 * <ul>
+		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
+		 * <li>"addChild" - animation to execute when added as a child</li>
+		 * <li>"removeChild" - animation to execute before removing from stage (delays removing from stage)</li>
+		 * <li>"addedToStageAction" - action(s) to execute when added to stage</li>
+		 * <li>"childrenCreatedAction" - acction(s) to execute when all initial children (from xml children nodes) are
+		 * instantiated and added to this instance</li>
+		 * </ul>
+		 * @see axl.xdef.types.xAction
+		 * @see axl.xdef.XSupport#animByNameExtra()
+		 * @see axl.utils.AO#animate()
+		 */
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void 
 		{
@@ -137,13 +163,17 @@ package axl.xdef.types
 					childrenCreatedAction[i] = new xAction(b[i],xroot,this);
 			}
 		}
-		
-		
-		public function get eventAnimationComplete():Event {return eventAnimComplete }
+		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
+		 * this object
+		 * @see axl.xdef.XSupport#applyAttrubutes()
+		 * @see #resetOnAddedToStage
+		 * @see #reparseMetaEverytime
+		 * */
 		public function reset():void {
 			AO.killOff(this);
 			XSupport.applyAttributes(def, this);	
 		}
+		/** XML definition of this object*/
 		public function get def():XML { return xdef }
 		public function set def(value:XML):void 
 		{ 
@@ -153,8 +183,6 @@ package axl.xdef.types
 			parseDef();
 		}
 		
-		private function animComplete():void {	this.dispatchEvent(this.eventAnimationComplete) }
-		
 		override public function addChild(child:DisplayObject):DisplayObject
 		{
 			super.addChild(child);
@@ -162,11 +190,10 @@ package axl.xdef.types
 			if(c != null && c.meta.addChild != null)
 			{
 				c.reset();
-				XSupport.animByNameExtra(c, 'addChild', animComplete);
+				XSupport.animByNameExtra(c, 'addChild');
 			}
 			return child;
 		}
-		
 		override public function addChildAt(child:DisplayObject, index:int):DisplayObject
 		{
 			super.addChildAt(child, index);
@@ -174,7 +201,7 @@ package axl.xdef.types
 			if(c != null && c.meta.addChild != null)
 			{
 				c.reset();
-				XSupport.animByNameExtra(c, 'addChild',animComplete);
+				XSupport.animByNameExtra(c, 'addChild');
 			}
 			return child;
 		}
@@ -214,39 +241,14 @@ package axl.xdef.types
 			XSupport.drawFromDef(def.graphics[0], this);
 		}
 		
-		public function get xtransform():ColorTransform { return xtrans }
-		public function set xtransform(v:ColorTransform):void { xtrans =v; this.transform.colorTransform = v;
-			if(xtransDef == null)
-				xtransDef = new ColorTransform();
-		}
-		public function set transformOn(v:Boolean):void { this.transform.colorTransform = (v ? xtrans : xtransDef ) }
-		
 		override public function set filters(v:Array):void
 		{
 			xfilters = v;
 			super.filters=v;
 		}
-		
+		/** Sets assigned  filters on or off @see #filters */
 		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
 		public function get filtersOn():Boolean { return filters != null }
 		
-		
-		public function ctransform(prop:String,val:Number):void {
-			if(!xtrans)
-				xtrans = new ColorTransform();
-			xtrans[prop] = val;
-			this.transform.colorTransform = xtrans;
-		}
-		
-		public function linkButton(xmlName:String, onClick:Function):xButton
-		{
-			var b:xButton = getChildByName(xmlName) as xButton;
-			if(b != null)
-			{
-				b.onClick = onClick;
-				this.setChildIndex(b, this.numChildren-1);
-			}
-			return b;
-		}
 	}
 }
