@@ -172,12 +172,13 @@ package axl.xdef
 		 * @see axl.xdef.interfaces.ixDef#reset() */
 		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):uint
 		{
-			if(reset)
-				target.reset();
-			else if(killCurrent)
-				AO.killOff(target);
 			if(target.meta.hasOwnProperty(animName))
 			{
+				if(reset)
+					target.reset();
+				else if(killCurrent)
+					AO.killOff(target);
+				
 				var animNameArray:Array = target.meta[animName];
 				var ag:Array = [];
 				if(!(animNameArray[0] is Array))
