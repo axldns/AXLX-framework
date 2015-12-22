@@ -16,6 +16,7 @@ package axl.xdef.types
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.utils.clearInterval;
+	import flash.utils.describeType;
 	
 	import axl.utils.AO;
 	import axl.utils.U;
@@ -249,7 +250,7 @@ package axl.xdef.types
 					if(rep.sourceRepPattern)
 					{
 						var sourceRepPattern:RegExp = new RegExp(rep.sourceRepPattern, rep.sourceRepOptions);
-						source = source.replace(sourceRepPattern, rep.sourceReplacement);
+						source = String(source).replace(sourceRepPattern, rep.sourceReplacement);
 					}
 					s= s.replace(pattern, String(source));
 				}
