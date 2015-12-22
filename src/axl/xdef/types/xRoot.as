@@ -223,7 +223,7 @@ package axl.xdef.types
 		 * Skipps objects which are not part of the display list. */
 		public function remove(...args):void
 		{
-			rmv.apply(args);
+			rmv.apply(null,args);
 		}
 		/** If child of name specified in argument exists - removes it. All animtions are performed
 		 * based on individual class settings (xBitmap, xSprite, xText, etc)*/
