@@ -117,17 +117,5 @@ package axl.xdef.types
 				U.log('[xAction][execute]['+target+']['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER', xowner, 'as', target);
 			return f;
 		}
-		
-		private function getDynamicArgs(v:Array):Array
-		{
-			var a:Array = v.concat();
-			for(var i:int = a.length; i-->0;)
-			{
-				var o:Object = a[i];
-				if(o is String && o.charAt(0) == '$')
-					a[i] = XSupport.simpleSourceFinder(xxparent.xroot, String(o));
-			}
-			return a;
-		}
 	}
 }

@@ -243,8 +243,8 @@ package axl.xdef.types
 				{
 					var rep:Object = a[i];
 					var pattern:RegExp = new RegExp(rep.pattern, rep.options);
-					var source:Object = XSupport.simpleSourceFinder(this.xroot, rep.source);
-					if(source == null)
+					var source:Object = (rep.source.charAt(0) == '$' ? xroot.binCommand(rep.source.substr(1)) : rep.source);//XSupport.simpleSourceFinder(this.xroot, rep.source);
+					if(source == null || source is Error)
 						source = rep.source;
 					
 					if(rep.sourceRepPattern)

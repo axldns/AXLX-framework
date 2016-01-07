@@ -9,9 +9,6 @@
  */
 package axl.xdef.types
 {
-	import flash.events.Event;
-	
-	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
 	
 	public class xObject implements ixDef
