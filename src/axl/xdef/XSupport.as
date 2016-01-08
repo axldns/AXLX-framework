@@ -360,11 +360,15 @@ package axl.xdef
 		{
 			var o:xObject = new xObject(xml, xroot);
 			if(dynamicSourceLoad)
+			{
+				//U.log('[getDataFromDef - CHECK SOURCE]', xml.@name, xml.@src);
 				checkSource(xml, objCallback,true);
+			}
 			else 
 				return objCallback();
 			function objCallback():xObject
 			{
+				//U.log('[getDataFromDef - CALLBACK - data assign]', xml.@name, xml.@src);
 				o.data = Ldr.getAny(String(xml.@src))
 				return o;
 			}
@@ -563,17 +567,29 @@ package axl.xdef
 		 * <li>If xml has "src" attribute but <code>dynamicLoad=false</code> - calback is executed right away</li>
 		 * <li>If xml has "src" attribute and <code>dynamicLoad=true</code> - callback is executed only when resource is loaded or failed loading.</li>
 		 * </ul> */
-		private static function checkSource(xml:XML, callBack:Function, dynamicLoad:Boolean=true,sourcePrefixes:Object=null):void
+		private static function checkSource(xml:XML, callBack:Function, dynamicLoad:Boolean=true,sourcePrefixes:Object=null,overwriteInLib:Boolean=false,xroot:xRoot=null):void
 		{
 			if(xml.hasOwnProperty('@src'))
 			{
 				var source:String = String(xml.@src);
+				while(source.charAt(0) == '$' && xroot != null)
+				{
+					source = String(xroot.binCommand(source.substr(1)));
+				}
+				if(String(xml.@src) != source)
+				{
+					//U.log("UPDATING XML, VARIABLE SRC from", String(xml.@src), 'TO', source)
+					xml.@src = source
+				}
 				var inLib:Object = Ldr.getAny(source);
-				if(inLib != null)
+				if((inLib != null) && (overwriteInLib == false))
+				{
+					//U.log('[CHECK SOURCE]', xml.@name, xml.@src, "ALREADY IN LIBRARY");
 					callBack(xml);
+				}
 				else if(dynamicLoad)
 				{
-					Ldr.load(source, function():void{callBack(xml)},null,null,sourcePrefixes);
+					Ldr.load(source, function():void{callBack(xml)},null,null,sourcePrefixes, overwriteInLib ? Ldr.behaviours.loadOverwrite : Ldr.behaviours.loadSkip);
 				}
 				else
 					callBack(xml);
@@ -620,13 +636,13 @@ package axl.xdef
 				var type:String = xml.name();
 				var obj:Object;
 				if(dynamicLoad)
-					checkSource(xml, readyTypeCallback, true, xroot ? xroot.sourcePrefixes : null);
+					checkSource(xml, readyTypeCallback, true, xroot ? xroot.sourcePrefixes : null, xml.hasOwnProperty('@forceReload'),xroot) ;
 				else
 					readyTypeCallback();
 				function readyTypeCallback():void
 				{
-					var bmp:Bitmap = xml.hasOwnProperty('@src') ? Ldr.getBitmapCopy(String(xml.@src)) : null;
 					//U.log("OBJECT BUILD", type, xml.@name);
+					// INSTANTIATION
 					switch(type)
 					{
 						case 'div': obj = new xSprite(xml,xroot); break;
@@ -640,7 +656,7 @@ package axl.xdef
 						case 'img': obj = getImageFromDef(xml,false,xroot); break;
 						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
 						case 'swf': obj = getSwfFromDef2(xml,false,xroot); break;
-						case 'data' : obj = getDataFromDef(xml,xroot);break;
+						case 'data' : obj = getDataFromDef(xml,xroot,false);break;
 						case 'act' : obj = getActionFromDef(xml,xroot);break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						default: 
@@ -648,6 +664,7 @@ package axl.xdef
 								obj = userTypes[type](xml,xroot);
 							break;
 					}
+					// REGISTRATION
 					if(obj != null)
 					{
 						if(obj.hasOwnProperty('name') && xml.hasOwnProperty('@name'))
@@ -658,7 +675,7 @@ package axl.xdef
 						if(obj.hasOwnProperty('xroot'))
 							obj.xroot = xroot;
 					}
-					
+					// ATTACHING SRC
 					if(obj is DisplayObjectContainer &&  xml.hasOwnProperty('@src'))
 					{
 						var n:String = String(xml.@src);
@@ -666,16 +683,18 @@ package axl.xdef
 						if(b is Bitmap)
 							obj.addChildAt(Ldr.getBitmapCopy(n),0);
 					}
+					//APPLYING ATTRIBUTES 1
 					applyAttributes(xml, obj);
 					
-					if(obj is xSprite)
-					{
-						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
-					}
-					else if(obj is Carusele)
+					// PUSHING CHILDREN
+					if(obj is Carusele)
 					{
 						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
 						Carusele(obj).movementBit(0);
+					}
+					else if(obj is DisplayObjectContainer)
+					{
+						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 					}
 					
 					// notify

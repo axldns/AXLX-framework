@@ -77,12 +77,17 @@ package axl.xdef.types
 				getAdditionsByName(v as Array, gotit,node,onNotExist,forceNewElement);
 			else
 				getAdditionByName(v as String, gotit,node,onNotExist,forceNewElement)
-			function gotit(d:DisplayObject):void{
-				
+			function gotit(d:Object):void
+			{
+				if(!(d is DisplayObject))
+				{
+					U.log('[WARNING]', d, d && d.hasOwnProperty('name') ? d.name : v, "IS NOT A DISPLAY OBJECT");
+					return
+				}
 				if(underChild != null)
-					addUnderChild(d,underChild,indexModificator);
+					addUnderChild(d as DisplayObject,underChild,indexModificator);
 				else
-					addChild(d);
+					addChild(d as DisplayObject);
 			}
 		}
 		/** Adds or removes one or more elements (config xml nodes) to any instantiated DisplayObjectContainer descendants.
