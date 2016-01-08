@@ -195,11 +195,11 @@ package axl.xdef.types
 		 * against all regular expressions in "replace" array.
 		 * </li>
 		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
-		 * <li>"addedToStageAction" - action(s) to execute when added to stage</li>
+		 * <li>"addedToStageAction" - action(s) to execute when added to stage
 		 * instantiated and added to this instance</li>
 		 * <li>"action" - action(s) to execute when html link is clicked</li>
-		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method</li>
-		 * when htmlText hyperLink is clicked 
+		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method
+		 * when htmlText hyperLink is clicked</li>
 		 * </ul>
 		 * @see axl.xdef.types.xAction
 		 * @see axl.xdef.XSupport#animByNameExtra()
