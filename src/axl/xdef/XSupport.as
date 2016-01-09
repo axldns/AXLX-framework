@@ -188,16 +188,15 @@ package axl.xdef
 				var atocomplete:uint = ag.length;
 				for(var i:int = 0; i < ag.length; i++)
 				{
+					//assemble
 					var g:Array = [target].concat(ag[i]);
-					var f:Object = XSupport.getDynamicArgs(g[3],target.xroot);
+					//dynamic properties
+					if(g[2] is String && g[2].charAt(0) == "$")
+						g[2] = target.xroot.binCommand(g[2].substr(1));
+					//on complete
+					var f:Object = target.xroot.binCommand(g[3].substr(1));
 					g[3] = (f != null) ?  execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete) : acomplete;
-					if(g[2].hasOwnProperty('onUpdate'))
-					{
-						var onUpdate:Function =  (g[2].onUpdate is Function) ? g[2].onUpdate : XSupport.simpleSourceFinder(target.xroot, g[2].onUpdate) as Function;
-						g[2].onUpdate = onUpdate;
-						if(g[2].hasOwnProperty('onUpdateArgs'))
-							g[2].onUpdateArgs =  XSupport.getDynamicArgs(g[2].onUpdateArgs,target.xroot);
-					}
+					//proceed
 					AO.animate.apply(null, g);
 				}
 			}
@@ -212,7 +211,7 @@ package axl.xdef
 		}
 		/** used for onComplete + onCompleteArgs animByNameExtra args
 		 * @see #animByNameExtra() */
-		private static function execFactory(f:Object, xrootObject:ixDisplay, args:Array=null, callback:Function=null):Function
+		private static function execFactory(f:Object, xrootObject:xRoot, args:Array=null, callback:Function=null):Function
 		{
 			var anonymous:Function = function():void
 			{
@@ -718,65 +717,6 @@ package axl.xdef
 				qcall();
 		}
 		
-		/** Resolves address/reference string [starting with $ (dolar symbol)] in order to return object. AS3 hierarchy.
-		 * @param initSource - first element of the chain from which inner properties are being looked for. Typically your "xroot".
-		 * @param s - dot-style address - refference to your object. E.g.:
-		 * <br><code> $stage.align.length </code> would return string length of your
-		 * stage align mode. <br>Array's and Vector's elements can be accesed by wraping element index with dots. 
-		 * <br> E.g. <code>$stage.stageVideos.0.viewPort</code> would return viewPort Rectangle of first stageVideo element if available.
-		 * @return <ul><li><code>null</code> if init string is null</li>
-		 * <li>Your <code>s:String</code> param if it doesn't start with "$" symbol</li>
-		 * <li><code>null</code> and logs SOURCE NOT FOUND if address can not be resolved</li>
-		 * <li>referenced object if address is resolved. If referenced object is also a $ reference string - function processes recursively
-		 * and returns object from last recursion.</li>
-		 * </ul>
-		 *  */
-		public static function simpleSourceFinder(initSource:Object, s:String):Object
-		{
-			if(s == null)
-				return null;
-			//U.log('[XSupport][simpleSourceFinder]', initSource, initSource.hasOwnProperty('name') ? ('['+ initSource.name +']') : '', s);
-			var keys:Array;
-			if(s.charAt(0) == '$')
-				keys= s.substr(1).split('.');
-			else
-				return s;
-			var target:Object = initSource;
-			//U.log("KEYS", keys);
-			try
-			{
-				//U.log("KEYS.len", keys.length);
-				while(keys.length)
-				{
-					//U.log("trying:", target, '->',  keys[0]);
-					target = target[keys.shift()];
-				}
-			} catch(e:*){target=null, U.log("[XSupport] SOURCE NOT FOUND",s)}
-			if(target is String && target.charAt(0) == '$')
-				target = simpleSourceFinder(initSource, String(target));
-			//U.log("[XSupport][simpleSourceFinder] returning:", target);
-			return target;
-		}
-		
-		/** Resolves  reference to object usign ordered address chunks in an array.
-		 *  For optimizaiton purposes you may want to keep your address paths already split in array.
-		 * @see #simpleSourceFinder() */
-		public static function simpleSourceFinderByArray(initSource:Object, xownerArray:Array):Object
-		{
-			var target:Object = initSource;
-			var keys:Array = xownerArray.concat();
-			try{
-				while(keys.length)
-				{
-					//U.log("trying:", target, '->',  keys[0]);
-					target = target[keys.shift()];
-				}
-			} catch(e:*){target=null,U.log("[XSupport] SOURCE NOT FOUND",xownerArray)}
-			if(target is String && target.charAt(0) == '$')
-				target = simpleSourceFinder(initSource, String(target));
-			return target;
-		}
-		
 		/**  Resolves one ore more address/reference strings [starting with $ (dolar symbol)] in order to return object. AS3 hierarchy.
 		 * @param v - string or array
 		 * @param root - initial resource - first element of chain to look from for deeper references.
@@ -786,17 +726,17 @@ package axl.xdef
 		 * (non-reference array elements remain untouched, reference strings are resolved)</li>
 		 * <li>your <code>v</code> parameter if it's neither string nor array</li></ul>
 		 * @see #simpleSourceFinder() */
-		public static function getDynamicArgs(v:Object,root:Object):Object
+		public static function getDynamicArgs(v:Object,xroot:xRoot):Object
 		{
 			if(v is String && v.charAt(0) == '$' )
-				return simpleSourceFinder(root, String(v));
+				return xroot.binCommand(String(v).substr(1));
 			if(v is Array)
 			{
 				var a:Array = v.concat();
 				for(var i:int = a.length; i-->0;)
 				{
 					var o:Object = a[i];
-					a[i] = (o is String && o.charAt(0) == '$') ? XSupport.simpleSourceFinder(root, String(o)) : o;
+					a[i] = (o is String && o.charAt(0) == '$') ? xroot.binCommand(String(v).substr(1)) : o;
 				}
 				return a;
 			}

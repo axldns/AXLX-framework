@@ -177,7 +177,7 @@ package axl.xdef.types
 				return U.log("[xRoot][getAdditionByName] requesting non existing element", v);
 			if(v.charAt(0) == '$')
 			{
-				v = XSupport.simpleSourceFinder(this,v) as String;
+				v = binCommand(v.substr(1)) as String;
 				if(v == null)
 					v='ERROR';
 			}

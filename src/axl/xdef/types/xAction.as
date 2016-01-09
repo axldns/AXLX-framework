@@ -21,9 +21,7 @@ package axl.xdef.types
 		private var xvalue:Object;
 		private var xdef:Object;
 		private var xxparent:ixDef;
-		private var xowner:String;
-		private var dynamicOwner:Boolean;
-		private var xownerArray:Array;
+		private var xrepeat:Object;
 		private var dynamicArgs:Object;
 		private var stickFunction:Boolean;
 		private var stickArgs:Boolean;
@@ -34,15 +32,13 @@ package axl.xdef.types
 		 * @param def - object that contains <code>type</code> which is funciton name, and <code>value</code>  */
 		public function xAction(def:Object,xroot:xRoot,xparent:ixDef)
 		{
-			this.xxparent = xparent
+			this.xxparent = xparent;
+			this.xrepeat = def.repeat || 1;
 			type = def.type;
 			value = def.value;
 			xdef = def;
-			xowner = def.owner;
 			stickFunction = def.stickFunction;
 			stickArgs = def.stickArgs;
-			if(xowner && xowner.charAt(0) == '$')
-				xownerArray = xowner.substr(1).split('.');
 			dynamicArgs = def.dynamicArgs;
 		}
 		/** Owner of the function to execute. By Default main class of the project. */
@@ -61,6 +57,7 @@ package axl.xdef.types
 		public function execute():void
 		{
 			var f:Function;
+			var a:Object;
 			if(stickFunction)
 			{
 				if(func == null)
@@ -75,21 +72,28 @@ package axl.xdef.types
 			if(xvalue[0] == undefined)
 				f()
 			else if(!dynamicArgs)
-				f.apply(null,value);
+				a = value
 			else
 			{
 				if(stickArgs)
 				{
 					if(aargs == null)
 						aargs = (XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array) || [value];
-					f.apply(null, aargs);
+					a = aargs
 				}
 				else
 				{
-					var argsd:Array = (XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array) || [value];
-					f.apply(null,argsd);
+					a= (XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array) || [value];
 				}
 			}
+			var r:int = 0;
+			if(xrepeat is String && xrepeat.charAt(0) == '$')
+				r =int(xparent.xroot.binCommand(xrepeat.substr(1)));
+			else
+				r = int(xrepeat);
+			U.log("executing action", r, 'times');
+			while(r-->0)
+				f.apply(null,a);
 		}
 		
 		private function findFunc():Function
@@ -100,13 +104,7 @@ package axl.xdef.types
 				U.log('[xAction][execute] UNKNOWN ACTION PARENT!');
 				return null
 			}
-			var target:Object;
-			if(xownerArray != null)
-				target =  XSupport.simpleSourceFinderByArray(xxparent, xownerArray);
-			else if(xowner == 'this')
-				target = xxparent;
-			else
-				target = xxparent['xroot'];
+			var target:Object = xxparent['xroot'];
 			
 			if(target && target.hasOwnProperty(type))
 			{
@@ -114,7 +112,7 @@ package axl.xdef.types
 				//U.log('[xAction][execute]['+target+']['+xtype+']('+value+')', f);
 			}
 			else 
-				U.log('[xAction][execute]['+target+']['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER', xowner, 'as', target);
+				U.log('[xAction][execute]['+target+']['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER',  target);
 			return f;
 		}
 	}

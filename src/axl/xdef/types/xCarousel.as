@@ -19,7 +19,6 @@ package axl.xdef.types
 	
 	public class xCarousel extends Carusele implements ixDef
 	{
-		public var onElementAdded:Function;
 		private var addedToRail:xAction;
 		
 		private var xdef:XML;

@@ -160,7 +160,7 @@ package axl.xdef.types
 			frameListenerAdded = false;
 			if(stopFunc != null)
 			{
-				var f:Function = XSupport.simpleSourceFinder(this.xroot, stopFunc) as Function;
+				var f:Function = xroot.binCommand(stopFunc.substr(1)) as Function;
 				if(f != null)
 				{
 					if(stopFuncArgs)

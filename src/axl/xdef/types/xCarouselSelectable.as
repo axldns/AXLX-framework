@@ -12,6 +12,7 @@ package axl.xdef.types
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
@@ -83,10 +84,9 @@ package axl.xdef.types
 					elementSelected = new xAction(meta.elementSelected,xroot,this);
 		}
 		
-		
-		override protected function onRailElementAdded():void
+		override protected function elementAdded(e:Event):void
 		{
-			super.onRailElementAdded();
+			super.elementAdded(e);
 			selectedObject = getChildClosestToCenter()[0];
 		}
 		
