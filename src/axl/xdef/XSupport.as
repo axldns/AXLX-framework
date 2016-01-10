@@ -54,6 +54,7 @@ package axl.xdef
 		public var defaultFont:String;
 		/** @see axl.xdef.types.xRoot */
 		public var root:xRoot;
+		private static var reservedAttributes:Array = ['src'];
 		/** Object that contains references to all instantiated and <b>uniquely</b> named objects 
 		 * created within <code>getReadyType</code> method (all auto xml additions and executions).
 		 * <br>Object without name property defined are not registered.
@@ -100,6 +101,8 @@ package axl.xdef
 			{
 				keyArray = String(attribs[i].name()).split('.');
 				key = keyArray.pop();
+				if(reservedAttributes.indexOf(key) > -1)
+					continue;
 				deepTarget = target;
 				while(keyArray.length)
 					deepTarget = deepTarget[keyArray.shift()];
@@ -194,7 +197,9 @@ package axl.xdef
 					if(g[2] is String && g[2].charAt(0) == "$")
 						g[2] = target.xroot.binCommand(g[2].substr(1));
 					//on complete
-					var f:Object = target.xroot.binCommand(g[3].substr(1));
+					var f:Object = g[3];
+					if(f is String && f.charAt(0) == "$")
+						f = target.xroot.binCommand(f.substr(1));
 					g[3] = (f != null) ?  execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete) : acomplete;
 					//proceed
 					AO.animate.apply(null, g);
@@ -239,140 +244,7 @@ package axl.xdef
 			return ret;
 		}
 		
-		/**
-		 * XML tag name <b><code>txt</code></b> can't contain any children<br>
-		 * Allows to instantiate <code>axl.xdef.types.xText</code> which is descendandt of merged flash TextField and 
-		 * TextFormat classes.
-		 * If <code>html</code> flag is set to true, you may need to wrap contents inside CDATA block in order to use html tags.
-		 * <pre>
-		 * &lt;txt name='btnTerms' embedFonts='true' multiline='true' html='true'>Terms&lt;br>and&lt;br>Conditions>&lt;/txt>
-		 * </pre>
-		 * If fontName is not set, related xsupport instance default font is applied.
-		 * @see axl.xdef.types.xText
-		 * */
-		public static function getTextFieldFromDef(def:XML):xText
-		{
-			if(def == null)
-				return null;
-			var tf:xText = new xText(def);
-			return tf;
-		}
-		
-		/**
-		 * XML tag name <b><code>btn</code></b> can contain children<br>
-		 * Allows to instantiate <code>axl.xdef.types.xButton</code>. 
-		 * Buttons as a common use-case can have no <code>src</code> attribute no <code>graphics</code>nodes defined
-		 *  and still be valid and handy action holders.
-		 * <pre>
-		 * &lt;btn name='COMPLETE' meta='{"action":[{"type":"rmv","value":"anything"},{"type":"add","value":"anything2"}]}'/>
-		 * &lt;img name='1' src='1.jpg' meta='{"addedToStage":[25,{"y":500},"$registry.COMPLETE.execute"]}'/>
-		 * </pre>
-		 * @see axl.xdef.types.xButton
-		 * */
-		public static function getButtonFromDef(xml:XML, handler:Function,dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xButton
-		{
-			var btn:xButton = new xButton(xml,xroot);
-				btn.onClick = handler;
-			if(dynamicSourceLoad)
-				checkSource(xml, buttonCallback,true);
-			else 
-				return buttonCallback();
-			function buttonCallback():xButton
-			{
-				btn.upstate = Ldr.getBitmapCopy(String(xml.@src));
-				return btn;
-			}
-			return btn;
-		}
-		
-		/**
-		 * XML tag name <b><code>img</code></b> can contain children<br>
-		 * Allows to instantiate <code>axl.xdef.types.xBitmap</code> class whcich is equivalent of regular flash Bitmap.
-		 * Method returns xBitmap instance immediately but actual drawing into it is done when available. 
-		 * Displaying more than one image of the same src does not cause subsequent loadings.
-		 * Once bitmap source is loaded, all other requests to that source are being re-drawn (copy) from root one.
-		 * <pre>
-		 *	&lt;img name='tick1'  x='5' src='../tick.png'/>
-		 *	&lt;img name='tick2' x='10'  src='../tick.png'/>
-		 *	&lt;img name='tick3' x='15' src='../tick.png'/>
-		 *	&lt;img name='tick4' x='20' src='../tick.png'/>
-		 *	&lt;img name='tick5' x='25' src='../tick.png'/>
-		 * </pre>
-		 * This will display five differently positioned Bitmaps. Loading of tick.png occures just once. 
-		 * @see axl.xdef.types.xBitmap
-		 * */
-		public static function getImageFromDef(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xBitmap
-		{
-			var xb:xBitmap = new xBitmap(null,'auto',true,xroot,xml);
-			if(dynamicSourceLoad)
-				checkSource(xml, imageCallback,true);
-			else
-				return imageCallback();
-			function imageCallback():xBitmap
-			{
-				xb.bitmapData = U.getBitmapData(Ldr.getBitmap(String(xml.@src)));
-				xb.smoothing = true;
-				return xb;
-			}
-			return xb;
-		}	
-		/**
-		 * XML tag name <b><code>swf</code></b> can contain children<br>
-		 * Allows to instantiate <code>axl.xdef.types.xSwf</code> class whcich supports controlling MovieClips.
-		 * Method returns xSwf instance immediately but actual swf is being added once loaded.
-		 * <pre>
-		 *&lt;swf name='animation src='../anim.swf' addStarts='true' stopOnEnd='true' />;
-		 * </pre>
-		 * @see axl.xdef.types.xSwf
-		 * */
-		public function getSwfFromDef2(xml:XML, dynamicSourceLoad:Boolean=true,xroot:xRoot=null):xSwf
-		{
-			var spr:xSwf = new xSwf(null,xroot);
-			if(dynamicSourceLoad)
-				checkSource(xml, swfCallback,true);
-			else
-				return swfCallback();
-			function swfCallback():xSwf
-			{
-				spr.addSwf(Ldr.getAny(String(xml.@src)) as DisplayObject);
-				spr.def = xml;
-				return spr;
-			}
-			return spr;
-		}
-		/**
-		 * XML tag name <b><code>data</code></b> expects no children.<br>
-		 * By attribute "src" allows to load any type of data - XML, JSON, MP3, JPG, PNG, SWF, other.<br>
-		 * Loaded data is attempted to turn it to usable type (according to <code>axl.utils.Ldr</code>)
-		 * and asigned to <code>data</code> property of freshly instantiated <code><b>xObject</b></code> .
-		 *<pre>
-		 *&lt;data name='myMp3 src='../audio.mp3'/>;
-		 * </pre>
-		 * Can be then refferenced
-		 * <pre>
-		 * &lt;btn name='btnPlay meta='{"action":[{"type":"binCommand","value":"registry.myMp3.data.play()"}]}'/>
-		 * </pre> 
-		 * @see axl.xdef.types.xObject
-		 * @see axl.utils.Ldr
-		 * */
-		private function getDataFromDef(xml:XML, xroot:xRoot,dynamicSourceLoad:Boolean=true):xObject
-		{
-			var o:xObject = new xObject(xml, xroot);
-			if(dynamicSourceLoad)
-			{
-				//U.log('[getDataFromDef - CHECK SOURCE]', xml.@name, xml.@src);
-				checkSource(xml, objCallback,true);
-			}
-			else 
-				return objCallback();
-			function objCallback():xObject
-			{
-				//U.log('[getDataFromDef - CALLBACK - data assign]', xml.@name, xml.@src);
-				o.data = Ldr.getAny(String(xml.@src))
-				return o;
-			}
-			return o;
-		}
+
 		/**
 		 * XML tag name <b><code>graphics</code></b> expects <code>command</code> children only.<br>
 		 * Draws on canvas of drawable DisplayObject (if flash.display.graphics Class is in its scope).
@@ -444,14 +316,7 @@ package axl.xdef
 			return ar.length > 0 ? ar : null;
 		}
 		
-		/** XML tag name <b><code>act</code></b> expects no children.<br>
-		 * Returns lightweight, non-displayable Function equivalent, ready to call "execute" on
-		 * @see axl.xdef.xtypes.xActionSet
-		 * @see axl.xdef.xtypes.xAction */
-		private function getActionFromDef(xml:XML, xroot:xRoot):xActionSet
-		{
-			return new xActionSet(xml,xroot);
-		}
+	
 		/**
 		 * XML tag name <b><code>filter</code></b><br>
 		 * Returns BitmapFilter object from XML definiton.
@@ -493,7 +358,6 @@ package axl.xdef
 		 * */
 		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChildAt',xroot:xRoot=null,onChildrenCreated:Function=null):void
 		{
-			
 			if(def == null)
 			{
 				 finishPushing();
@@ -566,35 +430,29 @@ package axl.xdef
 		 * <li>If xml has "src" attribute but <code>dynamicLoad=false</code> - calback is executed right away</li>
 		 * <li>If xml has "src" attribute and <code>dynamicLoad=true</code> - callback is executed only when resource is loaded or failed loading.</li>
 		 * </ul> */
-		private static function checkSource(xml:XML, callBack:Function, dynamicLoad:Boolean=true,sourcePrefixes:Object=null,overwriteInLib:Boolean=false,xroot:xRoot=null):void
+		private static function checkSource(xml:XML, callBack:Function,sourcePrefixes:Object=null,overwriteInLib:Boolean=false,xroot:xRoot=null):void
 		{
 			if(xml.hasOwnProperty('@src'))
 			{
+				//U.log(xml.@name, "HAS SOURCE")
 				var source:String = String(xml.@src);
 				while(source.charAt(0) == '$' && xroot != null)
 				{
-					source = String(xroot.binCommand(source.substr(1)));
-				}
-				if(String(xml.@src) != source)
-				{
-					//U.log("UPDATING XML, VARIABLE SRC from", String(xml.@src), 'TO', source)
-					xml.@src = source
+					source = String(xroot.binCommand(source.substr(1),2));
 				}
 				var inLib:Object = Ldr.getAny(source);
 				if((inLib != null) && (overwriteInLib == false))
 				{
 					//U.log('[CHECK SOURCE]', xml.@name, xml.@src, "ALREADY IN LIBRARY");
-					callBack(xml);
-				}
-				else if(dynamicLoad)
-				{
-					Ldr.load(source, function():void{callBack(xml)},null,null,sourcePrefixes, overwriteInLib ? Ldr.behaviours.loadOverwrite : Ldr.behaviours.loadSkip);
+					callBack(source);
 				}
 				else
-					callBack(xml);
+				{
+					Ldr.load(source, function():void{callBack(source)},null,null,sourcePrefixes, overwriteInLib ? Ldr.behaviours.loadOverwrite : Ldr.behaviours.loadSkip);
+				}
 			}
 			else
-				callBack(xml);
+				callBack(null);
 		}
 		/** Translates xml node to an ActionScript object within predefined types and their equivalents:
 		 * <ul>
@@ -635,12 +493,12 @@ package axl.xdef
 				var type:String = xml.name();
 				var obj:Object;
 				if(dynamicLoad)
-					checkSource(xml, readyTypeCallback, true, xroot ? xroot.sourcePrefixes : null, xml.hasOwnProperty('@forceReload'),xroot) ;
+					checkSource(xml, readyTypeCallback, xroot ? xroot.sourcePrefixes : null, xml.hasOwnProperty('@forceReload'),xroot) ;
 				else
 					readyTypeCallback();
-				function readyTypeCallback():void
+				function readyTypeCallback(sourceTest:String=null):void
 				{
-					//U.log("OBJECT BUILD", type, xml.@name);
+					//U.log("OBJECT BUILD", type, xml.@name, sourceTest);
 					// INSTANTIATION
 					switch(type)
 					{
@@ -649,14 +507,14 @@ package axl.xdef
 						case 'txt': obj =  new xText(xml,xroot,defaultFont); break;
 						case 'scrollBar': obj = new xScroll(xml); break;
 						case 'msk': obj = new xMasked(xml,xroot); break;
+						case 'btn': obj = new xButton(xml,xroot); break;
+						case 'data' : obj = new xObject(xml, xroot);break;
+						case 'img': obj = new xBitmap(null,'auto',true,xroot,xml); break;
 						case 'carousel' : obj = new xCarousel(xml,xroot); break;
 						case 'carouselSelectable' : obj = new xCarouselSelectable(xml,xroot);break;
+						case 'swf': obj = new xSwf(null,xroot); break;
+						case 'act' : obj = new xActionSet(xml,xroot);break;
 						case 'filters': obj = filtersFromDef(xml); break;
-						case 'img': obj = getImageFromDef(xml,false,xroot); break;
-						case 'btn': obj = getButtonFromDef(xml,null,false,xroot); break;
-						case 'swf': obj = getSwfFromDef2(xml,false,xroot); break;
-						case 'data' : obj = getDataFromDef(xml,xroot,false);break;
-						case 'act' : obj = getActionFromDef(xml,xroot);break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						default: 
 							if(userTypes[type] is Function)
@@ -675,13 +533,27 @@ package axl.xdef
 							obj.xroot = xroot;
 					}
 					// ATTACHING SRC
-					if(obj is DisplayObjectContainer &&  xml.hasOwnProperty('@src'))
+					if(sourceTest != null)
 					{
-						var n:String = String(xml.@src);
-						var b:Object = Ldr.getAny(n); 
-						if(b is Bitmap)
-							obj.addChildAt(Ldr.getBitmapCopy(n),0);
+						var b:Object = Ldr.getAny(sourceTest); 
+						if(obj is DisplayObjectContainer)
+						{
+							if(b is Bitmap)
+								obj.addChildAt(Ldr.getBitmapCopy(sourceTest),0);
+							else if(b is DisplayObject)
+								obj.addChildAt(b as DisplayObject,0);
+						}
+						else if(obj is Bitmap)
+						{
+							obj.bitmapData = U.getBitmapData(Ldr.getBitmap(sourceTest));
+							obj.smoothing = true;
+						}
+						else if(obj.hasOwnProperty('data'))
+						{
+							obj.data = b;
+						}
 					}
+					
 					//APPLYING ATTRIBUTES 1
 					applyAttributes(xml, obj);
 					

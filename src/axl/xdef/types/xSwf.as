@@ -61,6 +61,17 @@ package axl.xdef.types
 				mc.stop();
 		}
 		
+		override public function addChild(child:DisplayObject):DisplayObject
+		{
+			return addSwf(child);
+		}
+		
+		override public function addChildAt(child:DisplayObject, index:int):DisplayObject
+		{
+			return addSwf(child);
+		}
+		
+		
 		public function addSwf(main:DisplayObject,parent:DisplayObject=null):*
 		{
 			if(mc != null)
@@ -79,7 +90,7 @@ package axl.xdef.types
 				
 				mc.addEventListener(Event.ADDED_TO_STAGE, ats);
 				mc.addEventListener(Event.REMOVED_FROM_STAGE, rfs);
-				this.addChild(parent || main);
+				super.addChild(parent || main);
 			}
 			else if(main is DisplayObjectContainer)
 			{

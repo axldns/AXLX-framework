@@ -21,6 +21,8 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
+		private static const ver:String = '0.91';
+		public static function get version():String { return ver }
 		protected var xsupport:XSupport;
 		protected var CONFIG:XML;
 		private var rootFinder:RootFinder;
