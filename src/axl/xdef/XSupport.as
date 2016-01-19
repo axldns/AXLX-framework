@@ -608,7 +608,7 @@ package axl.xdef
 				for(var i:int = a.length; i-->0;)
 				{
 					var o:Object = a[i];
-					a[i] = (o is String && o.charAt(0) == '$') ? xroot.binCommand(String(v).substr(1)) : o;
+					a[i] = (o is String && o.charAt(0) == '$') ? xroot.binCommand(String(o).substr(1)) : o;
 				}
 				return a;
 			}
