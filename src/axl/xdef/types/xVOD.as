@@ -11,12 +11,11 @@ package axl.xdef.types
 	import flash.utils.setTimeout;
 	
 	import axl.utils.U;
+	import axl.xdef.XSupport;
 
 	public class xVOD extends xSprite
 	{
 		private var xrtmp:String;
-	
-		
 		private var xvideoMeta:Object;
 		private var xloops:int=1;
 		private var xpercentTime:Number=0;
@@ -27,6 +26,7 @@ package axl.xdef.types
 		private var xwidth:Number=0;
 		private var xbufferPlayback:Number = 1;
 		private var xvolume:Number = 0.1;
+		private var xonFrame:Function; 
 		private var infiniteLoop:Boolean = false;
 		
 		private var xnc:NetConnection;
@@ -34,174 +34,34 @@ package axl.xdef.types
 		private var xns:NetStream;
 		private var nso:NetStreamPlayOptions;
 		
-		private var EMPTY_BUFFER:Boolean;
+		private var EMPTY_BUFFER:Boolean=true;
 		private var DESTROYED:Boolean=false;
 		private var FIRST_FILL:Boolean=true;
-		private var IS_PAUSED:Boolean;
+		private var IS_PAUSED:Boolean=false;
+		
 		//------------------- PUBLIC -------------//
-
-		private var xonFrame:Function; 
-		public var useStageVideo:Boolean=false;
 		public var AUTOPLAY:Boolean = true;
+		public var useStageVideo:Boolean=false;
 		public var keepAspectRatio:Boolean=true;
+		public var netStausEventFunctionMap:Object = {};
 		
 		public var bufferInitial:Number = 1;
-		
+		public var destroyOnEnd:Boolean=true;
 		public var reconnectGapMs:int = 2;
 		public var reconnectAttemptsNo:int;
+		
 		public var onExit:Function;
 		public var onPlayStart:Function;
 		public var onBufferFull:Function;
 		public var onBufferEmpty:Function;
-		public var netStausEventFunctionMap:Object = {};
-		
-				
+		public var onComplete:Function;
+		public var onPlayStop:Function;
 		
 		public function xVOD(definition:XML=null, xrootObj:xRoot=null)
 		{
 			super(definition, xrootObj);
 			//THE CHAIN: nc---connect---netStatusHandler---ON_CONNECTED---[build net stream, build video, attach stream]--play stream---netStatusHandler---NetStream.Play.Start---
 		}
-		
-		public function get videoMeta():Object { return xvideoMeta };
-		public function get videoAspectRatio():Number { return xvideoAspectRatio }
-		public function get nc():NetConnection { return xnc }
-		public function get video():Video {	return xvideo}
-		public function get ns():NetStream { return xns }
-		public function get rtmp():String { return xrtmp }
-		public function set rtmp(v:String):void
-		{
-			if(v == xrtmp)
-				return;
-			xrtmp = v;
-			destroy();
-			build_netConnection();
-		}
-		
-		public function get loops():int	{ return xloops }
-		public function set loops(v:int):void
-		{
-			xloops = v;
-			infiniteLoop = (v < 1);
-		}
-		
-		public function get bufferPlayback():Number { return xbufferPlayback }
-		public function set bufferPlayback(v:Number):void 
-		{
-			xbufferPlayback = v;
-			if(!FIRST_FILL && ns)
-				ns.bufferTime = v;
-		}
-		public function get bufferMax():Number { return xbufferMax }
-		public function set bufferMax(v:Number):void
-		{
-			xbufferMax = v;
-			if(ns)
-				ns.bufferTimeMax = v;
-		}
-		
-		public function get volume():Number { return xvolume }
-		public function set volume(v:Number):void
-		{
-			xvolume = v > 1 ? 1 : (v < 0 ? 0 : v);
-			if(ns)
-				ns.soundTransform.volume = xvolume;
-		}
-		
-		
-		public function get onFrame():Function { return xonFrame }
-		public function set onFrame(v:Function):void
-		{
-			if(v == null)
-				this.removeEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
-			else
-			{
-				this.addEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
-			}
-			xonFrame = v;
-		}
-		
-		public function get percentTime():Number
-		{
-			if(nc == null || ns == null || xvideoMeta == null)
-				return 0;
-			xpercentTime = (ns.time / xvideoMeta.duration);
-			if(xpercentTime < 0) xpercentTime = 0;
-			if(xpercentTime > 1) xpercentTime = 1;
-			return xpercentTime;
-		}
-		
-		public function get percentBuffer():Number
-		{
-			if(nc == null || ns == null || xvideoMeta == null)
-				return 0;
-			xpercentBuffer = ((ns.bufferLength +  ns.time) /  xvideoMeta.duration);
-			if(xpercentBuffer < 0) xpercentBuffer = 0;
-			if(xpercentBuffer > 1) xpercentBuffer = 1;
-			return xpercentBuffer;
-		}
-		
-		override public function set height(v:Number):void
-		{
-			xheight = v;
-			if(video)
-			{
-				video.height = xheight;
-				if(keepAspectRatio && videoAspectRatio > 0)
-				{
-					video.width = xheight * videoAspectRatio;
-					xwidth = video.width;
-				}
-			}
-		}
-		
-		override public function set width(v:Number):void
-		{
-			xwidth = v;
-			if(video)
-			{
-				video.width = xwidth;
-				if(keepAspectRatio && videoAspectRatio > 0)
-				{
-					video.height = xwidth / videoAspectRatio;
-					xheight = video.height;
-				}
-			}
-		}
-		
-		public function pause():void { ns ? ns.pause() : null }
-		public function stop():void { ns ? ns.pause() : null }
-		public function manualPlay():void
-		{
-			if(nc && nc.connected && ns)
-				ns.resume();
-		}
-		
-		public function play():void
-		{
-			if(!nc)
-				return build_netConnection();
-			if(nc && nc.connected)
-			{
-				if(ns)
-					ns.resume();
-			}
-		}
-		
-		public function restart():void
-		{
-			if(nc && nc.connected && ns)
-			{
-				ns.seek(0);
-			}
-			else
-			{
-				destroy();
-				build_netConnection();
-			}
-		}
-		
-		
 		
 		private function dealWithStage(xrootObj:xRoot):void
 		{
@@ -372,11 +232,11 @@ package axl.xdef.types
 					break;
 				//14
 				case "NetStream.Pause.Notify":
-					IS_PAUSED = true;
+					ON_PAUSE();
 					break;
 				case "NetStream.Unpause.Notify":
-					IS_PAUSED = false;
 					ns.bufferTime = bufferPlayback;
+					ON_PLAY_START();
 					break;
 				default:
 					var f:Function = netStausEventFunctionMap[event.info.code] as Function;
@@ -427,11 +287,15 @@ package axl.xdef.types
 		
 		private function resolveVideoComplete():void
 		{
-			U.log(this,"resolveVideoComplete", loops); 
-			if(infiniteLoop || --loops > 0)
+			U.log(this,"resolveVideoComplete", infiniteLoop, xloops); 
+			if(infiniteLoop || --xloops > 0)
 				restart();
 			else
-				EXIT_SEQUENCE();
+			{
+				if(onComplete)
+					onComplete();
+				destroyOnEnd ? EXIT_SEQUENCE() : U.log(this, "destroyOnEnd=false, call EXIT_SEQUENCE or destroy() to dispose this content");
+			}
 		}
 		
 		private function ON_CONNECTED():void
@@ -452,9 +316,11 @@ package axl.xdef.types
 		private function ON_PLAY_START():void
 		{
 			U.log("ON_PLAY_START");
+			IS_PAUSED = false;
+			if(onPlayStart != null)
+				onPlayStart();
 			if(FIRST_FILL)
 			{
-				FIRST_FILL = false;
 				if(AUTOPLAY)
 				{
 					U.log(this,"[ON_PLAY_START] AUTOPLAY = true - NOT PAUSING");
@@ -471,8 +337,13 @@ package axl.xdef.types
 				U.log(this,"[ON_PLAY_START] FIRST_FILL = false");
 				ns.bufferTime = bufferPlayback;
 			}
-			if(onPlayStart != null)
-				onPlayStart();
+			FIRST_FILL = false;
+		}
+		private function ON_PAUSE():void
+		{
+			IS_PAUSED = true;
+			if(onPlayStop != null)
+				onPlayStop();
 		}
 		
 		private function ON_BUFFER_FULL():void
@@ -528,16 +399,20 @@ package axl.xdef.types
 		
 		private function EXIT_SEQUENCE():void
 		{
-			U.log("EXIT_SEQUENCE");
-			onFrame = null;
-			destroy();
-			if(onExit is Function)
-				onExit();
+			if(!DESTROYED)
+			{
+				U.log("EXIT_SEQUENCE");
+				onFrame = null;
+				destroyAll();
+				if(onExit is Function)
+					onExit();
+			}
+			
 		}
 		
 		//------------------------------------------------------ DESTROY SECTION ------------------------------------------------------//
 		
-		private function destroy():void
+		private function destroyAll():void
 		{
 			DESTROYED = true;
 			IS_PAUSED = false;
@@ -594,6 +469,151 @@ package axl.xdef.types
 			}
 			xvideoAspectRatio = 0;
 			xvideoMeta = null;
+		}
+		
+		//------------------------------------------------------ PUBLIC API  ------------------------------------------------------//
+		//------------------------------------------------------ PUBLIC API  ------------------------------------------------------//
+		//------------------------------------------------------ PUBLIC API  ------------------------------------------------------//
+		
+		public function get videoMeta():Object { return xvideoMeta };
+		public function get videoAspectRatio():Number { return xvideoAspectRatio }
+		public function get nc():NetConnection { return xnc }
+		public function get video():Video {	return xvideo}
+		public function get ns():NetStream { return xns }
+		public function get rtmp():String { return xrtmp }
+		public function set rtmp(v:String):void
+		{
+			if(v == xrtmp)
+				return;
+			xrtmp = v;
+			destroyAll();
+			build_netConnection();
+		}
+		
+		public function get loops():int	{ return xloops }
+		public function set loops(v:int):void
+		{
+			xloops = v;
+			infiniteLoop = (v < 1);
+		}
+		
+		public function get bufferPlayback():Number { return xbufferPlayback }
+		public function set bufferPlayback(v:Number):void 
+		{
+			xbufferPlayback = v;
+			if(!FIRST_FILL && ns)
+				ns.bufferTime = v;
+		}
+		public function get bufferMax():Number { return xbufferMax }
+		public function set bufferMax(v:Number):void
+		{
+			xbufferMax = v;
+			if(ns)
+				ns.bufferTimeMax = v;
+		}
+		
+		public function get volume():Number { return xvolume }
+		public function set volume(v:Number):void
+		{
+			xvolume = v > 1 ? 1 : (v < 0 ? 0 : v);
+			if(ns)
+				ns.soundTransform.volume = xvolume;
+		}
+		
+		
+		public function get onFrame():Function { return xonFrame }
+		public function set onFrame(v:Function):void
+		{
+			if(v == null)
+				this.removeEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
+			else
+			{
+				this.addEventListener(Event.ENTER_FRAME, onEnterFrameHandler);
+			}
+			xonFrame = v;
+		}
+		
+		public function get percentTime():Number
+		{
+			if(nc == null || ns == null || xvideoMeta == null)
+				return 0;
+			xpercentTime = (ns.time / xvideoMeta.duration);
+			if(xpercentTime < 0) xpercentTime = 0;
+			if(xpercentTime > 1) xpercentTime = 1;
+			return xpercentTime;
+		}
+		
+		public function get percentBuffer():Number
+		{
+			if(nc == null || ns == null || xvideoMeta == null)
+				return 0;
+			xpercentBuffer = ((ns.bufferLength +  ns.time) /  xvideoMeta.duration);
+			if(xpercentBuffer < 0) xpercentBuffer = 0;
+			if(xpercentBuffer > 1) xpercentBuffer = 1;
+			return xpercentBuffer;
+		}
+		
+		override public function set height(v:Number):void
+		{
+			xheight = v;
+			if(video)
+			{
+				video.height = xheight;
+				if(keepAspectRatio && videoAspectRatio > 0)
+				{
+					video.width = xheight * videoAspectRatio;
+					xwidth = video.width;
+				}
+			}
+		}
+		
+		override public function set width(v:Number):void
+		{
+			xwidth = v;
+			if(video)
+			{
+				video.width = xwidth;
+				if(keepAspectRatio && videoAspectRatio > 0)
+				{
+					video.height = xwidth / videoAspectRatio;
+					xheight = video.height;
+				}
+			}
+		}
+		
+		public function pause():void { ns ? ns.pause() : null }
+		public function stop():void { ns ? ns.pause() : null }
+		public function destroy():void { destroyAll() }
+		public function manualPlay():void
+		{
+			if(nc && nc.connected && ns)
+				ns.resume();
+		}
+		
+		public function play():void
+		{
+			if(!nc)
+				return build_netConnection();
+			if(nc && nc.connected)
+			{
+				if(ns)
+					ns.resume();
+			}
+		}
+		
+		public function restart():void
+		{
+			if(nc && nc.connected && ns)
+			{
+				ns.seek(0);
+				ON_PLAY_START(); // because seek dispatches SeekStart.Notify and Seek.Notify only (no Play.Start);
+			}
+			else
+			{
+				destroyAll();
+				XSupport.applyAttributes(def, this);
+				build_netConnection();
+			}
 		}
 	}
 }
