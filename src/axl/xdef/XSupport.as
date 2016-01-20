@@ -516,7 +516,7 @@ package axl.xdef
 						case 'act' : obj = new xActionSet(xml,xroot);break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
-						case 'script' : includeScript(xml); break;
+						case 'script': obj = includeScript(xml,xroot); break;
 						default: 
 							if(userTypes[type] is Function)
 								obj = userTypes[type](xml,xroot);
@@ -580,18 +580,20 @@ package axl.xdef
 			}
 		}
 		
-		public function includeScript(xml:XML):void
+		public function includeScript(xml:XML,xroot:xRoot):Object
 		{
 			var scrpt:XML = Ldr.getXML(U.fileNameFromUrl(xml.@src));
-			if(scrpt != null && scrpt.hasOwnProperty('additions'))
+			var doMerge:Boolean = xml.hasOwnProperty('@mergeAdditions') && xml.@mergeAdditions == 'true';
+			if(scrpt != null && doMerge && scrpt.hasOwnProperty('additions'))
 			{
 				var xl:XMLList = scrpt.additions[0].children() as XMLList;
 				var len:int = xl.length();
 				var target:XML =this.root.config.additions[0];
 				for(var i:int=0; i<len;i++)
 					target.appendChild(xl[i]);
-				U.log(xl,"elements included to additions from", xml.@src);
+				U.log(len,"elements included to additions from", xml.@src);
 			}
+			return { xroot : xroot, data : scrpt, name : xml.@name }
 		}
 		
 		/** Private function to support objects instantiation in order. Hold's delegates 
