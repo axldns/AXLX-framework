@@ -516,6 +516,7 @@ package axl.xdef
 						case 'act' : obj = new xActionSet(xml,xroot);break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
+						case 'script': obj = includeScript(xml,xroot); break;
 						default: 
 							if(userTypes[type] is Function)
 								obj = userTypes[type](xml,xroot);
@@ -531,43 +532,42 @@ package axl.xdef
 						}
 						if(obj.hasOwnProperty('xroot'))
 							obj.xroot = xroot;
-					}
 					// ATTACHING SRC
-					if(sourceTest != null)
-					{
-						var b:Object = Ldr.getAny(sourceTest); 
-						if(obj is DisplayObjectContainer)
+						if(sourceTest != null)
 						{
-							if(b is Bitmap)
-								obj.addChildAt(Ldr.getBitmapCopy(sourceTest),0);
-							else if(b is DisplayObject)
-								obj.addChildAt(b as DisplayObject,0);
+							var b:Object = Ldr.getAny(sourceTest); 
+							if(obj is DisplayObjectContainer)
+							{
+								if(b is Bitmap)
+									obj.addChildAt(Ldr.getBitmapCopy(sourceTest),0);
+								else if(b is DisplayObject)
+									obj.addChildAt(b as DisplayObject,0);
+							}
+							else if(obj is Bitmap)
+							{
+								obj.bitmapData = U.getBitmapData(Ldr.getBitmap(sourceTest));
+								obj.smoothing = true;
+							}
+							else if(obj.hasOwnProperty('data'))
+							{
+								obj.data = b;
+							}
 						}
-						else if(obj is Bitmap)
+						
+						//APPLYING ATTRIBUTES 1
+						applyAttributes(xml, obj);
+						
+						// PUSHING CHILDREN
+						if(obj is Carusele)
 						{
-							obj.bitmapData = U.getBitmapData(Ldr.getBitmap(sourceTest));
-							obj.smoothing = true;
+							pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
+							Carusele(obj).movementBit(0);
 						}
-						else if(obj.hasOwnProperty('data'))
+						else if(obj is DisplayObjectContainer)
 						{
-							obj.data = b;
+							pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 						}
 					}
-					
-					//APPLYING ATTRIBUTES 1
-					applyAttributes(xml, obj);
-					
-					// PUSHING CHILDREN
-					if(obj is Carusele)
-					{
-						pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
-						Carusele(obj).movementBit(0);
-					}
-					else if(obj is DisplayObjectContainer)
-					{
-						pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
-					}
-					
 					// notify
 					if(callBack2argument != null)
 						callBack(obj, callBack2argument);
@@ -578,6 +578,22 @@ package axl.xdef
 						additionQueue[0]();
 				}
 			}
+		}
+		
+		public function includeScript(xml:XML,xroot:xRoot):Object
+		{
+			var scrpt:XML = Ldr.getXML(U.fileNameFromUrl(xml.@src));
+			var doMerge:Boolean = xml.hasOwnProperty('@mergeAdditions') && xml.@mergeAdditions == 'true';
+			if(scrpt != null && doMerge && scrpt.hasOwnProperty('additions'))
+			{
+				var xl:XMLList = scrpt.additions[0].children() as XMLList;
+				var len:int = xl.length();
+				var target:XML =this.root.config.additions[0];
+				for(var i:int=0; i<len;i++)
+					target.appendChild(xl[i]);
+				U.log(len,"elements included to additions from", xml.@src);
+			}
+			return { xroot : xroot, data : scrpt, name : xml.@name }
 		}
 		
 		/** Private function to support objects instantiation in order. Hold's delegates 
