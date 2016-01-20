@@ -37,7 +37,7 @@ package axl.xdef.types
 		public var intervalValue:int=0;
 		public var intervalDelay:int = 0;
 		public var intervalHoverValue:int=0;
-		
+		public var executeReleasedOutside:Boolean;
 		
 		private var userClickHandler:Function;
 		private var eventClick:Event = new Event("clickButton",true);
@@ -73,6 +73,7 @@ package axl.xdef.types
 		private var addedToStageActions:Vector.<xAction>
 		
 		private var actionOut:Boolean;
+		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
 			super(definition,xroot);
@@ -212,10 +213,14 @@ package axl.xdef.types
 			isOver = (e.type == MouseEvent.ROLL_OVER);
 			var val:int =  isOver ? 0 : 1;
 			
-			if(overTarget[overKey] is Function)
-				overTarget[overKey].apply(null, overVals[val]);
-			else
-				overTarget[overKey] = overVals[val];
+			if(overTarget)
+			{
+				if(overTarget[overKey] is Function)
+					overTarget[overKey].apply(null, overVals[val]);
+				else
+					overTarget[overKey] = overVals[val];
+			}
+			
 			executeHover();
 			if(isOver && (intervalHoverValue > 0) && intervalHoverID < 1)
 				intervalHoverID = setInterval(repeatHoverActions, intervalHoverValue,e);
@@ -272,15 +277,17 @@ package axl.xdef.types
 		protected function mouseMove(e:MouseEvent):void
 		{
 			if(isDown && !e.buttonDown)
-				touchEnd();
+				touchEnd(e);
 		}
 		
-		private function touchEnd():void
+		private function touchEnd(e:MouseEvent):void
 		{
 			isDown = false;
 			U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
 			U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
 			clearIntervals();
+			if(e.target != this && executeReleasedOutside)
+				mouseClick(e);
 		}
 		
 		private function clearIntervals():void
