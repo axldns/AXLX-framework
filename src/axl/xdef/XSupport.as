@@ -36,6 +36,7 @@ package axl.xdef
 	import axl.xdef.types.xSprite;
 	import axl.xdef.types.xSwf;
 	import axl.xdef.types.xText;
+	import axl.xdef.types.xVOD;
 	
 	/** Factory class for XML defined elements.<br>
 	 * <ul>
@@ -517,6 +518,7 @@ package axl.xdef
 						case 'filters': obj = filtersFromDef(xml); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						case 'script': obj = includeScript(xml,xroot); break;
+						case 'vod' : obj =new xVOD(xml,xroot);
 						default: 
 							if(userTypes[type] is Function)
 								obj = userTypes[type](xml,xroot);
