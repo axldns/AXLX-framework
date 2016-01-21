@@ -414,12 +414,14 @@ package axl.xdef.types
 		
 		private function destroyAll():void
 		{
+			U.log(this,"DESTROY ALL");
 			DESTROYED = true;
 			IS_PAUSED = false;
 			xvideoMeta = null;
 			destroyNC();
 			destroyNS();
 			destroyVideo();
+			xrtmp = null;
 			
 		}
 		private function destroyNC():void
@@ -485,8 +487,9 @@ package axl.xdef.types
 		{
 			if(v == xrtmp)
 				return;
-			xrtmp = v;
+			U.log("SETTING RTMP", v);
 			destroyAll();
+			xrtmp = v;
 			build_netConnection();
 		}
 		
