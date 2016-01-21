@@ -14,6 +14,7 @@ package axl.xdef.types
 	import flash.events.MouseEvent;
 	
 	import axl.ui.controllers.BoundBox;
+	import axl.utils.U;
 
 	public class xScroll extends xSprite
 	{
@@ -27,7 +28,8 @@ package axl.xdef.types
 		private var btnDown:xButton;
 		private var eventChange:Event;
 		private var percentButtonMovemnt:Boolean;
-		private var deltaMultiply:int=1;
+		private var deltaMultiply:Number=1;
+		public var wheelScrollAllowed:Boolean=true;
 		
 		
 		public function xScroll(def:XML)
@@ -41,7 +43,14 @@ package axl.xdef.types
 		
 		protected function wheelEvent(e:MouseEvent):void
 		{
-			boxControll.movementVer((e.delta * deltaMultiply) * -1);
+			if(!wheelScrollAllowed) 
+				return;
+			//U.log(this, this.name,boxControll.vertical ? 'vertical': "", boxControll.horizontal ? "horizontal" :"", 'delta:', e.delta,  'multply:', deltaMultiply, 'v:',  e.delta * deltaMultiply );
+			if(boxControll.vertical)
+				boxControll.movementVer((e.delta * deltaMultiply) * -1);
+			else if(boxControll.horizontal)
+				boxControll.movementHor((e.delta * deltaMultiply) * -1);
+			//boxControll.movementVer((e.delta * deltaMultiply) * -1);
 			boxControll.dispatchEvent(eventChange);
 		}
 		
@@ -97,8 +106,8 @@ package axl.xdef.types
 		public function get controller():BoundBox { return boxControll }
 		
 		/** determines scroll efficiency default 1. Passing font size + spacing */
-		public function get deltaMultiplier():int { return deltaMultiply }
-		public function set deltaMultiplier(value:int):void	{ deltaMultiply = value }
+		public function get deltaMultiplier():Number { return deltaMultiply }
+		public function set deltaMultiplier(value:Number):void	{ deltaMultiply = value }
 		
 		public function linkButton(xmlName:String, onClick:Function):xButton
 		{

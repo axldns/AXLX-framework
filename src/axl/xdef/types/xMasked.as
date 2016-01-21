@@ -31,7 +31,7 @@ package axl.xdef.types
 		private var fakeRect:Rectangle = new Rectangle();
 		private var eventChange:Event = new Event(Event.CHANGE);
 		private var ctrl:BoundBox;
-		private var deltaMultiply:int=1;
+		private var deltaMultiply:Number=1;
 		
 		public var container:xSprite;
 		public var wheelScrollAllowed:Boolean = true;
@@ -84,22 +84,37 @@ package axl.xdef.types
 			ctrl.addEventListener(Event.CHANGE, maskedMovement);
 			this.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent) }
 		
-		protected function wheelEvent(e:MouseEvent):void {
-			U.log(this, this.name, e,  wheelScrollAllowed);
-			if(!wheelScrollAllowed) return;
-			ctrl.movementVer(e.delta * deltaMultiply);
+		protected function wheelEvent(e:MouseEvent):void 
+		{
+			if(!wheelScrollAllowed) 
+				return;
+			//U.log(this, this.name,ctrl.vertical ? 'vertical': "", ctrl.horizontal ? "horizontal" :"", 'delta:', e.delta,  'multply:', deltaMultiply, 'v:',  e.delta * deltaMultiply );
+			if(ctrl.vertical)
+				ctrl.movementVer(e.delta * deltaMultiply);
+			else if(ctrl.horizontal)
+				ctrl.movementHor(e.delta * deltaMultiply);
 			ctrl.dispatchEvent(eventChange);
 		}
 		
 		protected function scrollBarMovement(e:Event=null):void
 		{
-			ctrl.percentageVertical = 1 - scrollBar.controller.percentageVertical;
+			var val:Number = (scrollBar.controller.horizontal ? scrollBar.controller.percentageHorizontal : scrollBar.controller.percentageVertical);
+			if(ctrl.vertical)
+				ctrl.percentageVertical = 1 - val;
+			else if(ctrl.horizontal)
+				ctrl.percentageHorizontal = 1 -val;
 		}
 		
 		protected function maskedMovement(e:Event=null):void
 		{
 			if(scrollBar != null)
-				scrollBar.controller.percentageVertical = 1 - ctrl.percentageVertical;
+			{
+				var val:Number = (ctrl.horizontal ? ctrl.percentageHorizontal : ctrl.percentageVertical);
+				if(scrollBar.controller.horizontal)
+					scrollBar.controller.percentageHorizontal = 1 -val;
+				else if(scrollBar.controller.vertical)
+					scrollBar.controller.percentageVertical = 1 -val;
+			}
 		}
 		
 		public function refreshToScrollBar():void
@@ -178,8 +193,8 @@ package axl.xdef.types
 		}
 		
 		/** determines scroll efficiency default 1. Passing font size + spacing */
-		public function get deltaMultiplier():int { return deltaMultiply }
-		public function set deltaMultiplier(value:int):void	{ deltaMultiply = value }
+		public function get deltaMultiplier():Number { return deltaMultiply }
+		public function set deltaMultiplier(value:Number):void	{ deltaMultiply = value }
 		
 		/** returns controller */
 		public function get controller():BoundBox { return ctrl }
