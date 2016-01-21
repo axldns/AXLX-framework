@@ -518,7 +518,7 @@ package axl.xdef
 						case 'filters': obj = filtersFromDef(xml); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						case 'script': obj = includeScript(xml,xroot); break;
-						case 'vod' : obj =new xVOD(xml,xroot);
+						case 'vod' : obj = new xVOD(xml,xroot); break;
 						default: 
 							if(userTypes[type] is Function)
 								obj = userTypes[type](xml,xroot);
