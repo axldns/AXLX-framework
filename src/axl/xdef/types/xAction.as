@@ -27,6 +27,10 @@ package axl.xdef.types
 		private var stickArgs:Boolean;
 		private var func:Function;
 		private var aargs:Array;
+		private var xowner:Object;
+		private var dynamicOwner:Boolean;
+
+		private var target:Object;
 		/** Class that allows to execute [target] functions by name. <br>
 		 *  xButton can call xRoot directly, by defining "action" object in xButton meta attribute.<br>
 		 * @param def - object that contains <code>type</code> which is funciton name, and <code>value</code>  */
@@ -37,8 +41,15 @@ package axl.xdef.types
 			type = def.type;
 			value = def.value;
 			xdef = def;
+			
 			stickFunction = def.stickFunction;
 			stickArgs = def.stickArgs;
+			
+			xowner = def.owner;
+			if(xowner is String && xowner.charAt(0) == '$')
+				xowner = def.owner.substr(1);
+			
+			dynamicOwner = Boolean(def.hasOwnProperty('dynamicOwner') && def.dynamicOwner == 'true');
 			dynamicArgs = def.dynamicArgs;
 		}
 		/** Owner of the function to execute. By Default main class of the project. */
@@ -102,9 +113,22 @@ package axl.xdef.types
 			if(!xxparent)
 			{
 				U.log('[xAction][execute] UNKNOWN ACTION PARENT!');
-				return null
+				return null;
 			}
-			var target:Object = xxparent['xroot'];
+			
+			if(xowner == 'this')
+				target = xxparent;
+			else if(xowner == null)
+				target = xxparent['xroot'];
+			else if(dynamicOwner)
+			{
+				target =  this.xparent.xroot.binCommand(xowner);
+			}
+			else
+			{
+				if(target == null)
+					target =  this.xparent.xroot.binCommand(xowner);
+			}
 			
 			if(target && target.hasOwnProperty(type))
 			{
@@ -112,7 +136,7 @@ package axl.xdef.types
 				//U.log('[xAction][execute]['+target+']['+xtype+']('+value+')', f);
 			}
 			else 
-				U.log('[xAction][execute]['+target+']['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER',  target);
+				U.log('[xAction][execute]['+target+']['+xtype+']('+value+') - UNKNOWN FUNCTION OWNER', xowner, 'as', target)
 			return f;
 		}
 	}
