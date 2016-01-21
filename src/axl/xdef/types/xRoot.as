@@ -157,6 +157,11 @@ package axl.xdef.types
 		{
 			return this.CONFIG[node].*.(@name==v)[0];
 		}
+		
+		public function getXMLNodeByName(xml:XML,v:String):XML
+		{
+			return xml.*.(@name==v)[0];
+		}
 		/** Instantiates element from loaded config node. Instantiated / loaded / cached object
 		 * is an argument for callback. 
 		 * <br>All objects are being created within <code>XSupport.getReadyType2</code> function. 

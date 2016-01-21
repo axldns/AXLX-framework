@@ -16,7 +16,6 @@ package axl.xdef.types
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.utils.clearInterval;
-	import flash.utils.describeType;
 	
 	import axl.utils.AO;
 	import axl.utils.U;
@@ -135,14 +134,18 @@ package axl.xdef.types
 			if(def == null)
 				throw new Error("Undefined definition for " + this);
 			XSupport.applyAttributes(def, this);
-			
+			var tv:String =  def.toString();
 			if(!def.hasOwnProperty('@font'))
 				tff.font = defaultFont;
 			this.defaultTextFormat = tff;
-			if(def.hasOwnProperty('@html'))
-				this.htmlText = def.toString();
-			else
-				this.text = def.toString();
+			if(tv.length > 0)
+			{
+				if(def.hasOwnProperty('@html') && def.@html == 'true')
+					this.htmlText = tv;
+				else
+					this.text = tv;
+			}
+			
 			if(!def.hasOwnProperty('@width'))
 				this.width = textWidth + 5;
 			if(!def.hasOwnProperty('@height'))
@@ -215,10 +218,11 @@ package axl.xdef.types
 			metaAlreadySet = true;
 			if(meta.hasOwnProperty('js'))
 				trigerExt = meta.js;
+			var a:Object, b:Array;
 			if(meta.hasOwnProperty('action'))
 			{
-				var a:Object = meta.action;
-				var b:Array = (a is Array) ? a as Array : [a];
+				a = meta.action;
+				b = (a is Array) ? a as Array : [a];
 				for(var i:int = 0, j:int = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
 			}
