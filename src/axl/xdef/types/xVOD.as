@@ -4,6 +4,7 @@ package axl.xdef.types
 	import flash.events.Event;
 	import flash.events.NetStatusEvent;
 	import flash.events.SecurityErrorEvent;
+	import flash.media.SoundTransform;
 	import flash.media.Video;
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
@@ -110,7 +111,7 @@ package axl.xdef.types
 			destroyNS();
 			FIRST_FILL = true;
 			xns = new NetStream(nc);
-			ns.soundTransform.volume = xvolume;
+			ns.soundTransform = new SoundTransform(xvolume);
 			ns.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
 			ns.videoReliable = false;
 			ns.audioReliable = false;
@@ -273,7 +274,7 @@ package axl.xdef.types
 			xvideoMeta = info;
 			var w:Number = info.width as Number;
 			var h:Number = info.height as Number;
-			U.log('W AND H', w, h);
+			U.log('original dim', w + 'x' + h);
 			if(!isNaN(w) && !isNaN(h) && w > 0 && h > 0)
 			{
 				xvideoAspectRatio = w/h;
@@ -287,7 +288,6 @@ package axl.xdef.types
 		
 		private function resolveVideoComplete():void
 		{
-			U.log(this,"resolveVideoComplete", infiniteLoop, xloops); 
 			if(infiniteLoop || --xloops > 0)
 				restart();
 			else
@@ -520,7 +520,7 @@ package axl.xdef.types
 		{
 			xvolume = v > 1 ? 1 : (v < 0 ? 0 : v);
 			if(ns)
-				ns.soundTransform.volume = xvolume;
+				ns.soundTransform = new SoundTransform(xvolume);
 		}
 		
 		
