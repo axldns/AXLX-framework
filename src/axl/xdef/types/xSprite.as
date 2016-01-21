@@ -113,7 +113,7 @@ package axl.xdef.types
 				U.distribute(this,distributeVertical,false);
 		}
 		
-		private function onChildrenCreated():void
+		public function onChildrenCreated():void
 		{
 			if(childrenCreatedAction != null)
 			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
