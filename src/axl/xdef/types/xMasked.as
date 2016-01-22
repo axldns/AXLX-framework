@@ -82,38 +82,59 @@ package axl.xdef.types
 		
 		private function addListeners():void {
 			ctrl.addEventListener(Event.CHANGE, maskedMovement);
-			this.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent) }
+			container.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent) 
+		}
 		
 		protected function wheelEvent(e:MouseEvent):void 
 		{
-			if(!wheelScrollAllowed) 
+			if(!wheelScrollAllowed || e.delta==0)
 				return;
 			//U.log(this, this.name,ctrl.vertical ? 'vertical': "", ctrl.horizontal ? "horizontal" :"", 'delta:', e.delta,  'multply:', deltaMultiply, 'v:',  e.delta * deltaMultiply );
 			if(ctrl.vertical)
 				ctrl.movementVer(e.delta * deltaMultiply);
 			else if(ctrl.horizontal)
 				ctrl.movementHor(e.delta * deltaMultiply);
-			ctrl.dispatchEvent(eventChange);
 		}
 		
 		protected function scrollBarMovement(e:Event=null):void
 		{
 			var val:Number = (scrollBar.controller.horizontal ? scrollBar.controller.percentageHorizontal : scrollBar.controller.percentageVertical);
+			ctrl.changeNotifications = false;
+			ctrl.liveChanges = false;
 			if(ctrl.vertical)
-				ctrl.percentageVertical = 1 - val;
+				ctrl.setPercentageVertical(1 - val,true)
 			else if(ctrl.horizontal)
-				ctrl.percentageHorizontal = 1 -val;
+				ctrl.setPercentageHorizontal(1 -val,true);
+			ctrl.changeNotifications = true;
+			ctrl.liveChanges = true;
 		}
 		
 		protected function maskedMovement(e:Event=null):void
 		{
 			if(scrollBar != null)
 			{
-				var val:Number = (ctrl.horizontal ? ctrl.percentageHorizontal : ctrl.percentageVertical);
+				var cur:Number,newv:Number,diff:Number;
+				scrollBar.controller.changeNotifications = false;
+				scrollBar.controller.liveChanges = false;
 				if(scrollBar.controller.horizontal)
-					scrollBar.controller.percentageHorizontal = 1 -val;
-				else if(scrollBar.controller.vertical)
-					scrollBar.controller.percentageVertical = 1 -val;
+				{
+					cur = scrollBar.controller.percentageHorizontal;
+					newv = 1- (ctrl.horizontal ? ctrl.percentageHorizontal : ctrl.percentageVertical);
+					diff = Math.abs(newv-cur);
+					if(diff > 0.001)
+						scrollBar.controller.setPercentageHorizontal(newv,true)
+				}
+				
+				if(scrollBar.controller.vertical)
+				{
+					cur = scrollBar.controller.percentageVertical;
+					newv = 1- (ctrl.vertical ? ctrl.percentageVertical : ctrl.percentageHorizontal);
+					diff = Math.abs(newv-cur);
+					if(diff > 0.001)
+						scrollBar.controller.setPercentageVertical(newv,true);
+				}
+				scrollBar.controller.changeNotifications = true;
+				scrollBar.controller.liveChanges = true;
 			}
 		}
 		

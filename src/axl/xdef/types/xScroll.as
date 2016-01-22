@@ -14,11 +14,9 @@ package axl.xdef.types
 	import flash.events.MouseEvent;
 	
 	import axl.ui.controllers.BoundBox;
-	import axl.utils.U;
 
 	public class xScroll extends xSprite
 	{
-		
 		private var rail:DisplayObject;
 		private var train:DisplayObject;
 		private var boxControll:BoundBox;
@@ -26,16 +24,13 @@ package axl.xdef.types
 		private var btnRight:xButton;
 		private var btnLeft:xButton;
 		private var btnDown:xButton;
-		private var eventChange:Event;
 		private var percentButtonMovemnt:Boolean;
 		private var deltaMultiply:Number=1;
 		public var wheelScrollAllowed:Boolean=true;
 		
-		
 		public function xScroll(def:XML)
 		{
 			makeBox();
-			eventChange = new Event(Event.CHANGE);
 			this.addEventListener(Event.ADDED, elementAdded);
 			this.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent);
 			super(def);
@@ -43,15 +38,13 @@ package axl.xdef.types
 		
 		protected function wheelEvent(e:MouseEvent):void
 		{
-			if(!wheelScrollAllowed) 
+			if(!wheelScrollAllowed || e.delta==0) 
 				return;
 			//U.log(this, this.name,boxControll.vertical ? 'vertical': "", boxControll.horizontal ? "horizontal" :"", 'delta:', e.delta,  'multply:', deltaMultiply, 'v:',  e.delta * deltaMultiply );
 			if(boxControll.vertical)
 				boxControll.movementVer((e.delta * deltaMultiply) * -1);
 			else if(boxControll.horizontal)
 				boxControll.movementHor((e.delta * deltaMultiply) * -1);
-			//boxControll.movementVer((e.delta * deltaMultiply) * -1);
-			boxControll.dispatchEvent(eventChange);
 		}
 		
 		private function makeBox():void
@@ -59,7 +52,6 @@ package axl.xdef.types
 			boxControll = new BoundBox();
 			boxControll.bound = rail;
 			boxControll.box = train;
-			//boxControll.verticalBehavior = BoundBox.inscribed;
 		}
 		
 		override protected function elementAdded(e:Event):void
