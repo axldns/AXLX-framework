@@ -15,7 +15,6 @@ package axl.xdef
 
 	public class xLauncher
 	{
-		private var fileName:String;
 		private var appRemote:Object;
 		private var flow:Flow;
 		private var projectSettings:XML;
@@ -29,7 +28,7 @@ package axl.xdef
 		public var onCfgFileListLoaded:Function;
 		public var onProjectSettings:Function;
 		/** 
-		 * appRemoteURLs can be sufixed with filename or its chunks before loading config.<br>
+		 * <code>appRemoteURLs</code> can be sufixed with <code>fileName</code> or its chunks before loading config.<br>
 		 * If value is null/undefined: config is loaded as appRemoteURLs + filename.xml<br>
 		 * Otherwise replaced filename is added to appremote.<br>
 		 * Let <code>appRemoteURLs = 'http://axldns.com/'</code><br>
@@ -40,8 +39,14 @@ package axl.xdef
 		 * Loaded config URL is <code>http://axldns.com/MOV/VIP/axldns/201601/MOV_VIP_axldns_201601.xml</code><br>
 		 * if <code>appRemoteSPLITfilename = [/_/,"/"]</code>
 		 * Loaded config URL is <code>http://axldns.com/MOV/VIP_axldns_201601/MOV_VIP_axldns_201601.xml</code><br>
+		 * @see #fileName
 		 * */
 		public var appReomoteSPLITfilename:Array;
+		/** Forces to load config of specific <code>fileName</code>. If it's not set,<br>
+		 * it checks  for <code>loaderInfo.parameters.fileName</code>,<br>
+		 * if it's not set it tries to figure it out from <code>loaderInfo.url</code>
+		 * @see #appReomoteSPLITfilename */
+		public var fileName:String;
 		public function xLauncher(target:xRoot,setPermitedProperties:Function)
 		{
 			rootObj = target;
@@ -52,7 +57,29 @@ package axl.xdef
 		{ 
 			U.log(rootObj +'[xLauncher][launch]' + appRemoteURLs);
 			appRemote = appRemoteURLs;
-			findFilename(fileNameFound) 
+			findFilename(fileNameFound);
+		}
+		
+		private function findFilename(ready:Function):void
+		{
+			var tid:int = flash.utils.setTimeout(notFound,500);
+			if(rootObj.stage)
+				onStageAvailable();
+			else
+				rootObj.addEventListener(Event.ADDED_TO_STAGE, onStageAvailable);
+			
+			function onStageAvailable(e:Event=null):void
+			{
+				rootObj.removeEventListener(Event.ADDED_TO_STAGE, onStageAvailable);
+				flash.utils.clearTimeout(tid);
+				U.log('rootObj.loaderInfo.url',rootObj.loaderInfo.url);
+				isLocal = rootObj.loaderInfo.url.match(/^(file|app):/i);
+				fileName = fileName || rootObj.loaderInfo.parameters.fileName || U.fileNameFromUrl(rootObj.loaderInfo.url);
+				
+				U.log("filename =", fileName, 'local:', isLocal);
+				ready();
+			}
+			function notFound():void {U.log("stage not found, filename unknown, config cant be found") }
 		}
 		
 		private function fileNameFound():void
@@ -108,32 +135,11 @@ package axl.xdef
 			}
 			if(onProjectSettings)
 				onProjectSettings();
-			U.log("[[[[[[ PROJECT BUILD]]]]]]]", projectSettings.toXMLString());
+			U.log("[[[[[[[ PROJECT BUILD ]]]]]]]", projectSettings.toXMLString());
 			rootObj.def = xml.root[0];
 			partDone();
 		}
 		
-		private function findFilename(ready:Function):void
-		{
-			var tid:int = flash.utils.setTimeout(notFound,500);
-			if(rootObj.stage)
-				onStageAvailable();
-			else
-				rootObj.addEventListener(Event.ADDED_TO_STAGE, onStageAvailable);
-			
-			function onStageAvailable(e:Event=null):void
-			{
-				rootObj.removeEventListener(Event.ADDED_TO_STAGE, onStageAvailable);
-				flash.utils.clearTimeout(tid);
-				U.log('rootObj.loaderInfo.url',rootObj.loaderInfo.url);
-				isLocal = rootObj.loaderInfo.url.match(/^(file|app):/i);
-				fileName = rootObj.loaderInfo.parameters.fileName || U.fileNameFromUrl(rootObj.loaderInfo.url);
-				
-				U.log("filename =", fileName, 'local:', isLocal);
-				ready();
-			}
-			function notFound():void {U.log("stage not found, filename unknown, config cant be found") }
-		}
 		
 		private function getSourcePrefixes(conf:XML):Array
 		{
@@ -166,6 +172,7 @@ package axl.xdef
 		{
 			if(++partCounter >= 2)
 			{
+				U.log(rootObj +'[xLauncher][COMPLETE]');
 				if(onAllDone)
 					onAllDone();
 				destroy();
@@ -174,7 +181,7 @@ package axl.xdef
 		
 		private function destroy():void
 		{
-			
+			U.log(rootObj +'[xLauncher][DESTROY]');
 			fileName = null;
 			appRemote = null;
 			projectSettings = null;
@@ -188,6 +195,5 @@ package axl.xdef
 			onCfgFileListLoaded = null;
 			onProjectSettings = null;
 		}
-		
 	}
 }
