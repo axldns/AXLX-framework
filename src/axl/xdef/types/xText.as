@@ -53,6 +53,7 @@ package axl.xdef.types
 		/** Distributes  children horizontaly with gap specified by this property. 
 		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
 		private var metaAlreadySet:Boolean;
+		public var debug:Boolean;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
 		{
@@ -61,8 +62,6 @@ package axl.xdef.types
 			
 			if(this.xroot != null && definition != null)
 				xroot.registry[String(definition.@name)] = this;
-			else
-				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
 					
 			defaultFont = xdefaultFont;
 			tff = new TextFormat();
@@ -102,7 +101,7 @@ package axl.xdef.types
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 					addedToStageActions[i].execute();
-				U.log(this, this.name, '[addedToStage]', j, 'actions');
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
 		
