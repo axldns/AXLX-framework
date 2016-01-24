@@ -36,6 +36,7 @@ package axl.xdef.types
 		public var reparsDefinitionEverytime:Boolean=false;
 		private var metaAlreadySet:Boolean;
 		private var addedToStageActions:Vector.<xAction>;
+		public var debug:Boolean;
 		
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null,definition:XML=null)
 		{
@@ -70,7 +71,7 @@ package axl.xdef.types
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 				addedToStageActions[i].execute();
-				U.log(this, this.name, '[addedToStage]', j, 'actions');
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
 	

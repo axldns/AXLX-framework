@@ -201,7 +201,7 @@ package axl.xdef.types
 			}
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
 				actions[i].execute();
-			U.log(this, this.name, '[executed]', j, 'actions');
+			if(xroot.DEBUG) U.log(this, this.name, '[executed]', j, 'actions');
 		}
 		
 		protected function hover(e:MouseEvent=null):void

@@ -12,6 +12,7 @@ package axl.xdef.types
 		private var xname:String;
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		private var executeArgs:Array;
+		public var debug:Boolean;
 		public function xActionSet(xml:XML,xrootObject:xRoot)
 		{
 			xxroot = xrootObject;

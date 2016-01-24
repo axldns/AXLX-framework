@@ -55,18 +55,17 @@ package axl.xdef.types
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 				addedToStageActions[i].execute();
-				U.log(this, this.name, '[addedToStage]', j, 'actions');
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
 		
 		
 		public function onChildrenCreated():void
 		{
-			U.log(this, this.name, 'onChildrenCreated', childrenCreatedAction, childrenCreatedAction ? onChildrenCreated.length : 0);
 			if(childrenCreatedAction != null)
 			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
 					childrenCreatedAction[i].execute();
-				U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
+				if(debug) U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
 			}
 		}
 		

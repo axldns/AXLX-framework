@@ -102,7 +102,7 @@ package axl.xdef.types
 				r =int(xparent.xroot.binCommand(xrepeat.substr(1)));
 			else
 				r = int(xrepeat);
-			//U.log("executing action", r, 'times');
+			if(xparent['debug'] )U.log("executing action", r, 'times');
 			while(r-->0)
 				f.apply(null,a);
 		}

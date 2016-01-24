@@ -30,6 +30,7 @@ package axl.xdef.types
 		protected var xdef:XML;
 		protected var xmeta:Object={};
 		private var xxroot:xRoot;
+		public var debug:Boolean;
 		
 		protected var xfilters:Array
 		protected var xtrans:ColorTransform;
@@ -72,8 +73,8 @@ package axl.xdef.types
 			this.xroot = xrootObj || this.xroot;
 			if(this.xroot != null && definition != null)
 				xroot.registry[String(definition.@name)] = this;
-			else
-				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
+			else if (!(this is xRoot))
+				U.log(this, this.name, "[WARINING] ELEMENT HAS" ,xroot,  'as root and ', definition? definition.name() : "null", 'node as def.', this is xRoot)
 			xdef = definition;
 			super();
 			parseDef();
@@ -101,7 +102,7 @@ package axl.xdef.types
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 				addedToStageActions[i].execute();
-				U.log(this, this.name, '[addedToStage]', j, 'actions');
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
 		
@@ -118,7 +119,7 @@ package axl.xdef.types
 			if(childrenCreatedAction != null)
 			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
 					childrenCreatedAction[i].execute();
-				U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
+				if(debug) U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
 			}
 		}
 		/**
@@ -249,6 +250,5 @@ package axl.xdef.types
 		/** Sets assigned  filters on or off @see #filters */
 		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
 		public function get filtersOn():Boolean { return filters != null }
-		
 	}
 }
