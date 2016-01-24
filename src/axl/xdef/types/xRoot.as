@@ -16,6 +16,7 @@ package axl.xdef.types
 	import axl.utils.U;
 	import axl.utils.binAgent.RootFinder;
 	import axl.xdef.XSupport;
+	import axl.xdef.xLauncher;
 	import axl.xdef.interfaces.ixDef;
 
 	/** Master class for XML DisplayList projects. Treat it as your stage */
@@ -23,27 +24,26 @@ package axl.xdef.types
 	{
 		private static const ver:String = '0.91';
 		public static function get version():String { return ver }
+		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
+		protected var xDEBUG:Boolean;
 		protected var CONFIG:XML;
 		private var rootFinder:RootFinder;
-		/** General  loading resources PREFIX.<br><code>pathPrefixes</code> argument for <code>Ldr.load</code> method.
-		 * All elements with "src" attribute are using this.
-		 * @see axl.utils.Ldr#load()*/
-		public var sourcePrefixes:Array;
+		private var xlauncher:xLauncher=  new xLauncher(this,setPermited);
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
 		{
-			if(xsupport == null)
-				xsupport = new XSupport();
-			if(xsupport.root == null)
-				xsupport.root = this;
+			xsupport = new XSupport();
+			xsupport.root = this;
 			this.xroot = this;
-			
-			if(rootFinder == null)
-				rootFinder = new RootFinder(this,XSupport);
+			rootFinder = new RootFinder(this,XSupport);
 			super(definition);
+			
 		}
+		public function get sourcePrefixes():Array {return xsourcePrefixes }
+		public function get launcher():xLauncher {return xlauncher }
+		public function get DEBUG():Boolean {return xDEBUG }
 		/** Returns reference to XML config - the project definition */
 		public function get config():XML { return CONFIG }
 		/** &lt;root> element definition. Setting it up for the first time fires up chain
@@ -61,6 +61,13 @@ package axl.xdef.types
 			XSupport.applyAttributes(value, this);
 		}
 		
+		private function setPermited(xml:XML,df:String,dbg:Boolean,srcPrefixes:Array):void
+		{
+			xsupport.defaultFont =df;
+			xDEBUG = dbg;
+			CONFIG = xml;
+			xsourcePrefixes = srcPrefixes
+		}
 		
 		// ADD - REMOVE
 		/** Adds or removes one or more elements (config xml nodes) to stage (xml root node).
@@ -120,7 +127,7 @@ package axl.xdef.types
 			else
 				getAdditionByName(v as String, gotIt,node,onNotExist,forceNewElement);
 			function gotIt(o:Object):void {
-				U.log(this, o, o.name, '[addTo]', c, c.name, 'via', command);
+				if(DEBUG) U.log(this, o, o.name, '[addTo]', c, c.name, 'via', command);
 				c[command](o);
 			}
 		}
@@ -179,7 +186,7 @@ package axl.xdef.types
 		 */
 		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
 		{
-			U.log('[xRoot][getAdditionByName]', v);
+			if(DEBUG) U.log('[xRoot][getAdditionByName]', v);
 			if(v == null)
 				return U.log("[xRoot][getAdditionByName] requesting non existing element", v);
 			if(v.charAt(0) == '$')
@@ -190,7 +197,7 @@ package axl.xdef.types
 			}
 			else if((registry[v] != null ) && !forceNewElement)
 			{
-				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
+				if(DEBUG) U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
 				callback(registry[v]);
 				return;
 			}
@@ -253,7 +260,7 @@ package axl.xdef.types
 		public function removeRegistered(v:String):void
 		{
 			var dobj:DisplayObject = xsupport.registered(v) as DisplayObject;
-			U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
+			if(DEBUG) U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
 			if(dobj != null && dobj.parent != null)
 				dobj.parent.removeChild(dobj);
 		}
@@ -296,7 +303,7 @@ package axl.xdef.types
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
 		{
 			c = c || this.getChildByName(objName) as ixDef;
-			U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
+			if(DEBUG) U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
 				XSupport.animByNameExtra(c, screenName, onComplete);
 			else
