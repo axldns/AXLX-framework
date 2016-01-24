@@ -506,7 +506,7 @@ package axl.xdef
 						case 'div': obj = new xSprite(xml,xroot); break;
 						case 'form': obj = new xForm(xml,xroot); break;
 						case 'txt': obj =  new xText(xml,xroot,defaultFont); break;
-						case 'scrollBar': obj = new xScroll(xml); break;
+						case 'scrollBar': obj = new xScroll(xml,xroot); break;
 						case 'msk': obj = new xMasked(xml,xroot); break;
 						case 'btn': obj = new xButton(xml,xroot); break;
 						case 'data' : obj = new xObject(xml, xroot);break;
