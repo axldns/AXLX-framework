@@ -63,14 +63,15 @@ package axl.xdef
 		private function findFilename(ready:Function):void
 		{
 			var tid:int = flash.utils.setTimeout(notFound,500);
-			if(rootObj.stage)
+			if(fileName || rootObj.stage)
 				onStageAvailable();
 			else
 				rootObj.addEventListener(Event.ADDED_TO_STAGE, onStageAvailable);
 			
 			function onStageAvailable(e:Event=null):void
 			{
-				rootObj.removeEventListener(Event.ADDED_TO_STAGE, onStageAvailable);
+				if(e)
+					rootObj.removeEventListener(Event.ADDED_TO_STAGE, onStageAvailable);
 				flash.utils.clearTimeout(tid);
 				U.log('rootObj.loaderInfo.url',rootObj.loaderInfo.url);
 				isLocal = rootObj.loaderInfo.url.match(/^(file|app):/i);
