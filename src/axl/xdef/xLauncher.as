@@ -107,8 +107,13 @@ package axl.xdef
 			
 			if(rootObj.loaderInfo.parameters.loadedURL != null)
 			{
-				fileName = U.fileNameFromUrl(rootObj.loaderInfo.url,true);
+				fileName = U.fileNameFromUrl(rootObj.loaderInfo.parameters.loadedURL,true);
 				mergeLoadedURLtoLibraryURLs(rootObj.loaderInfo.parameters.loadedURL.substr(0,rootObj.loaderInfo.parameters.loadedURL.lastIndexOf('/')+1));
+			}
+			else if(rootObj.loaderInfo.url != null)
+			{
+				if(isLocal)
+					Ldr.defaultPathPrefixes.unshift('..');
 			}
 			if(rootObj.loaderInfo.parameters.fileName != null)
 				fileName = rootObj.loaderInfo.parameters.fileName;
