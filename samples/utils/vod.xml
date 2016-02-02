@@ -28,112 +28,125 @@
     <div name='afterTime'/>
     <div name='notOptedIn'/>
 
-    <div name='vodComponent'> 
-      <act name='pbupdater' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.pbb.scaleX = registry.vod.percentBuffer",
-        "registry.pbt.scaleX = registry.vod.percentTime"
-        ]]}]}'/>
+    <div name='vodComponent' x='-390' meta='{"addedToStage":[0.4,{"x":0}],"removeChild":[0.4,{"x":-390}]}'> 
+        <act name='pbupdater' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.pbb.scaleX = registry.vod.percentBuffer",
+          "registry.pbt.scaleX = registry.vod.percentTime"
+          ]]}]}'/>
 
-      <act name='vodStarted' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.btnPlayTXT.text = \"PAUSE\"",
-        "registry.vod.meta.state=\"state_playing\""
-        ]]}]}'/>
+        <act name='vodStarted' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.btnPlayTXT.text = \"PAUSE\"",
+          "registry.vod.meta.state=\"state_playing\""
+          ]]}]}'/>
 
-      <act name='vodStopped' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.btnPlayTXT.text = \"PLAY\"",
-        "registry.vod.meta.state=\"state_paused\""
-        ]]}]}'/>
+        <act name='vodStopped' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.btnPlayTXT.text = \"PLAY\"",
+          "registry.vod.meta.state=\"state_paused\""
+          ]]}]}'/>
 
-       <act name='vodCompleted' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.btnPlayTXT.text = \"RESTART\"",
-        "registry.vod.meta.state=\"state_finished\""
-        ]]}]}'/>
+         <act name='vodCompleted' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.btnPlayTXT.text = \"RESTART\"",
+          "registry.vod.meta.state=\"state_finished\""
+          ]]}]}'/>
 
-      <act name='vodExited' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.btnPlayTXT.text = \"bye bye\"",
-        "registry.vod.meta.state=\"state_exited\""
-        ]]},{"type":"rmv","value":["vod","vodControls"]}]}'/>
-     
-      <act name='state_connecting' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.btnPlayTXT.text = \"connecting...\""
-        ]]}]}'/>
+        <act name='vodExited' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.btnPlayTXT.text = \"bye bye\"",
+          "registry.vod.meta.state=\"state_exited\""
+          ]]}]}'/>
 
-      <act name='state_playing' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.vod.pause()"
-        ]]}]}'/>
+        <act name='vodVolumeChanged' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.vod.volume=registry.volumeScroller.controller.percentageHorizontal"
+          ]]}]}'/>
+       
+        <act name='state_connecting' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.btnPlayTXT.text = \"connecting...\""
+          ]]}]}'/>
 
-      <act name='state_paused' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.vod.play()"
-        ]]}]}'/>
+        <act name='state_playing' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.vod.pause()"
+          ]]}]}'/>
 
-      <act name='state_finished' meta='{"action":[{"type":"binCommand","value":[[
-        "registry.vod.restart()",
-        "registry.vod.AUTOPLAY = true",
-        "registry.vod.meta.state=\"state_playing\""
-        ]]}]}'/>
+        <act name='state_paused' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.vod.play()"
+          ]]}]}'/>
 
-      <vod name='vod' 
-        x='0' y='25'  
-        width='$stage.stageWidth' 
-        bufferInitial='1' 
-        bufferPlayback='2' 
-        destroyOnEnd='false' 
-        AUTOPLAY='true' 
-        rtmp='http://staticwebdav.inx01.gamesys.corp/jpj/promotions/AXLDNS_test/promo/video/lft.mov' 
-        onPlayStart='$registry.vodStarted.execute' 
-        onFrame='$registry.pbupdater.execute' 
-        onPlayStop='$registry.vodStopped.execute' 
-        onComplete='$registry.vodCompleted.execute' 
-        onExit='$registry.vodExited.execute' 
-        meta='{"state":"state_connecting"}'
-        />
+        <act name='state_finished' meta='{"action":[{"type":"binCommand","value":[[
+          "registry.vod.restart()",
+          "registry.vod.AUTOPLAY = true",
+          "registry.vod.meta.state=\"state_playing\""
+          ]]}]}'/>
+
+        <vod name='vod' 
+          x='0' y='287'  
+          width='390' 
+          bufferInitial='1' 
+          bufferPlayback='2' 
+          destroyOnEnd='false' 
+          AUTOPLAY='false' 
+          onPlayStart='$registry.vodStarted.execute' 
+          onFrame='$registry.pbupdater.execute' 
+          onPlayStop='$registry.vodStopped.execute' 
+          onComplete='$registry.vodCompleted.execute' 
+          onExit='$registry.vodExited.execute' 
+          meta='{"state":"state_connecting"}'
+          rtmp='http://staticwebdav.inx01.gamesys.corp/jpj/promotions/AXLDNS_test/promo/video/lft.mp4' 
+          />
 
         <div name='vodControls'>
-          <btn name='btnPlayInner' x='0' y='300' meta='{"action":[{"type":"executeFromXML","value":"$registry.vod.meta.state","dynamicArgs":true}]}' over='ctransform:[["greenOffset",40],["greenOffset",0]]'>
+          <btn name='btnPlayInner' x='6' y='472' scaleX='0.5' scaleY='0.5' alpha='0.8' meta='{"action":[{"type":"executeFromXML","value":"$registry.vod.meta.state","dynamicArgs":true}]}' over='ctransform:[["greenOffset",40],["greenOffset",0]]'>
             <graphics>
               <command color='0x9bde43'>beginFill</command>
               <command x='0' y='0' width='179' height='54'>drawRect</command>
             </graphics>
             <txt name='btnPlayTXT' y='5' width='179' color='0xffffff' size='31' mouseEnabled='false' align='center' bold='true' italic='true' wordWrap='true' embedFonts='true'>conecting</txt>
           </btn>
-          <div name='progressBar' x='0' y='280'>
+          <div name='progressBar' x='0' y='503'>
             <div name='pbg'>
               <graphics>
                 <command  thickness='5' color='0x333333'>lineStyle</command>
-                <command x='$stage.stageWidth' y='0' >lineTo</command>
+                <command x='390' y='0' >lineTo</command>
               </graphics>
             </div>
             <div name='pbb' scaleX='0'>
               <graphics>
                 <command  thickness='5' color='0x888888'>lineStyle</command>
-                <command x='$stage.stageWidth' y='0' >lineTo</command>
+                <command x='390' y='0' >lineTo</command>
               </graphics>
             </div>
             <div name='pbt' scaleX='0'>
               <graphics>
                 <command  thickness='5' color='0xaa0000'>lineStyle</command>
-                <command x='$stage.stageWidth' y='0' >lineTo</command>
+                <command x='390' y='0' >lineTo</command>
               </graphics>
             </div>
           </div>
-          <msk name='volumeBar' x='300' y='300' visibleY='-10' visibleWidth='100' visibleHeight='20'>
-            <msk name='vb' >
-              <scrollBar  horizontal='true' controller.horizontal='true' controller.horizontalBehavior='top' deltaMultiplier='20' controller.animationTime='0.2'>
+         
+            <scrollBar x='282' y='492'  alpha='0.6' name='volumeScroller' horizontal='true' controller.horizontal='true' controller.horizontalBehavior='top' deltaMultiplier='-3' controller.animationTime='0.2' controller.onChange='$registry.vodVolumeChanged.execute' meta='{"childrenCreatedAction":[
+                {"type":"binCommand","value":[[
+                  "registry.volumeScroller.controller.percentageHorizontal = 0.3"
+                  ]]}
+                ]}'>
                <div name='rail'>
                   <graphics>
-                    <command  thickness='15' color='0x333333'>lineStyle</command>
-                    <command x='100' y='0' >lineTo</command>
+                    <command  thickness='15' color='0'>lineStyle</command>
+                    <command x='0' y='0' >moveTo</command>
+                    <command x='85' y='0' >lineTo</command>
                   </graphics>
                </div>
-                <btn name='train' executeReleasedOutside='true' >
+                <div name='railMask'>
+                 <graphics>
+                  <command color='0xff0000' alpha='.9'>beginFill</command>
+                  <command x='-7.5' y='-7.5' width='100' height='15' cw='15' ch='15'>drawRoundRect</command>
+                </graphics>
+               </div>
+                <btn name='train' executeReleasedOutside='true' mask='$registry.railMask'>
                   <graphics>
-                    <command  thickness='15' color='0xaa0000'>lineStyle</command>
-                    <command x='100' y='0' >lineTo</command>
+                    <command  thickness='15' color='0xffffff'>lineStyle</command>
+                     <command x='0' y='0' >moveTo</command>
+                    <command x='85' y='0' >lineTo</command>
                   </graphics>
                 </btn>
               </scrollBar>
-            </msk>
-          </msk>
         </div>
     </div>
   </additions>
