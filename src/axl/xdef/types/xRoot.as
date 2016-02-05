@@ -13,6 +13,7 @@ package axl.xdef.types
 	import flash.display.DisplayObjectContainer;
 	import flash.utils.setTimeout;
 	
+	import axl.utils.Ldr;
 	import axl.utils.U;
 	import axl.utils.binAgent.RootFinder;
 	import axl.xdef.XSupport;
@@ -65,6 +66,8 @@ package axl.xdef.types
 		{
 			xsupport.defaultFont =df;
 			xDEBUG = dbg;
+			if(dbg == false)
+				Ldr.verbose = null;
 			CONFIG = xml;
 			xsourcePrefixes = srcPrefixes
 		}
@@ -90,7 +93,7 @@ package axl.xdef.types
 			{
 				if(!(d is DisplayObject))
 				{
-					U.log('[WARNING]', d, d && d.hasOwnProperty('name') ? d.name : v, "IS NOT A DISPLAY OBJECT");
+					if(DEBUG) U.log('[WARNING]', d, d && d.hasOwnProperty('name') ? d.name : v, "IS NOT A DISPLAY OBJECT");
 					return
 				}
 				if(underChild != null)
@@ -118,7 +121,7 @@ package axl.xdef.types
 			var c:DisplayObjectContainer = intoChild as DisplayObjectContainer;
 			if(c == null)
 			{
-				U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+				if(DEBUG) U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
 				return
 			}
 				
@@ -188,7 +191,10 @@ package axl.xdef.types
 		{
 			if(DEBUG) U.log('[xRoot][getAdditionByName]', v);
 			if(v == null)
-				return U.log("[xRoot][getAdditionByName] requesting non existing element", v);
+			{
+				if(DEBUG) U.log("[xRoot][getAdditionByName] requesting non existing element", v);
+				return;
+			}
 			if(v.charAt(0) == '$')
 			{
 				v = binCommand(v.substr(1)) as String;
@@ -205,7 +211,7 @@ package axl.xdef.types
 			var xml:XML = getAdditionDefByName(v,node);
 			if(xml== null)
 			{
-				U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
+				if(DEBUG) U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
 				if(onError == null) 
 					throw new Error(v + ' does not exist in additions node');
 				else

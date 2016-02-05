@@ -48,7 +48,7 @@ package axl.xdef
 		private var framesCounter:int;
 		public var framesAwaitingLimit:int = 30;
 		private var isLaunched:Boolean;
-		private var tname:String = '[xLauncher 0.0.2]';
+		private var tname:String = '[xLauncher 0.0.3]';
 		public function xLauncher(target:xRoot,setPermitedProperties:Function)
 		{
 			rootObj = target;
