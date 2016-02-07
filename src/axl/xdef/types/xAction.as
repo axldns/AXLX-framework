@@ -80,10 +80,8 @@ package axl.xdef.types
 			
 			if(f == null)
 				throw new Error("Unsupported action type: " + type);
-			if(xvalue[0] == undefined)
-				f()
-			else if(!dynamicArgs)
-				a = value
+			if(!dynamicArgs)
+				a = value;
 			else
 			{
 				if(stickArgs)
@@ -103,8 +101,12 @@ package axl.xdef.types
 			else
 				r = int(xrepeat);
 			if(xparent['debug'] )U.log("executing action", r, 'times');
-			while(r-->0)
-				f.apply(null,a);
+			if(a != null)
+				while(r-->0)
+					f.apply(null,a);
+			else
+				while(r-->0)
+					f();
 		}
 		
 		private function findFunc():Function
