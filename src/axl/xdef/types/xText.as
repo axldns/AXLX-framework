@@ -76,6 +76,11 @@ package axl.xdef.types
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{ scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return scaleX + scaleY>>1 }
+		
 		protected function linkEvent(e:TextEvent):void
 		{
 			if(trigerExt != null && ExternalInterface.available)

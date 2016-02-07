@@ -59,7 +59,6 @@ package axl.xdef.types
 			}
 		}
 		
-		
 		public function onChildrenCreated():void
 		{
 			if(childrenCreatedAction != null)
@@ -68,6 +67,11 @@ package axl.xdef.types
 				if(debug) U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
 			}
 		}
+		
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{	scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return scaleX + scaleY>>1 }
 		
 		public function get def():XML { return xdef }
 		public function get meta():Object { return xmeta }

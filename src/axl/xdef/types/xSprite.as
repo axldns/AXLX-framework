@@ -92,7 +92,10 @@ package axl.xdef.types
 		}
 		
 		protected function removeFromStageHandler(e:Event):void	{ AO.killOff(this) }
-		
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{	scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return scaleX + scaleY>>1 }
 		protected function addedToStageHandler(e:Event):void
 		{
 			if(resetOnAddedToStage)
