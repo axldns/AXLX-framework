@@ -31,6 +31,7 @@ package axl.xdef.types
 		protected var CONFIG:XML;
 		private var rootFinder:RootFinder;
 		private var xlauncher:xLauncher=  new xLauncher(this,setPermited);
+		public var map:Object = {};
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
