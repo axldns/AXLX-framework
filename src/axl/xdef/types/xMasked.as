@@ -21,7 +21,7 @@ package axl.xdef.types
 
 	public class xMasked extends xSprite implements ixDisplay
 	{
-		public var scrollBar:xScroll;
+		private var xscrollBar:xScroll;
 		
 		private var vWid:Number=1;
 		private var vHeight:Number=1;
@@ -57,19 +57,39 @@ package axl.xdef.types
 
 		}
 		
+		public function get scrollBar():xScroll	{ return xscrollBar }
+		public function set scrollBar(v:xScroll):void
+		{
+			xscrollBar = v;
+			if(xscrollBar.controller == null)
+				throw new Error("scrollBar element needs elements named 'rail' and 'train'");
+			xscrollBar.controller.addEventListener(Event.CHANGE, scrollBarMovement);
+		}
+
 		override public function addChild(child:DisplayObject):DisplayObject
 		{
-			if(child is xScroll)
+			var v:xScroll = child as xScroll;
+			if(v)
 			{
-				scrollBar = child as xScroll;
-				if(scrollBar.controller == null)
-					throw new Error("scrollBar element needs elements named 'rail' and 'train'");
-				scrollBar.controller.addEventListener(Event.CHANGE, scrollBarMovement);
-				super.addChild(child);
+				scrollBar = v;
+				super.addChildAt(child);
 			}
 			else
 				container.addChild(child);
 			return child;
+		}
+		
+		override public function addChildAt(child:DisplayObject, index:int):DisplayObject
+		{
+			var v:xScroll = child as xScroll;
+			if(v)
+			{
+				scrollBar = v;
+				super.addChildAt(child, index);
+			}
+			else
+				container.addChildAt(child,index);
+			return child
 		}
 		
 		override protected function elementAdded(e:Event):void
@@ -94,11 +114,12 @@ package axl.xdef.types
 				ctrl.movementVer(e.delta * deltaMultiply);
 			else if(ctrl.horizontal)
 				ctrl.movementHor(e.delta * deltaMultiply);
+			trace(e);
 		}
 		
 		protected function scrollBarMovement(e:Event=null):void
 		{
-			var val:Number = (scrollBar.controller.horizontal ? scrollBar.controller.percentageHorizontal : scrollBar.controller.percentageVertical);
+			var val:Number = (xscrollBar.controller.horizontal ? xscrollBar.controller.percentageHorizontal : xscrollBar.controller.percentageVertical);
 			ctrl.changeNotifications = false;
 			ctrl.liveChanges = false;
 			if(ctrl.vertical)
@@ -107,34 +128,35 @@ package axl.xdef.types
 				ctrl.setPercentageHorizontal(1 -val,true);
 			ctrl.changeNotifications = true;
 			ctrl.liveChanges = true;
+			trace(e);
 		}
 		
 		protected function maskedMovement(e:Event=null):void
 		{
-			if(scrollBar != null)
+			if(xscrollBar != null)
 			{
 				var cur:Number,newv:Number,diff:Number;
-				scrollBar.controller.changeNotifications = false;
-				scrollBar.controller.liveChanges = false;
-				if(scrollBar.controller.horizontal)
+				xscrollBar.controller.changeNotifications = false;
+				xscrollBar.controller.liveChanges = false;
+				if(xscrollBar.controller.horizontal)
 				{
-					cur = scrollBar.controller.percentageHorizontal;
+					cur = xscrollBar.controller.percentageHorizontal;
 					newv = 1- (ctrl.horizontal ? ctrl.percentageHorizontal : ctrl.percentageVertical);
 					diff = Math.abs(newv-cur);
 					if(diff > 0.001)
-						scrollBar.controller.setPercentageHorizontal(newv,true)
+						xscrollBar.controller.setPercentageHorizontal(newv,true)
 				}
 				
-				if(scrollBar.controller.vertical)
+				if(xscrollBar.controller.vertical)
 				{
-					cur = scrollBar.controller.percentageVertical;
+					cur = xscrollBar.controller.percentageVertical;
 					newv = 1- (ctrl.vertical ? ctrl.percentageVertical : ctrl.percentageHorizontal);
 					diff = Math.abs(newv-cur);
 					if(diff > 0.001)
-						scrollBar.controller.setPercentageVertical(newv,true);
+						xscrollBar.controller.setPercentageVertical(newv,true);
 				}
-				scrollBar.controller.changeNotifications = true;
-				scrollBar.controller.liveChanges = true;
+				xscrollBar.controller.changeNotifications = true;
+				xscrollBar.controller.liveChanges = true;
 			}
 		}
 		
@@ -146,22 +168,6 @@ package axl.xdef.types
 		{
 			maskedMovement()
 		}
-		
-		override public function addChildAt(child:DisplayObject, index:int):DisplayObject
-		{
-			if(child is xScroll)
-			{
-				scrollBar = child as xScroll;
-				if(scrollBar.controller == null)
-					throw new Error("scrollBar element needs elements named 'rail' and 'train'");
-				scrollBar.controller.addEventListener(Event.CHANGE, scrollBarMovement);
-				super.addChildAt(child, index);
-			}
-			else
-				container.addChildAt(child,index);
-			return child
-		}
-		
 		
 		private function redrawMask():void
 		{

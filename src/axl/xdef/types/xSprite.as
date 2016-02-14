@@ -72,7 +72,13 @@ package axl.xdef.types
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			this.xroot = xrootObj || this.xroot;
 			if(this.xroot != null && definition != null)
-				xroot.registry[String(definition.@name)] = this;
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 			else if (!(this is xRoot))
 				U.log(this, this.name, "[WARINING] ELEMENT HAS" ,xroot,  'as root and ', definition? definition.name() : "null", 'node as def.', this is xRoot)
 			xdef = definition;

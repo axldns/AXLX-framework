@@ -61,7 +61,13 @@ package axl.xdef.types
 			this.xroot = xrootObj || this.xroot;
 			
 			if(this.xroot != null && definition != null)
-				xroot.registry[String(definition.@name)] = this;
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 					
 			defaultFont = xdefaultFont;
 			tff = new TextFormat();
@@ -251,7 +257,7 @@ package axl.xdef.types
 				{
 					var rep:Object = a[i];
 					var pattern:RegExp = new RegExp(rep.pattern, rep.options);
-					var source:Object = (rep.source.charAt(0) == '$' ? xroot.binCommand(rep.source.substr(1)) : rep.source);//XSupport.simpleSourceFinder(this.xroot, rep.source);
+					var source:Object = (rep.source.charAt(0) == '$' ? xroot.binCommand(rep.source.substr(1),this) : rep.source);//XSupport.simpleSourceFinder(this.xroot, rep.source);
 					if(source == null || source is Error)
 						source = rep.source;
 					

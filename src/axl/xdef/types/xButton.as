@@ -73,6 +73,7 @@ package axl.xdef.types
 		private var addedToStageActions:Vector.<xAction>
 		
 		private var actionOut:Boolean;
+		public var code:String;
 		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
@@ -195,12 +196,14 @@ package axl.xdef.types
 			if(this.postObject != null)
 			{
 				if(dynamicArgs)
-					this.postObject.sendData.apply(null, XSupport.getDynamicArgs(meta.post.sendArgs, this.xroot) as Array);
+					this.postObject.sendData.apply(null, XSupport.getDynamicArgs(meta.post.sendArgs, this.xroot,this) as Array);
 				else
 					this.postObject.sendData.apply(null, this.postSendArgs);
 			}
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
 				actions[i].execute();
+			if(code!=null)
+				xroot.binCommand(code,this);
 			if(xroot.DEBUG) U.log(this, this.name, '[executed]', j, 'actions');
 		}
 		

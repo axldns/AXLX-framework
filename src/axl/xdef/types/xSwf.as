@@ -171,11 +171,11 @@ package axl.xdef.types
 			frameListenerAdded = false;
 			if(stopFunc != null)
 			{
-				var f:Function = xroot.binCommand(stopFunc.substr(1)) as Function;
+				var f:Function = xroot.binCommand(stopFunc.substr(1),this) as Function;
 				if(f != null)
 				{
 					if(stopFuncArgs)
-						f.apply(null, XSupport.getDynamicArgs(meta.onStopFuncArgs,this.xroot))
+						f.apply(null, XSupport.getDynamicArgs(meta.onStopFuncArgs,this.xroot,this))
 					else
 						f();
 				}

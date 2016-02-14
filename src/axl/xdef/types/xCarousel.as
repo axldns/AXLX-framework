@@ -37,7 +37,13 @@ package axl.xdef.types
 			xdef = definition;
 			this.xroot = xrootObj || xroot;
 			if(this.xroot != null && definition != null)
-				xroot.registry[String(definition.@name)] = this;
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 			else
 				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
 			super();

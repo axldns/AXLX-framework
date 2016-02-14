@@ -115,7 +115,7 @@ package axl.xdef.types
 		public function addTo(v:Object,intoChild:Object,command:String='addChild',onNotExist:Function=null,node:String='additions',forceNewElement:Boolean=false):void
 		{
 			if(intoChild is String && intoChild.charAt(0) == "$")
-				intoChild = binCommand(intoChild.substr(1));
+				intoChild = binCommand(intoChild.substr(1),this);//should be calee
 			if(intoChild is String)
 				intoChild =  xsupport.registered(String(intoChild));
 				
@@ -198,7 +198,7 @@ package axl.xdef.types
 			}
 			if(v.charAt(0) == '$')
 			{
-				v = binCommand(v.substr(1)) as String;
+				v = binCommand(v.substr(1),this) as String;
 				if(v == null)
 					v='ERROR';
 			}
@@ -357,7 +357,7 @@ package axl.xdef.types
 		 * @return - latest result of evaluation (last element of array if so)
 		 * @see axl.utils.binAgent.RootFinder#parseInput()
 		 * */
-		public function binCommand(v:Object,debug:int=1):*
+		public function binCommand(v:Object,thisContext:Object,debug:int=1):*
 		{
 			if(rootFinder != null)
 			{
@@ -367,7 +367,7 @@ package axl.xdef.types
 					case 1:
 						for(;i<j;i++)
 						{
-							r = rootFinder.parseInput(a[i]);
+							r = rootFinder.parseInput(a[i],thisContext);
 							if(r is Error)
 								U.log("ERROR BIN COMMAND", a[i], '\n' + r);
 						}
@@ -375,13 +375,13 @@ package axl.xdef.types
 					case 2:
 						for(;i<j;i++)
 						{
-							r=rootFinder.parseInput(a[i])
+							r=rootFinder.parseInput(a[i],thisContext)
 							U.log("binCommand", r, 'result of:', a[i]);
 						}
 						return r;
 					default:
 						for(;i<j;i++)
-							r = rootFinder.parseInput(a[i]);
+							r = rootFinder.parseInput(a[i],thisContext);
 						return r;
 				}
 			}
