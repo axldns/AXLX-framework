@@ -23,7 +23,7 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.94';
+		private static const ver:String = '0.95';
 		public static function get version():String { return ver }
 		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
@@ -32,6 +32,7 @@ package axl.xdef.types
 		private var rootFinder:RootFinder;
 		private var xlauncher:xLauncher=  new xLauncher(this,setPermited);
 		public var map:Object = {};
+		public var onRootAfterAttributes:Function;
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
@@ -59,8 +60,10 @@ package axl.xdef.types
 			if(value == null || super.def != null)
 				return;
 			super.def = value;
-			xsupport.pushReadyTypes2(value, this,'addChildAt',this);
 			XSupport.applyAttributes(value, this);
+			if(onRootAfterAttributes)
+				onRootAfterAttributes();
+			xsupport.pushReadyTypes2(value, this,'addChildAt',this);
 		}
 		
 		private function setPermited(xml:XML,df:String,dbg:Boolean,srcPrefixes:Array):void
