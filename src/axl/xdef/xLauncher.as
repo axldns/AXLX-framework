@@ -21,10 +21,11 @@ package axl.xdef
 		private var setPermitedProps:Function;
 		private var partCounter:int=0;
 		
-		public var onAllDone:Function;
+		public var onAllReady:Function;
 		public var onStageAvailable:Function;
-		public var onCfgFileListLoaded:Function;
+		public var onConfigReady:Function;
 		public var onProjectSettings:Function;
+		public var onErrors:Function;
 		/** 
 		 * <code>appRemoteURLs</code> can be sufixed with <code>fileName</code> or its chunks before loading config.<br>
 		 * If value is null/undefined: config is loaded as appRemoteURLs + filename.xml<br>
@@ -48,7 +49,8 @@ package axl.xdef
 		private var framesCounter:int;
 		public var framesAwaitingLimit:int = 30;
 		private var isLaunched:Boolean;
-		private var tname:String = '[xLauncher 0.0.3]';
+		private var tname:String = '[xLauncher 0.0.12]';
+		
 		public function xLauncher(target:xRoot,setPermitedProperties:Function)
 		{
 			rootObj = target;
@@ -99,44 +101,55 @@ package axl.xdef
 		private function onLoaderInfoAvailable(e:Event=null):void
 		{
 			U.log(tname + '[onLoaderInfoAvailable]');
-			U.log(tname + ' loaderInfo',rootObj.loaderInfo);
-			U.log(tname + ' loaderInfo.url',rootObj.loaderInfo.url);
-			U.log(tname + ' loaderInfo.parameters.fileName',rootObj.loaderInfo.parameters.fileName);
-			U.log(tname + ' loaderInfo.parameters.loadedURL',rootObj.loaderInfo.parameters.loadedURL);
+			U.log(tname + ' loaderInfo:',rootObj.loaderInfo);
+			U.log(tname + ' loaderInfo.url:',rootObj.loaderInfo.url);
+			U.log(tname + ' loaderInfo.parameters.fileName:',rootObj.loaderInfo.parameters.fileName, 'vs assigned before:', fileName);
+			U.log(tname + ' loaderInfo.parameters.loadedURL:',rootObj.loaderInfo.parameters.loadedURL);
 			isLocal = rootObj.loaderInfo.url.match(/^(file|app):/i);
 			
+			
+			//resolve filename
+			fileName = fileName || rootObj.loaderInfo.parameters.fileName || U.fileNameFromUrl(rootObj.loaderInfo.parameters.loadedURL,true) || U.fileNameFromUrl(rootObj.loaderInfo.url,true);
+			//resolve directories
 			if(rootObj.loaderInfo.parameters.loadedURL != null)
 			{
-				fileName = U.fileNameFromUrl(rootObj.loaderInfo.parameters.loadedURL,true);
-				mergeLoadedURLtoLibraryURLs(rootObj.loaderInfo.parameters.loadedURL.substr(0,rootObj.loaderInfo.parameters.loadedURL.lastIndexOf('/')+1));
+				// this is not local
+				mergeLoadedURLtoLibraryURLs();
 			}
 			else if(rootObj.loaderInfo.url != null)
 			{
 				if(isLocal)
 					Ldr.defaultPathPrefixes.unshift('..');
 			}
-			if(rootObj.loaderInfo.parameters.fileName != null)
-				fileName = rootObj.loaderInfo.parameters.fileName;
 			
-			fileName = fileName || rootObj.loaderInfo.parameters.fileName || U.fileNameFromUrl(rootObj.loaderInfo.url);
-			
-			trace(tname +" fileName =", fileName, 'isLocal:', isLocal);
+			U.log(tname +" fileName =", fileName, ' isLocal:', isLocal);
 			fileNameFound()
 		}
 		
-		private function mergeLoadedURLtoLibraryURLs(v:String):void
+		private function mergeLoadedURLtoLibraryURLs():void
 		{
+			trace('mergeLoadedURLtoLibraryURLs')
 			if(isLocal)
 			{
-				Ldr.defaultPathPrefixes.unshift('../');
-			}
-			for(var i:int = 0; i < Ldr.defaultPathPrefixes.length; i++)
-			{
-				var s:String =  Ldr.defaultPathPrefixes[i];
-				if(s.match(/^(\.\.\/|\/.\.\/)/))
+				trace('mergeLoadedURLtoLibraryURLs is local', Ldr.defaultPathPrefixes);
+				//Ldr.defaultPathPrefixes.unshift('../');
+			
+			
+				// retrurns [www.example.com/test/location] FROM [www.example.com/test/location/flash.swf]
+				var v:String = rootObj.loaderInfo.parameters.loadedURL.substr(0,rootObj.loaderInfo.parameters.loadedURL.lastIndexOf('/')+1);
+				
+				Ldr.defaultPathPrefixes.unshift(v);
+				trace('mergeLoadedURLtoLibraryURLs AFTER', Ldr.defaultPathPrefixes);
+				//adds [www.example.com/test/location] TO ANYTHING LIKE [../flash.xml] 
+				
+				/*for(var i:int = 0; i < Ldr.defaultPathPrefixes.length; i++)
 				{
-					Ldr.defaultPathPrefixes[i] = v +  Ldr.defaultPathPrefixes[i];
-				}
+					var s:String =  Ldr.defaultPathPrefixes[i];
+					if(true||s.match(/^(\.\.\/|\/.\.\/|\.)/))
+					{
+						Ldr.defaultPathPrefixes[i] = v +  Ldr.defaultPathPrefixes[i];
+					}
+				}*/
 			}
 		}
 		
@@ -150,15 +163,17 @@ package axl.xdef
 			}
 			Ldr.defaultPathPrefixes.push(rootObj.loaderInfo.parameters["remote"] || appRemote);
 			
-			trace(tname,'[MERGED] Ldr.defaultPathPrefixes', Ldr.defaultPathPrefixes);
+			U.log(tname,'[MERGED] Ldr.defaultPathPrefixes', Ldr.defaultPathPrefixes);
 			
 			
-			NetworkSettings.configPath = '/' + fileName.replace('.swf', '.xml')+ '?cacheBust=' + String(new Date().time).substr(0,-3);
+			NetworkSettings.configPath = fileName.replace('.swf', '.xml')+ '?cacheBust=' + String(new Date().time).substr(0,-3);
 			flow = new Flow();
 			flow.addEventListener(flash.events.ErrorEvent.ERROR, errorHandler);
+			flow.addEventListener(flash.events.Event.COMPLETE, onFlowComplete);
 			flow.onConfigLoaded = onConfigLoaded;
 			U.autoStageManaement = false;
-			U.init(rootObj,800,600,onFilesLoaded,flow);
+			U.log(tname, 'Calling U.init with flow of config', NetworkSettings.configPath);
+			U.init(rootObj,800,600,onAllDone,flow);
 			onStageAvailable?onStageAvailable():null
 		}
 		
@@ -173,6 +188,8 @@ package axl.xdef
 			else
 				U.log('Flow error - config'+ e.toString())
 			isLaunched = false;
+			if(onErrors)
+				onErrors();
 		}
 		
 		protected function onConfigLoaded(xml:XML):void
@@ -180,7 +197,7 @@ package axl.xdef
 			U.log(rootObj +'[xLauncher][onConfigLoaded]');
 			if(!(xml is XML) || !xml.hasOwnProperty('root') )
 			{
-				U.msg("Invalid config file");
+				U.log("Invalid config file");
 				return;
 			}
 			if(xml.hasOwnProperty('project'))
@@ -198,10 +215,21 @@ package axl.xdef
 			if(onProjectSettings)
 				onProjectSettings();
 			U.log("[[[[[[[ PROJECT BUILD ]]]]]]]", projectSettings.toXMLString());
-			rootObj.def = xml.root[0];
-			partDone();
+			buildContent(xml.root[0]);
 		}
 		
+		private function buildContent(rootDef:XML):void
+		{
+			if(rootObj.stage)
+				rootObj.def = rootDef;
+			else
+				rootObj.addEventListener(Event.ADDED_TO_STAGE, rootHasStage);
+			function rootHasStage(e:Event):void
+			{
+				rootObj.removeEventListener(Event.ADDED_TO_STAGE, rootHasStage);
+				rootObj.def = rootDef;
+			}		
+		}
 		
 		private function getSourcePrefixes(conf:XML):Array
 		{
@@ -212,33 +240,35 @@ package axl.xdef
 				o.push(xmll[i].toString());
 			if(isLocal)
 			{
-				U.log(rootObj +"[xSetup][getSourcePrefixes]local loading. Unshifting '..' to source prefixes");
 				o.unshift(Ldr.defaultPathPrefixes[0]);
+				U.log(rootObj +"[xSetup][getSourcePrefixes][LOCAL]");
 			}
 			else
-				U.log(rootObj +"[xSetup][getSourcePrefixes] NOT A LOCAL LOADING. First address prefix is:", o[0]);
+			{
+				o.push(Ldr.defaultPathPrefixes[0]);
+				U.log(rootObj +"[xSetup][getSourcePrefixes][NOT A LOCAL LOADING]");
+			}
+			U.log(tname, rootObj, '[xSetup][SRC PATHS]:\n# ', o.join('\n# '));
 			return o;
 		}		
 		
-		protected function onFilesLoaded():void
+		protected function onFlowComplete(e:Event=null):void
 		{
 			U.log(rootObj +'[xLauncher][onFilesLoaded]');
+			flow.removeEventListener(flash.events.ErrorEvent.ERROR, errorHandler);
+			flow.removeEventListener(flash.events.Event.COMPLETE, onFlowComplete);
 			flow.destroy();
 			flow = null;
-			if(onCfgFileListLoaded)
-				onCfgFileListLoaded();
-			partDone();
+			if(onConfigReady)
+				onConfigReady();
 		}
 		
-		private function partDone():void
+		
+		protected function onAllDone():void
 		{
-			if(++partCounter >= 2)
-			{
-				U.log(rootObj +'[xLauncher][COMPLETE]');
-				if(onAllDone)
-					onAllDone();
-				destroy();
-			}
+			U.log(rootObj +'[xLauncher][COMPLETE]');
+			if(onAllReady)
+				onAllReady();
 		}
 		
 		private function destroy():void
@@ -252,9 +282,8 @@ package axl.xdef
 			rootObj = null;
 			setPermitedProps = null;
 			partCounter = 0;
-			onAllDone = null;
 			onStageAvailable = null;
-			onCfgFileListLoaded = null;
+			onConfigReady = null;
 			onProjectSettings = null;
 		}
 	}
