@@ -40,7 +40,7 @@ package axl.xdef
 		
 		private function finishMovement():void
 		{
-			var v:ixDef = cTarget as ixDef;
+			var v:ixDef = selector.target as ixDef;
 			if(v == null)
 				return;
 			for(var s:String in supportedProperties)
