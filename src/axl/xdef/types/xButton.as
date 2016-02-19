@@ -125,7 +125,7 @@ package axl.xdef.types
 			if(meta.hasOwnProperty('actionOut'))
 			{
 				actionOut = true;
-				a = meta.actionOver;
+				a = meta.actionOut;
 				b = (a is Array) ? a as Array : [a];
 				for(i = 0, j = b.length; i<j; i++)
 					actionsOut[i] = new xAction(b[i],xroot,this);
@@ -211,6 +211,7 @@ package axl.xdef.types
 			checkProperties();
 			
 			isOver = (e.type == MouseEvent.ROLL_OVER);
+			
 			var val:int =  isOver ? 0 : 1;
 			
 			if(overTarget)
