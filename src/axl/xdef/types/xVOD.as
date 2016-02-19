@@ -21,6 +21,7 @@ package axl.xdef.types
 		private var xloops:int=1;
 		private var xpercentTime:Number=0;
 		private var xpercentBuffer:Number=0;
+		private var xpercentBytes:Number=0;
 		private var xvideoAspectRatio:Number=0;
 		private var xbufferMax:Number = 1;
 		private var xheight:Number=0;
@@ -57,6 +58,7 @@ package axl.xdef.types
 		public var onBufferEmpty:Function;
 		public var onComplete:Function;
 		public var onPlayStop:Function;
+		
 		
 		public function xVOD(definition:XML=null, xrootObj:xRoot=null)
 		{
@@ -556,6 +558,15 @@ package axl.xdef.types
 			return xpercentBuffer;
 		}
 		
+		public function get percentBytes():Number
+		{
+			if(ns == null)
+				return 0;
+			xpercentBytes = ns.bytesLoaded / ns.bytesTotal;
+			if(xpercentBytes < 0) xpercentBytes = 0;
+			if(xpercentBytes > 1) xpercentBytes = 1;
+			return xpercentBytes;
+		}
 		override public function set height(v:Number):void
 		{
 			xheight = v;
