@@ -164,12 +164,12 @@ package axl.xdef.types
 				stopFuncArgs = true
 		}
 		
-		private function stop():void
+		private function stop(executeOnStop:Boolean=true):void
 		{
 			mc.stop();
 			mc.removeEventListener(Event.ENTER_FRAME, mcEnterFrame);
 			frameListenerAdded = false;
-			if(stopFunc != null)
+			if(executeOnStop && stopFunc != null)
 			{
 				var f:Function = xroot.binCommand(stopFunc.substr(1)) as Function;
 				if(f != null)
@@ -181,7 +181,7 @@ package axl.xdef.types
 				}
 			}
 		}
-		public function gotoAnd(frame:int,command:String='play'):void
+		public function gotoAnd(frame:int,command:String='play',executeOnStop:Boolean=false):void
 		{
 			if(command == 'play')
 			{
@@ -192,7 +192,7 @@ package axl.xdef.types
 			else
 			{
 				mc.gotoAndStop(frame);
-				stop();
+				stop(executeOnStop);
 			}
 			
 		}
