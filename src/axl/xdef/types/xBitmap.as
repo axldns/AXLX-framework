@@ -36,12 +36,19 @@ package axl.xdef.types
 		public var reparsDefinitionEverytime:Boolean=false;
 		private var metaAlreadySet:Boolean;
 		private var addedToStageActions:Vector.<xAction>;
+		public var debug:Boolean;
 		
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null,definition:XML=null)
 		{
 			this.xroot = xrootObj || xroot;
 			if(this.xroot != null && definition != null)
-				xroot.registry[String(definition.@name)] = this;
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 			else
 				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF");
 			
@@ -59,6 +66,11 @@ package axl.xdef.types
 			clearInterval(intervalID);
 		}
 		
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{	scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return scaleX + scaleY>>1 }
+		
 		protected function addedToStageHandler(e:Event):void
 		{
 			if(resetOnAddedToStage)
@@ -70,7 +82,7 @@ package axl.xdef.types
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 				addedToStageActions[i].execute();
-				U.log(this, this.name, '[addedToStage]', j, 'actions');
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
 	

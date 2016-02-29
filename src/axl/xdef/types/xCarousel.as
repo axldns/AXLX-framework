@@ -37,7 +37,13 @@ package axl.xdef.types
 			xdef = definition;
 			this.xroot = xrootObj || xroot;
 			if(this.xroot != null && definition != null)
-				xroot.registry[String(definition.@name)] = this;
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 			else
 				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
 			super();
@@ -55,20 +61,23 @@ package axl.xdef.types
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 				addedToStageActions[i].execute();
-				U.log(this, this.name, '[addedToStage]', j, 'actions');
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
-		
 		
 		public function onChildrenCreated():void
 		{
-			U.log(this, this.name, 'onChildrenCreated', childrenCreatedAction, childrenCreatedAction ? onChildrenCreated.length : 0);
 			if(childrenCreatedAction != null)
 			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
 					childrenCreatedAction[i].execute();
-				U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
+				if(debug) U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
 			}
 		}
+		
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{	scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return scaleX + scaleY>>1 }
 		
 		public function get def():XML { return xdef }
 		public function get meta():Object { return xmeta }

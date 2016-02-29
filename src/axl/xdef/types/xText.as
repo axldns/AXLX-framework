@@ -53,6 +53,7 @@ package axl.xdef.types
 		/** Distributes  children horizontaly with gap specified by this property. 
 		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
 		private var metaAlreadySet:Boolean;
+		public var debug:Boolean;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
 		{
@@ -60,9 +61,13 @@ package axl.xdef.types
 			this.xroot = xrootObj || this.xroot;
 			
 			if(this.xroot != null && definition != null)
-				xroot.registry[String(definition.@name)] = this;
-			else
-				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 					
 			defaultFont = xdefaultFont;
 			tff = new TextFormat();
@@ -76,6 +81,11 @@ package axl.xdef.types
 		
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
+		
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{ scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return scaleX + scaleY>>1 }
 		
 		protected function linkEvent(e:TextEvent):void
 		{
@@ -102,7 +112,7 @@ package axl.xdef.types
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 					addedToStageActions[i].execute();
-				U.log(this, this.name, '[addedToStage]', j, 'actions');
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
 		}
 		
@@ -247,7 +257,7 @@ package axl.xdef.types
 				{
 					var rep:Object = a[i];
 					var pattern:RegExp = new RegExp(rep.pattern, rep.options);
-					var source:Object = (rep.source.charAt(0) == '$' ? xroot.binCommand(rep.source.substr(1)) : rep.source);//XSupport.simpleSourceFinder(this.xroot, rep.source);
+					var source:Object = (rep.source.charAt(0) == '$' ? xroot.binCommand(rep.source.substr(1),this) : rep.source);//XSupport.simpleSourceFinder(this.xroot, rep.source);
 					if(source == null || source is Error)
 						source = rep.source;
 					

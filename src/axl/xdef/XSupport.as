@@ -150,7 +150,7 @@ package axl.xdef
 			if(val.charAt(0) == '$' && target && target.hasOwnProperty('xroot') && target.xroot != null )
 			{
 				//U.log("[resolveValue][", target.hasOwnProperty('name') ? target.name : null, target,']:', val);
-				output = target.xroot.binCommand(val.substr(1));
+				output = target.xroot.binCommand(val.substr(1),target);
 				//U.log(target, target.hasOwnProperty('name') ? target.name : '','applying', key, '<==', val, '\t from', attribs[i].valueOf());
 			}
 			else
@@ -196,11 +196,11 @@ package axl.xdef
 					var g:Array = [target].concat(ag[i]);
 					//dynamic properties
 					if(g[2] is String && g[2].charAt(0) == "$")
-						g[2] = target.xroot.binCommand(g[2].substr(1));
+						g[2] = target.xroot.binCommand(g[2].substr(1),target);
 					//on complete
 					var f:Object = g[3];
 					if(f is String && f.charAt(0) == "$")
-						f = target.xroot.binCommand(f.substr(1));
+						f = target.xroot.binCommand(f.substr(1),target);
 					g[3] = (f != null) ?  execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete) : acomplete;
 					//proceed
 					AO.animate.apply(null, g);
@@ -221,7 +221,7 @@ package axl.xdef
 		{
 			var anonymous:Function = function():void
 			{
-				var dargs:Array =  XSupport.getDynamicArgs(args, xrootObject) as Array;
+				var dargs:Array =  XSupport.getDynamicArgs(args, xrootObject,f) as Array;
 				if(!(f is Array))
 					f = [f];
 				var fl:int = f.length;
@@ -439,7 +439,7 @@ package axl.xdef
 				var source:String = String(xml.@src);
 				while(source.charAt(0) == '$' && xroot != null)
 				{
-					source = String(xroot.binCommand(source.substr(1),2));
+					source = String(xroot.binCommand(source.substr(1),xroot,2));
 				}
 				var inLib:Object = Ldr.getAny(source);
 				if((inLib != null) && (overwriteInLib == false))
@@ -506,7 +506,7 @@ package axl.xdef
 						case 'div': obj = new xSprite(xml,xroot); break;
 						case 'form': obj = new xForm(xml,xroot); break;
 						case 'txt': obj =  new xText(xml,xroot,defaultFont); break;
-						case 'scrollBar': obj = new xScroll(xml); break;
+						case 'scrollBar': obj = new xScroll(xml,xroot); break;
 						case 'msk': obj = new xMasked(xml,xroot); break;
 						case 'btn': obj = new xButton(xml,xroot); break;
 						case 'data' : obj = new xObject(xml, xroot);break;
@@ -529,7 +529,10 @@ package axl.xdef
 					{
 						if(obj.hasOwnProperty('name') && xml.hasOwnProperty('@name'))
 						{
-							obj.name = String(xml.@name);
+							var v:String = String(xml.@name)
+							if(v is String && v.charAt(0) == '$' )
+								v = xroot.binCommand(v.substr(1), obj);
+							obj.name = v;
 							smallRegistry[obj.name] = obj;
 						}
 						if(obj.hasOwnProperty('xroot'))
@@ -616,17 +619,17 @@ package axl.xdef
 		 * (non-reference array elements remain untouched, reference strings are resolved)</li>
 		 * <li>your <code>v</code> parameter if it's neither string nor array</li></ul>
 		 * @see #simpleSourceFinder() */
-		public static function getDynamicArgs(v:Object,xroot:xRoot):Object
+		public static function getDynamicArgs(v:Object,xroot:xRoot,thisContext:Object):Object
 		{
 			if(v is String && v.charAt(0) == '$' )
-				return xroot.binCommand(String(v).substr(1));
+				return xroot.binCommand(String(v).substr(1),thisContext);
 			if(v is Array)
 			{
 				var a:Array = v.concat();
 				for(var i:int = a.length; i-->0;)
 				{
 					var o:Object = a[i];
-					a[i] = (o is String && o.charAt(0) == '$') ? xroot.binCommand(String(o).substr(1)) : o;
+					a[i] = (o is String && o.charAt(0) == '$') ? xroot.binCommand(String(o).substr(1),thisContext) : o;
 				}
 				return a;
 			}

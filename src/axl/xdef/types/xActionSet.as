@@ -12,11 +12,21 @@ package axl.xdef.types
 		private var xname:String;
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		private var executeArgs:Array;
-		public function xActionSet(xml:XML,xrootObject:xRoot)
+		public var code:String;
+		public var debug:Boolean;
+		public var repeat:Number;
+		public function xActionSet(definition:XML,xrootObject:xRoot)
 		{
 			xxroot = xrootObject;
-			xdef = xml;
-			xroot.registry[String(xml.@name)] = this;
+			xdef = definition;
+			if(this.xroot != null && definition != null)
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 			parse();
 		}
 		
@@ -39,6 +49,15 @@ package axl.xdef.types
 			executeArgs = args;
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
 				actions[i].execute();
+			if(code!=null)
+			{
+				if(isNaN(repeat))
+					xroot.binCommand(code,this);
+				else
+					for(i=repeat; i-->0;)
+						xroot.binCommand(code,this);
+						
+			}
 		}
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }

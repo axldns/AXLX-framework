@@ -22,11 +22,18 @@ package axl.xdef.types
 		public var reparseMetaEverytime:Boolean=false;
 		public var reparsDefinitionEverytime:Boolean=false;
 		private var metaAlreadySet:Boolean;
-		public function xObject(xml:XML,xroot:xRoot)
+		public function xObject(definition:XML,xroot:xRoot)
 		{
 			xxroot = xroot;
-			xdef = xml;
-			xroot.registry[String(xml.@name)] = this;
+			xdef = definition;
+			if(this.xroot != null && definition != null)
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
 		}
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -43,7 +50,7 @@ package axl.xdef.types
 		}
 		
 		public function get name():String { return xname }
-		public function set name(v:String):void { xname = v}
+		public function set name(v:String):void { xname = v; trace("OBJ", v,"REGISTERED")}
 		
 		public function get def():XML { return xdef }
 		public function set def(v:XML):void { xdef = v }

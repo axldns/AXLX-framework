@@ -13,37 +13,39 @@ package axl.xdef.types
 	import flash.display.DisplayObjectContainer;
 	import flash.utils.setTimeout;
 	
+	import axl.utils.Ldr;
 	import axl.utils.U;
 	import axl.utils.binAgent.RootFinder;
 	import axl.xdef.XSupport;
+	import axl.xdef.xLauncher;
 	import axl.xdef.interfaces.ixDef;
 
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.91';
+		private static const ver:String = '0.94';
 		public static function get version():String { return ver }
+		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
+		protected var xDEBUG:Boolean;
 		protected var CONFIG:XML;
 		private var rootFinder:RootFinder;
-		/** General  loading resources PREFIX.<br><code>pathPrefixes</code> argument for <code>Ldr.load</code> method.
-		 * All elements with "src" attribute are using this.
-		 * @see axl.utils.Ldr#load()*/
-		public var sourcePrefixes:Array;
+		private var xlauncher:xLauncher=  new xLauncher(this,setPermited);
+		public var map:Object = {};
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
 		{
-			if(xsupport == null)
-				xsupport = new XSupport();
-			if(xsupport.root == null)
-				xsupport.root = this;
+			xsupport = new XSupport();
+			xsupport.root = this;
 			this.xroot = this;
-			
-			if(rootFinder == null)
-				rootFinder = new RootFinder(this,XSupport);
+			rootFinder = new RootFinder(this,XSupport);
 			super(definition);
+			
 		}
+		public function get sourcePrefixes():Array {return xsourcePrefixes }
+		public function get launcher():xLauncher {return xlauncher }
+		public function get DEBUG():Boolean {return xDEBUG }
 		/** Returns reference to XML config - the project definition */
 		public function get config():XML { return CONFIG }
 		/** &lt;root> element definition. Setting it up for the first time fires up chain
@@ -61,6 +63,15 @@ package axl.xdef.types
 			XSupport.applyAttributes(value, this);
 		}
 		
+		private function setPermited(xml:XML,df:String,dbg:Boolean,srcPrefixes:Array):void
+		{
+			xsupport.defaultFont =df;
+			xDEBUG = dbg;
+			if(dbg == false)
+				Ldr.verbose = null;
+			CONFIG = xml;
+			xsourcePrefixes = srcPrefixes
+		}
 		
 		// ADD - REMOVE
 		/** Adds or removes one or more elements (config xml nodes) to stage (xml root node).
@@ -83,7 +94,7 @@ package axl.xdef.types
 			{
 				if(!(d is DisplayObject))
 				{
-					U.log('[WARNING]', d, d && d.hasOwnProperty('name') ? d.name : v, "IS NOT A DISPLAY OBJECT");
+					if(DEBUG) U.log('[WARNING]', d, d && d.hasOwnProperty('name') ? d.name : v, "IS NOT A DISPLAY OBJECT");
 					return
 				}
 				if(underChild != null)
@@ -104,14 +115,14 @@ package axl.xdef.types
 		public function addTo(v:Object,intoChild:Object,command:String='addChild',onNotExist:Function=null,node:String='additions',forceNewElement:Boolean=false):void
 		{
 			if(intoChild is String && intoChild.charAt(0) == "$")
-				intoChild = binCommand(intoChild.substr(1));
+				intoChild = binCommand(intoChild.substr(1),this);//should be calee
 			if(intoChild is String)
 				intoChild =  xsupport.registered(String(intoChild));
 				
 			var c:DisplayObjectContainer = intoChild as DisplayObjectContainer;
 			if(c == null)
 			{
-				U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+				if(DEBUG) U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
 				return
 			}
 				
@@ -120,7 +131,7 @@ package axl.xdef.types
 			else
 				getAdditionByName(v as String, gotIt,node,onNotExist,forceNewElement);
 			function gotIt(o:Object):void {
-				U.log(this, o, o.name, '[addTo]', c, c.name, 'via', command);
+				if(DEBUG) U.log(this, o, o.name, '[addTo]', c, c.name, 'via', command);
 				c[command](o);
 			}
 		}
@@ -179,18 +190,21 @@ package axl.xdef.types
 		 */
 		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
 		{
-			U.log('[xRoot][getAdditionByName]', v);
+			if(DEBUG) U.log('[xRoot][getAdditionByName]', v);
 			if(v == null)
-				return U.log("[xRoot][getAdditionByName] requesting non existing element", v);
+			{
+				if(DEBUG) U.log("[xRoot][getAdditionByName] requesting non existing element", v);
+				return;
+			}
 			if(v.charAt(0) == '$')
 			{
-				v = binCommand(v.substr(1)) as String;
+				v = binCommand(v.substr(1),this) as String;
 				if(v == null)
 					v='ERROR';
 			}
 			else if((registry[v] != null ) && !forceNewElement)
 			{
-				U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
+				if(DEBUG) U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
 				callback(registry[v]);
 				return;
 			}
@@ -198,7 +212,7 @@ package axl.xdef.types
 			var xml:XML = getAdditionDefByName(v,node);
 			if(xml== null)
 			{
-				U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
+				if(DEBUG) U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
 				if(onError == null) 
 					throw new Error(v + ' does not exist in additions node');
 				else
@@ -253,7 +267,7 @@ package axl.xdef.types
 		public function removeRegistered(v:String):void
 		{
 			var dobj:DisplayObject = xsupport.registered(v) as DisplayObject;
-			U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
+			if(DEBUG) U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
 			if(dobj != null && dobj.parent != null)
 				dobj.parent.removeChild(dobj);
 		}
@@ -296,7 +310,7 @@ package axl.xdef.types
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
 		{
 			c = c || this.getChildByName(objName) as ixDef;
-			U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
+			if(DEBUG) U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
 				XSupport.animByNameExtra(c, screenName, onComplete);
 			else
@@ -343,7 +357,7 @@ package axl.xdef.types
 		 * @return - latest result of evaluation (last element of array if so)
 		 * @see axl.utils.binAgent.RootFinder#parseInput()
 		 * */
-		public function binCommand(v:Object,debug:int=1):*
+		public function binCommand(v:Object,thisContext:Object,debug:int=1):*
 		{
 			if(rootFinder != null)
 			{
@@ -353,7 +367,7 @@ package axl.xdef.types
 					case 1:
 						for(;i<j;i++)
 						{
-							r = rootFinder.parseInput(a[i]);
+							r = rootFinder.parseInput(a[i],thisContext);
 							if(r is Error)
 								U.log("ERROR BIN COMMAND", a[i], '\n' + r);
 						}
@@ -361,13 +375,13 @@ package axl.xdef.types
 					case 2:
 						for(;i<j;i++)
 						{
-							r=rootFinder.parseInput(a[i])
+							r=rootFinder.parseInput(a[i],thisContext)
 							U.log("binCommand", r, 'result of:', a[i]);
 						}
 						return r;
 					default:
 						for(;i<j;i++)
-							r = rootFinder.parseInput(a[i]);
+							r = rootFinder.parseInput(a[i],thisContext);
 						return r;
 				}
 			}

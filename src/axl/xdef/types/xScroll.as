@@ -28,12 +28,12 @@ package axl.xdef.types
 		private var deltaMultiply:Number=1;
 		public var wheelScrollAllowed:Boolean=true;
 		
-		public function xScroll(def:XML)
+		public function xScroll(def:XML,rootObj:xRoot)
 		{
 			makeBox();
 			this.addEventListener(Event.ADDED, elementAdded);
 			this.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent);
-			super(def);
+			super(def,rootObj);
 		}
 		
 		protected function wheelEvent(e:MouseEvent):void

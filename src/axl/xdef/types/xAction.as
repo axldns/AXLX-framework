@@ -31,6 +31,7 @@ package axl.xdef.types
 		private var dynamicOwner:Boolean;
 
 		private var target:Object;
+		private var refreshArgumentsOnRepeat:Boolean;
 		/** Class that allows to execute [target] functions by name. <br>
 		 *  xButton can call xRoot directly, by defining "action" object in xButton meta attribute.<br>
 		 * @param def - object that contains <code>type</code> which is funciton name, and <code>value</code>  */
@@ -44,6 +45,7 @@ package axl.xdef.types
 			
 			stickFunction = def.stickFunction;
 			stickArgs = def.stickArgs;
+			refreshArgumentsOnRepeat = def.refrefreshArgumentsOnRepeat;
 			
 			xowner = def.owner;
 			if(xowner is String && xowner.charAt(0) == '$')
@@ -67,44 +69,54 @@ package axl.xdef.types
 		/** Executes asigned function*/
 		public function execute():void
 		{
+			trace('eesc');
 			var f:Function;
 			var a:Object;
-			if(stickFunction)
-			{
-				if(func == null)
-					func = findFunc();
-				f = func;
-			}
-			else
-				f =  findFunc();
+			if(func == null || !stickFunction)
+				func = findFunc();
+			f = func;
 			
 			if(f == null)
 				throw new Error("Unsupported action type: " + type);
-			if(xvalue[0] == undefined)
-				f()
-			else if(!dynamicArgs)
-				a = value
-			else
+			if(!dynamicArgs)
 			{
-				if(stickArgs)
-				{
-					if(aargs == null)
-						aargs = (XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array) || [value];
-					a = aargs
-				}
-				else
-				{
-					a= (XSupport.getDynamicArgs(value as Array, xxparent.xroot) as Array) || [value];
-				}
+				trace('not dynamic args');
+				a = value == 'this' ? xxparent : value;
+			}
+			else if(!refreshArgumentsOnRepeat)
+			{
+				if(aargs == null || !stickArgs)
+					aargs = (XSupport.getDynamicArgs(value as Array, xxparent.xroot,xxparent) as Array) || [value];
+				a = aargs;
 			}
 			var r:int = 0;
 			if(xrepeat is String && xrepeat.charAt(0) == '$')
-				r =int(xparent.xroot.binCommand(xrepeat.substr(1)));
+				r =int(xparent.xroot.binCommand(xrepeat.substr(1),xxparent));
 			else
 				r = int(xrepeat);
-			//U.log("executing action", r, 'times');
-			while(r-->0)
-				f.apply(null,a);
+			if(xparent['debug'] )U.log("executing action", r, 'times');
+			if(f == xparent.xroot.binCommand && a is Array)
+			{
+				a[1] = a[1] || xparent;
+			}
+			trace('currently a', a);
+			if(a == null)
+			{
+				while(r-->0)
+					f();
+			}
+			else
+			{
+				if(!refreshArgumentsOnRepeat)
+					while(r-->0)
+						f.apply(null,a);
+				else
+				{
+					while(r-->0)
+						f.apply(null, (XSupport.getDynamicArgs(value as Array, xxparent.xroot,xxparent) as Array));
+				}
+			}
+				
 		}
 		
 		private function findFunc():Function
@@ -122,12 +134,12 @@ package axl.xdef.types
 				target = xxparent['xroot'];
 			else if(dynamicOwner)
 			{
-				target =  this.xparent.xroot.binCommand(xowner);
+				target =  this.xparent.xroot.binCommand(xowner,xxparent);
 			}
 			else
 			{
 				if(target == null)
-					target =  this.xparent.xroot.binCommand(xowner);
+					target =  this.xparent.xroot.binCommand(xowner,xxparent);
 			}
 			
 			if(target && target.hasOwnProperty(type))
