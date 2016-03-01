@@ -31,7 +31,6 @@ package axl.xdef.types
 		public function xScroll(def:XML,rootObj:xRoot)
 		{
 			makeBox();
-			this.addEventListener(Event.ADDED, elementAdded);
 			this.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent);
 			super(def,rootObj);
 		}
@@ -56,6 +55,7 @@ package axl.xdef.types
 		
 		override protected function elementAdded(e:Event):void
 		{
+			super.elementAdded(e);
 			switch (e.target.name)
 			{
 				case 'rail': rail = boxControll.bound = e.target as DisplayObject; break;
