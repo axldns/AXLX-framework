@@ -174,10 +174,12 @@ package axl.xdef
 		 * @param reset can execute ixDef <code>reset</code> interface function before animation
 		 * @see axl.utils.AO#animate() 
 		 * @see axl.xdef.interfaces.ixDef#reset() */
-		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false):uint
+		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false,doNotDisturb:Boolean=false):uint
 		{
 			if(target.meta.hasOwnProperty(animName))
 			{
+				if(doNotDisturb && AO.contains(target))
+					return 1;
 				if(reset)
 					target.reset();
 				else if(killCurrent)

@@ -45,6 +45,7 @@ package axl.xdef.types
 			
 		}
 		public function get sourcePrefixes():Array {return xsourcePrefixes }
+		public function set sourcePrefixes(v:Array):void { xsourcePrefixes = v}
 		public function get launcher():xLauncher {return xlauncher }
 		public function get DEBUG():Boolean {return xDEBUG }
 		/** Returns reference to XML config - the project definition */
@@ -310,12 +311,12 @@ package axl.xdef.types
 		 * @param c -any animatable object that contains meta property
 		 * @see axl.xdef.XSupport#animByNameExtra()
 		 * */
-		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null):void
+		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
 		{
 			c = c || this.getChildByName(objName) as ixDef;
 			if(DEBUG) U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
-				XSupport.animByNameExtra(c, screenName, onComplete);
+				XSupport.animByNameExtra(c, screenName, onComplete,killCurrent,reset,doNotDisturb);
 			else
 			{
 				if(onComplete != null)
@@ -328,17 +329,17 @@ package axl.xdef.types
 		 * @param onComplete callback to call when all animations are complete
 		 * @see #singleAnimByMetaName()
 		 * */
-		public function animateAllRegisteredToScreen(screenName:String,onComplete:Function=null):void
+		public function animateAllRegisteredToScreen(screenName:String,onComplete:Function=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
 		{
 			var all:int=0;
 			var reg:Object = xsupport.registry;
 			for(var s:String in reg)
 			{
 				var c:ixDef = reg[s] as ixDef;
-				if(c != null && c.meta.hasOwnProperty(screenName))
+				if(c != null && c.meta && c.meta.hasOwnProperty(screenName))
 				{
 					all++;
-					singleAnimByMetaName(c.name,screenName,singleComplete,c);
+					singleAnimByMetaName(c.name,screenName,singleComplete,c,killCurrent,reset,doNotDisturb);
 				}
 			}
 			if(all < 1 && onComplete != null)
@@ -346,7 +347,9 @@ package axl.xdef.types
 			function singleComplete():void
 			{
 				if(--all == 0 && onComplete !=null)
+				{
 					onComplete();
+				}
 			}
 		}
 		
