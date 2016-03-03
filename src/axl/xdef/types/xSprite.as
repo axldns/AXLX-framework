@@ -10,9 +10,11 @@
 package axl.xdef.types
 {
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
+	import flash.geom.Vector3D;
 	
 	import axl.utils.AO;
 	import axl.utils.U;
@@ -31,6 +33,59 @@ package axl.xdef.types
 		protected var xmeta:Object={};
 		private var xxroot:xRoot;
 		public var debug:Boolean;
+		private var xsortZ:Boolean=false;
+		
+
+		public function get sortZ():Boolean { return xsortZ;}
+		public function set sortZ(v:Boolean):void
+		{
+			if(xsortZ == v)
+				return
+			xsortZ = v;
+			if(!v)
+				this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+			else if(v && this.stage != null)
+				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		}
+		
+		protected function onEnterFrame(event:Event):void
+		{
+			if(this.parent)
+				sort(this.parent);
+		}
+		
+		public function sort(targetContainer:DisplayObjectContainer=null):void 
+		{
+			var i:int;
+			
+			var distArray:Array=[];
+			
+			var curMid:Vector3D;
+			
+			var curDist:Number;
+			var observerPos:Vector3D=new Vector3D();
+			observerPos.x=root.transform.perspectiveProjection.projectionCenter.x;
+			observerPos.y=root.transform.perspectiveProjection.projectionCenter.y;
+			observerPos.z=-root.transform.perspectiveProjection.focalLength;
+			var numc:int = this.numChildren;
+			var sortMethod:String = 'distObserver';
+			var c:DisplayObject;
+			for(i=0;i<numc;i++)
+			{
+				c = this.getChildAt(i);
+				curMid=c.transform.getRelativeMatrix3D(root).position.clone();
+				curDist=Math.sqrt(Math.pow(curMid.x-observerPos.x,2)+Math.pow(curMid.y-observerPos.y,2)+Math.pow(curMid.z-observerPos.z,2));
+				distArray[i] = {distance:curDist,child:c}
+			}
+			
+			distArray.sortOn("distance", Array.NUMERIC | Array.DESCENDING);
+			i = distArray.length;
+			while(i-->0)
+			{
+				//U.log(distArray[i].child.name, 'on distance', distArray[i].distance);
+				this.setChildIndex(distArray[i].child, i);
+			}
+		}
 		
 		protected var xfilters:Array
 		protected var xtrans:ColorTransform;
@@ -97,7 +152,10 @@ package axl.xdef.types
 				this.xroot.registry.v = this;
 		}
 		
-		protected function removeFromStageHandler(e:Event):void	{ AO.killOff(this) }
+		protected function removeFromStageHandler(e:Event):void	{ 
+			this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+			AO.killOff(this) 
+		}
 		/** sets both scaleX and scaleY to the same value*/
 		public function set scale(v:Number):void{	scaleX = scaleY = v }
 		/** returns average of scaleX and scaleY */
@@ -113,9 +171,16 @@ package axl.xdef.types
 				addedToStageActions[i].execute();
 				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
+			if(this.sortZ)
+				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
 		protected function elementAdded(e:Event):void
+		{
+			redistribute();
+		}
+		
+		public function redistribute():void
 		{
 			if(!isNaN(distributeHorizontal))
 				U.distribute(this,distributeHorizontal,true);
