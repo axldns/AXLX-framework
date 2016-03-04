@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -285,41 +285,41 @@ package axl.xdef.types
 		}
 		
 		public function get align():String { return tff.align }
-		public function set align(v:String):void { tff.align = v }
+		public function set align(v:String):void { tff.align = v; this.setTextFormat(tff); }
 		public function get blockIndent():Object { return tff.blockIndent }
-		public function set blockIndent(v:Object):void { tff.blockIndent = v }
+		public function set blockIndent(v:Object):void { tff.blockIndent = v; this.setTextFormat(tff); }
 		public function get bold():Object { return tff.bold }
-		public function set bold(v:Object):void { tff.bold = v }
+		public function set bold(v:Object):void { tff.bold = v; this.setTextFormat(tff); }
 		public function get bullet():Object { return tff.bullet }
-		public function set bullet(v:Object):void { tff.bullet = v }
+		public function set bullet(v:Object):void { tff.bullet = v; this.setTextFormat(tff); }
 		public function get color():Object { return tff.color }
-		public function set color(v:Object):void { tff.color = v }
+		public function set color(v:Object):void { tff.color = v; this.setTextFormat(tff); }
 		public function get font():String { return tff.font }
-		public function set font(v:String):void { tff.font = v }
+		public function set font(v:String):void { tff.font = v; this.setTextFormat(tff); }
 		public function get indent():Object { return tff.indent }
-		public function set indent(v:Object):void { tff.indent = v }
+		public function set indent(v:Object):void { tff.indent = v; this.setTextFormat(tff); }
 		public function get italic():Object { return tff.italic }
-		public function set italic(v:Object):void { tff.italic = v }
+		public function set italic(v:Object):void { tff.italic = v; this.setTextFormat(tff); }
 		public function get kerning():Object { return tff.kerning }
-		public function set kerning(v:Object):void { tff.kerning = v }
+		public function set kerning(v:Object):void { tff.kerning = v; this.setTextFormat(tff); }
 		public function get leading():Object { return tff.leading }
-		public function set leading(v:Object):void { tff.leading = v }
+		public function set leading(v:Object):void { tff.leading = v; this.setTextFormat(tff); }
 		public function get leftMargin():Object { return tff.leftMargin }
-		public function set leftMargin(v:Object):void { tff.leftMargin = v }
+		public function set leftMargin(v:Object):void { tff.leftMargin = v; this.setTextFormat(tff); }
 		public function get letterSpacing():Object { return tff.letterSpacing }
-		public function set letterSpacing(v:Object):void { tff.letterSpacing = v }
+		public function set letterSpacing(v:Object):void { tff.letterSpacing = v; this.setTextFormat(tff); }
 		public function get rightMargin():Object { return tff.rightMargin }
-		public function set rightMargin(v:Object):void { tff.rightMargin = v }
+		public function set rightMargin(v:Object):void { tff.rightMargin = v; this.setTextFormat(tff); }
 		public function get size():Object { return tff.size }
-		public function set size(v:Object):void { tff.size = v }
+		public function set size(v:Object):void { tff.size = v; this.setTextFormat(tff); }
 		public function get tabStops():Array { return tff.tabStops }
-		public function set tabStops(v:Array):void { tff.tabStops = v }
+		public function set tabStops(v:Array):void { tff.tabStops = v; this.setTextFormat(tff); }
 		public function get target():String { return tff.target }
-		public function set target(v:String):void { tff.target = v }
+		public function set target(v:String):void { tff.target = v; this.setTextFormat(tff); }
 		public function get underline():Object { return tff.underline }
-		public function set underline(v:Object):void { tff.underline = v }
+		public function set underline(v:Object):void { tff.underline = v; this.setTextFormat(tff); }
 		public function get url():String { return tff.url }
-		public function set url(v:String):void { tff.url = v }
+		public function set url(v:String):void { tff.url = v; this.setTextFormat(tff); }
 
 	}
 }
