@@ -72,7 +72,7 @@ package axl.xdef.types
 			if(v)
 			{
 				scrollBar = v;
-				super.addChildAt(child);
+				super.addChild(child);
 			}
 			else
 				container.addChild(child);
