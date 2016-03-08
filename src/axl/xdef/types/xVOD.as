@@ -294,7 +294,7 @@ package axl.xdef.types
 				restart();
 			else
 			{
-				if(onComplete)
+				if(onComplete!=null)
 					onComplete();
 				destroyOnEnd ? EXIT_SEQUENCE() : U.log(this, "destroyOnEnd=false, call EXIT_SEQUENCE or destroy() to dispose this content");
 			}

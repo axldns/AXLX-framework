@@ -105,7 +105,7 @@ package axl.xdef
 			U.log(tname + ' loaderInfo.url:',rootObj.loaderInfo.url);
 			U.log(tname + ' loaderInfo.parameters.fileName:',rootObj.loaderInfo.parameters.fileName, 'vs assigned before:', fileName);
 			U.log(tname + ' loaderInfo.parameters.loadedURL:',rootObj.loaderInfo.parameters.loadedURL);
-			isLocal = rootObj.loaderInfo.url.match(/^(file|app):/i);
+			isLocal = Boolean(rootObj.loaderInfo.url.match(/^(file|app):/i));
 			
 			
 			//resolve filename
@@ -174,7 +174,7 @@ package axl.xdef
 			U.autoStageManaement = false;
 			U.log(tname, 'Calling U.init with flow of config', NetworkSettings.configPath);
 			U.init(rootObj,800,600,onAllDone,flow);
-			onStageAvailable?onStageAvailable():null
+			(onStageAvailable != null)?onStageAvailable():null;
 		}
 		
 		protected function errorHandler(e:Event):void
@@ -188,7 +188,7 @@ package axl.xdef
 			else
 				U.log('Flow error - config'+ e.toString())
 			isLaunched = false;
-			if(onErrors)
+			if(onErrors!=null)
 				onErrors();
 		}
 		
@@ -212,7 +212,7 @@ package axl.xdef
 				var font:String = projectSettings.hasOwnProperty('@defaultFont') ? String(projectSettings.@defaultFont) : null;
 				setPermitedProps(xml,font,debug,getSourcePrefixes(xml))
 			}
-			if(onProjectSettings)
+			if(onProjectSettings!=null)
 				onProjectSettings();
 			U.log("[[[[[[[ PROJECT BUILD ]]]]]]]", projectSettings.toXMLString());
 			buildContent(xml.root[0]);
@@ -259,15 +259,14 @@ package axl.xdef
 			flow.removeEventListener(flash.events.Event.COMPLETE, onFlowComplete);
 			flow.destroy();
 			flow = null;
-			if(onConfigReady)
+			if(onConfigReady!=null)
 				onConfigReady();
 		}
-		
 		
 		protected function onAllDone():void
 		{
 			U.log(rootObj +'[xLauncher][COMPLETE]');
-			if(onAllReady)
+			if(onAllReady!=null)
 				onAllReady();
 		}
 		

@@ -62,7 +62,7 @@ package axl.xdef.types
 		public function get type():String { return xtype }
 		public function set type(value:String):void	{ xtype = value }
 
-		/** An argument for executed function*/
+		/** An argument or array of arguments for function to execute*/
 		public function get value():Object { return xvalue }
 		public function set value(v:Object):void { xvalue = (v is Array) ? v : [v] }
 		
@@ -99,7 +99,6 @@ package axl.xdef.types
 			{
 				a[1] = a[1] || xparent;
 			}
-			trace('currently a', a);
 			if(a == null)
 			{
 				while(r-->0)

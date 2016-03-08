@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -30,7 +30,7 @@ package axl.xdef.types
 		protected var xDEBUG:Boolean;
 		protected var CONFIG:XML;
 		private var rootFinder:RootFinder;
-		private var xlauncher:xLauncher=  new xLauncher(this,setPermited);
+		private var xlauncher:xLauncher;
 		public var map:Object = {};
 		public var onRootAfterAttributes:Function;
 		
@@ -38,6 +38,7 @@ package axl.xdef.types
 		public function xRoot(definition:XML=null)
 		{
 			xsupport = new XSupport();
+			xlauncher = new xLauncher(this,setPermited);
 			xsupport.root = this;
 			this.xroot = this;
 			rootFinder = new RootFinder(this,XSupport);
@@ -62,7 +63,7 @@ package axl.xdef.types
 				return;
 			super.def = value;
 			XSupport.applyAttributes(value, this);
-			if(onRootAfterAttributes)
+			if(onRootAfterAttributes!=null)
 				onRootAfterAttributes();
 			xsupport.pushReadyTypes2(value, this,'addChildAt',this);
 		}
@@ -172,7 +173,7 @@ package axl.xdef.types
 		{
 			return this.CONFIG[node].*.(@name==v)[0];
 		}
-		
+		/** Finds child node by name*/
 		public function getXMLNodeByName(xml:XML,v:String):XML
 		{
 			return xml.*.(@name==v)[0];
