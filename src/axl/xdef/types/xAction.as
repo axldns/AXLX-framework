@@ -69,7 +69,6 @@ package axl.xdef.types
 		/** Executes asigned function*/
 		public function execute():void
 		{
-			trace('eesc');
 			var f:Function;
 			var a:Object;
 			if(func == null || !stickFunction)
@@ -80,7 +79,6 @@ package axl.xdef.types
 				throw new Error("Unsupported action type: " + type);
 			if(!dynamicArgs)
 			{
-				trace('not dynamic args');
 				a = value == 'this' ? xxparent : value;
 			}
 			else if(!refreshArgumentsOnRepeat)
@@ -94,7 +92,7 @@ package axl.xdef.types
 				r =int(xparent.xroot.binCommand(xrepeat.substr(1),xxparent));
 			else
 				r = int(xrepeat);
-			if(xparent['debug'] )U.log("executing action", r, 'times');
+			if(xparent['debug'] )U.log("executing action",xparent.name, r, 'times');
 			if(f == xparent.xroot.binCommand && a is Array)
 			{
 				a[1] = a[1] || xparent;

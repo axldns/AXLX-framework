@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -24,7 +24,6 @@ package axl.xdef.types
 		private var btnRight:xButton;
 		private var btnLeft:xButton;
 		private var btnDown:xButton;
-		private var percentButtonMovemnt:Boolean;
 		private var deltaMultiply:Number=1;
 		public var wheelScrollAllowed:Boolean=true;
 		
@@ -41,9 +40,9 @@ package axl.xdef.types
 				return;
 			//U.log(this, this.name,boxControll.vertical ? 'vertical': "", boxControll.horizontal ? "horizontal" :"", 'delta:', e.delta,  'multply:', deltaMultiply, 'v:',  e.delta * deltaMultiply );
 			if(boxControll.vertical)
-				boxControll.movementVer((e.delta * deltaMultiply) * -1);
+				boxControll.movementVer((e.delta * deltaMultiply) * -1,false,boxControll);
 			else if(boxControll.horizontal)
-				boxControll.movementHor((e.delta * deltaMultiply) * -1);
+				boxControll.movementHor((e.delta * deltaMultiply) * -1,false,boxControll);
 		}
 		
 		private function makeBox():void
@@ -72,25 +71,13 @@ package axl.xdef.types
 		{
 			if(boxControll == null)
 				return;
-			if(percentButtonMovemnt)
+			
+			switch(e.target)
 			{
-				switch(e.target)
-				{
-					case btnUp: boxControll.percentageVertical -= deltaMultiply; break;
-					case btnDown: boxControll.percentageVertical += deltaMultiply; break;
-					case btnLeft: boxControll.percentageHorizontal -= deltaMultiply; break;
-					case btnRight: boxControll.percentageHorizontal += deltaMultiply; break;
-				}
-			}
-			else
-			{
-				switch(e.target)
-				{
-					case btnUp: boxControll.movementVer(-deltaMultiply); break;
-					case btnDown: boxControll.movementVer(deltaMultiply); break;
-					case btnLeft: boxControll.movementHor(-deltaMultiply); break;
-					case btnRight: boxControll.movementHor(deltaMultiply); break;
-				}
+				case btnUp: boxControll.movementVer(-deltaMultiply,false,this); break;
+				case btnDown: boxControll.movementVer(deltaMultiply,false,this); break;
+				case btnLeft: boxControll.movementHor(-deltaMultiply,false,this); break;
+				case btnRight: boxControll.movementHor(deltaMultiply,false,this); break;
 			}
 			boxControll.dispatchChange();
 		}

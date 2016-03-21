@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -44,7 +44,6 @@ package axl.xdef.types
 			shapeMask = new Shape();
 			container = new xSprite(null,xroot);
 			container.name = "maskContainerOf_" + String((definiton != null) ? definiton.@name : "null");
-			//container.mask = shapeMask;
 			super(definiton,xroot);
 			super.addChild(container);
 			super.addChild(shapeMask);
@@ -63,7 +62,7 @@ package axl.xdef.types
 			xscrollBar = v;
 			if(xscrollBar.controller == null)
 				throw new Error("scrollBar element needs elements named 'rail' and 'train'");
-			xscrollBar.controller.addEventListener(Event.CHANGE, scrollBarMovement);
+			xscrollBar.controller.onChange = controller2Change;
 		}
 
 		override public function addChild(child:DisplayObject):DisplayObject
@@ -101,72 +100,31 @@ package axl.xdef.types
 		}
 		
 		private function addListeners():void {
-			ctrl.addEventListener(Event.CHANGE, maskedMovement);
+			ctrl.onChange = controller1Change;
 			container.addEventListener(MouseEvent.MOUSE_WHEEL, wheelEvent) 
 		}
+		private function controller1Change(e:Object=null):void
+		{
+			if((scrollBar == null) || e==scrollBar.controller)
+				return;
+			scrollBar.controller.percentageCommon( 1-ctrl.percentageHorizontal,1- ctrl.percentageVertical,false,ctrl);
+		}
 		
+		private function controller2Change (e:Object=null):void
+		{
+			if(e==ctrl)
+				return;
+			ctrl.percentageCommon(1-scrollBar.controller.percentageHorizontal, 1-scrollBar.controller.percentageVertical,false,scrollBar.controller);
+		}
+			
 		protected function wheelEvent(e:MouseEvent):void 
 		{
 			if(!wheelScrollAllowed || e.delta==0)
 				return;
-			//U.log(this, this.name,ctrl.vertical ? 'vertical': "", ctrl.horizontal ? "horizontal" :"", 'delta:', e.delta,  'multply:', deltaMultiply, 'v:',  e.delta * deltaMultiply );
 			if(ctrl.vertical)
-				ctrl.movementVer(e.delta * deltaMultiply);
+				ctrl.movementVer(e.delta * deltaMultiply,false,ctrl);
 			else if(ctrl.horizontal)
-				ctrl.movementHor(e.delta * deltaMultiply);
-			trace(e);
-		}
-		
-		protected function scrollBarMovement(e:Event=null):void
-		{
-			var val:Number = (xscrollBar.controller.horizontal ? xscrollBar.controller.percentageHorizontal : xscrollBar.controller.percentageVertical);
-			ctrl.changeNotifications = false;
-			ctrl.liveChanges = false;
-			if(ctrl.vertical)
-				ctrl.setPercentageVertical(1 - val,true)
-			else if(ctrl.horizontal)
-				ctrl.setPercentageHorizontal(1 -val,true);
-			ctrl.changeNotifications = true;
-			ctrl.liveChanges = true;
-			trace(e);
-		}
-		
-		protected function maskedMovement(e:Event=null):void
-		{
-			if(xscrollBar != null)
-			{
-				var cur:Number,newv:Number,diff:Number;
-				xscrollBar.controller.changeNotifications = false;
-				xscrollBar.controller.liveChanges = false;
-				if(xscrollBar.controller.horizontal)
-				{
-					cur = xscrollBar.controller.percentageHorizontal;
-					newv = 1- (ctrl.horizontal ? ctrl.percentageHorizontal : ctrl.percentageVertical);
-					diff = Math.abs(newv-cur);
-					if(diff > 0.001)
-						xscrollBar.controller.setPercentageHorizontal(newv,true)
-				}
-				
-				if(xscrollBar.controller.vertical)
-				{
-					cur = xscrollBar.controller.percentageVertical;
-					newv = 1- (ctrl.vertical ? ctrl.percentageVertical : ctrl.percentageHorizontal);
-					diff = Math.abs(newv-cur);
-					if(diff > 0.001)
-						xscrollBar.controller.setPercentageVertical(newv,true);
-				}
-				xscrollBar.controller.changeNotifications = true;
-				xscrollBar.controller.liveChanges = true;
-			}
-		}
-		
-		public function refreshToScrollBar():void
-		{
-			scrollBarMovement();
-		}
-		public function refreshToContent():void
-		{
-			maskedMovement()
+				ctrl.movementHor(e.delta * deltaMultiply,false,ctrl);
 		}
 		
 		private function redrawMask():void
