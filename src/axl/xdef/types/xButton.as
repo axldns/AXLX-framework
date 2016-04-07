@@ -264,6 +264,7 @@ package axl.xdef.types
 			{
 				U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
 				U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
+				hover(new MouseEvent("rollout",false));
 			}
 			var f:String = isEnabled ? 'addEventListener' : 'removeEventListener';
 			this[f](MouseEvent.MOUSE_DOWN, mouseDown);

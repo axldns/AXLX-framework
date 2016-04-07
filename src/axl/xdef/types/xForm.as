@@ -20,12 +20,17 @@ package axl.xdef.types
 		
 		private var currentFocused:xText;
 		private var indicatorProperties:Object = {thickness:2,color:0xFFFFFF,alpha:1,pixelHinting:true,scaleMode:"normal",caps:null,joints:null,miterLimit:3};
+
 		private var errorIndicatorProperties:Object = {thickness:2,color:0xFF0000,alpha:1,pixelHinting:true,scaleMode:"normal",caps:null,joints:null,miterLimit:3};
 		private var errorIndicator:Shape;
 		private var indicator:Shape;
 		private var buttonSubmit:xButton;
 		private var toValidate:Vector.<xText> = new Vector.<xText>();
 		private var xformObject:Object = {}
+		
+		public function get focusProps():Object	{return indicatorProperties};
+		public function get errorProps():Object	{return errorIndicatorProperties};
+		public var onError:Function;
 		
 		public function xForm(definition:XML=null, xroot:xRoot=null)
 		{
@@ -121,11 +126,11 @@ package axl.xdef.types
 			errorIndicator.x = t.x;
 			errorIndicator.y = t.y;
 			t.parent.addChild(errorIndicator);
-			
+			if(onError != null)
+				onError();
 		}
 
 		public function get formObject():Object	{ return xformObject }
-
 		
 	}
 }
