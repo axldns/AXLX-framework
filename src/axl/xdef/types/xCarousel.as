@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -19,8 +19,6 @@ package axl.xdef.types
 	
 	public class xCarousel extends Carusele implements ixDef
 	{
-		private var addedToRail:xAction;
-		
 		private var xdef:XML;
 		private var xmeta:Object = {}
 		private var xxroot:xRoot;
@@ -31,6 +29,18 @@ package axl.xdef.types
 		private var metaAlreadySet:Boolean;
 		private var addedToStageActions:Vector.<xAction>;
 		private var childrenCreatedAction:Vector.<xAction>;
+		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onAddedToStage:String;
+		/** Portion of uncompiled code to execute when object is removed from stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRemovedFromStage:String;
+		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
+		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var inject:String;
 		
 		public function xCarousel(definition:XML,xrootObj:xRoot=null)
 		{
@@ -48,6 +58,7 @@ package axl.xdef.types
 				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF")
 			super();
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
+			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			parseDef();
 		}
 		public function get xroot():xRoot { return xxroot }
@@ -63,6 +74,14 @@ package axl.xdef.types
 				addedToStageActions[i].execute();
 				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
+			if(onAddedToStage != null)
+				xroot.binCommand(onAddedToStage,this);
+		}
+		protected function removeFromStageHandler(e:Event):void
+		{
+			AO.killOff(this);
+			if(onRemovedFromStage != null)
+				xroot.binCommand(onRemovedFromStage,this);
 		}
 		
 		public function onChildrenCreated():void

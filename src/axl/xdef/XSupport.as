@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -563,7 +563,11 @@ package axl.xdef
 						
 						//APPLYING ATTRIBUTES 1
 						applyAttributes(xml, obj);
-						
+						//code inject
+						if(obj.hasOwnProperty("inject") && obj.inject != null)
+						{
+							xroot.binCommand(obj.inject, obj);
+						}
 						// PUSHING CHILDREN
 						if(obj is Carusele)
 						{
@@ -574,7 +578,9 @@ package axl.xdef
 						{
 							pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 						}
+						
 					}
+					
 					// notify
 					if(callBack2argument != null)
 						callBack(obj, callBack2argument);

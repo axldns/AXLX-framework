@@ -54,6 +54,18 @@ package axl.xdef.types
 		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
 		private var metaAlreadySet:Boolean;
 		public var debug:Boolean;
+		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onAddedToStage:String;
+		/** Portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRemovedFromStage:String;
+		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
+		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var inject:String;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
 		{
@@ -99,6 +111,8 @@ package axl.xdef.types
 		{
 			AO.killOff(this);
 			clearInterval(intervalID);
+			if(onRemovedFromStage != null)
+				xroot.binCommand(onRemovedFromStage,this);
 		}
 		
 		protected function addedToStageHandler(e:Event):void
@@ -114,6 +128,8 @@ package axl.xdef.types
 					addedToStageActions[i].execute();
 				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
+			if(onAddedToStage != null)
+				xroot.binCommand(onAddedToStage,this);
 		}
 		
 		private function onComplete():void

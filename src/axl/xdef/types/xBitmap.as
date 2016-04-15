@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -31,12 +31,31 @@ package axl.xdef.types
 		private var xtransDef:ColorTransform;
 		private var xfilters:Array;
 		private var intervalID:uint;
-		public var resetOnAddedToStage:Boolean = true;
-		public var reparseMetaEverytime:Boolean=false;
-		public var reparsDefinitionEverytime:Boolean=false;
 		private var metaAlreadySet:Boolean;
 		private var addedToStageActions:Vector.<xAction>;
+		
+		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
+		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
+		 * and killing all animations @see #reset() */
+		public var resetOnAddedToStage:Boolean = true;
+		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
+		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
+		public var reparseMetaEverytime:Boolean=false;
+		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
+		 * affects graphics drawing only. Pushing children inside happens only once per existence in
+		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
+		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
+		public var reparsDefinitionEverytime:Boolean=false;
+		/** Determines if debugging info is printed to consle*/
 		public var debug:Boolean;
+		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onAddedToStage:String;
+		/** Portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRemovedFromStage:String;
 		
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null,definition:XML=null)
 		{
@@ -55,7 +74,6 @@ package axl.xdef.types
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);
-			
 		}
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -64,6 +82,8 @@ package axl.xdef.types
 		{
 			AO.killOff(this);
 			clearInterval(intervalID);
+			if(onRemovedFromStage != null)
+				xroot.binCommand(onRemovedFromStage,this);
 		}
 		
 		/** sets both scaleX and scaleY to the same value*/
@@ -84,6 +104,8 @@ package axl.xdef.types
 				addedToStageActions[i].execute();
 				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
+			if(onAddedToStage != null)
+				xroot.binCommand(onAddedToStage,this);
 		}
 	
 		public function get meta():Object { return xmeta }

@@ -33,9 +33,75 @@ package axl.xdef.types
 		protected var xmeta:Object={};
 		private var xxroot:xRoot;
 		public var debug:Boolean;
-		private var xsortZ:Boolean=false;
+		protected var xfilters:Array
+		protected var xtrans:ColorTransform;
+		private var intervalID:uint;
 		
-
+		private var metaAlreadySet:Boolean;
+		private var addedToStageActions:Vector.<xAction>;
+		private var childrenCreatedAction:Vector.<xAction>;
+		
+		private var xsortZ:Boolean=false;
+		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onAddedToStage:String;
+		/** Portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRemovedFromStage:String;
+		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
+		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var inject:String;
+		
+		/** Distributes  children horizontaly with gap specified by this property. 
+		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
+		public var distributeHorizontal:Number;
+		/** Distributes  children verticaly with gap specified by this property. 
+		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
+		public var distributeVertical:Number;
+		
+		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
+		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
+		public var reparseMetaEverytime:Boolean;
+		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
+		 * affects graphics drawing only. Pushing children inside happens only once per existence in
+		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
+		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
+		public var reparsDefinitionEverytime:Boolean;
+		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
+		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
+		 * and killing all animations @see #reset() */
+		public var resetOnAddedToStage:Boolean=true;
+		
+		/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.
+		 * Overrides standard addChild, addChildAt, removeChild, removeChildAt methods in order
+		 * to maintain meta-keyword-defined animations before removing children or after adding them to display list.
+		 * Self-listens for adding and removing from stage in order to maintain meta.addedToStage defined animation
+		 * and to kill all existing animations when removed.
+		 * @see #meta() */
+		public function xSprite(definition:XML=null,xrootObj:xRoot=null)
+		{
+			addEventListener(Event.ADDED, elementAdded);
+			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
+			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
+			this.xroot = xrootObj || this.xroot;
+			if(this.xroot != null && definition != null)
+			{
+				var v:String = String(definition.@name);
+				if(v.charAt(0) == '$' )
+					v = xroot.binCommand(v.substr(1), this);
+				this.name = v;
+				xroot.registry[this.name] = this;
+			}
+			else if (!(this is xRoot))
+				U.log(this, this.name, "[WARINING] ELEMENT HAS" ,xroot,  'as root and ', definition? definition.name() : "null", 'node as def.', this is xRoot)
+			xdef = definition;
+			super();
+			parseDef();
+			
+		}
 		public function get sortZ():Boolean { return xsortZ;}
 		public function set sortZ(v:Boolean):void
 		{
@@ -48,7 +114,7 @@ package axl.xdef.types
 				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
-		protected function onEnterFrame(event:Event):void
+		private function onEnterFrame(event:Event):void
 		{
 			if(this.parent)
 				sort(this.parent);
@@ -86,60 +152,6 @@ package axl.xdef.types
 				this.setChildIndex(distArray[i].child, i);
 			}
 		}
-		
-		protected var xfilters:Array
-		protected var xtrans:ColorTransform;
-		private var intervalID:uint;
-		
-		private var metaAlreadySet:Boolean;
-		private var addedToStageActions:Vector.<xAction>;
-		private var childrenCreatedAction:Vector.<xAction>;
-		
-		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
-		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
-		public var reparseMetaEverytime:Boolean;
-		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
-		 * affects graphics drawing only. Pushing children inside happens only once per existence in
-		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
-		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
-		public var reparsDefinitionEverytime:Boolean;
-		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
-		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
-		 * and killing all animations @see #reset() */
-		public var resetOnAddedToStage:Boolean=true;
-		/** Distributes  children horizontaly with gap specified by this property. 
-		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
-		public var distributeHorizontal:Number;
-		/** Distributes  children verticaly with gap specified by this property. 
-		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
-		public var distributeVertical:Number;
-		
-		/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.
-		 * Overrides standard addChild, addChildAt, removeChild, removeChildAt methods in order
-		 * to maintain meta-keyword-defined animations before removing children or after adding them to display list.
-		 * Self-listens for adding and removing from stage in order to maintain meta.addedToStage defined animation
-		 * and to kill all existing animations when removed.
-		 * @see #meta() */
-		public function xSprite(definition:XML=null,xrootObj:xRoot=null)
-		{
-			addEventListener(Event.ADDED, elementAdded);
-			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
-			this.xroot = xrootObj || this.xroot;
-			if(this.xroot != null && definition != null)
-			{
-				var v:String = String(definition.@name);
-				if(v.charAt(0) == '$' )
-					v = xroot.binCommand(v.substr(1), this);
-				this.name = v;
-				xroot.registry[this.name] = this;
-			}
-			else if (!(this is xRoot))
-				U.log(this, this.name, "[WARINING] ELEMENT HAS" ,xroot,  'as root and ', definition? definition.name() : "null", 'node as def.', this is xRoot)
-			xdef = definition;
-			super();
-			parseDef();
-		}
 		/** reference to parent xRoot object @see axl.xdef.types.xRoot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -154,7 +166,9 @@ package axl.xdef.types
 		
 		protected function removeFromStageHandler(e:Event):void	{ 
 			this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
-			AO.killOff(this) 
+			AO.killOff(this);
+			if(onRemovedFromStage != null)
+				xroot.binCommand(onRemovedFromStage,this);
 		}
 		/** sets both scaleX and scaleY to the same value*/
 		public function set scale(v:Number):void{	scaleX = scaleY = v }
@@ -171,6 +185,8 @@ package axl.xdef.types
 				addedToStageActions[i].execute();
 				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
 			}
+			if(onAddedToStage != null)
+				xroot.binCommand(onAddedToStage,this);
 			if(this.sortZ)
 				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
