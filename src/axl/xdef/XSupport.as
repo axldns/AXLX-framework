@@ -359,7 +359,7 @@ package axl.xdef
 		 * @param xroot - root of all XML based objects (stage equivalent)
 		 * @see #getReadyType2()
 		 * */
-		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChildAt',xroot:xRoot=null,onChildrenCreated:Function=null):void
+		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChild',xroot:xRoot=null,onChildrenCreated:Function=null):void
 		{
 			if(def == null)
 			{
@@ -409,10 +409,6 @@ package axl.xdef
 							container[command](v, index);
 						else
 							container['addChild'](v);
-					}
-					else if(command == 'addToRail')
-					{
-						container[command](v,false);
 					}
 					else
 						container[command](v);
@@ -569,16 +565,10 @@ package axl.xdef
 							xroot.binCommand(obj.inject, obj);
 						}
 						// PUSHING CHILDREN
-						if(obj is Carusele)
-						{
-							pushReadyTypes2(xml, obj as DisplayObjectContainer, 'addToRail',xroot);
-							Carusele(obj).movementBit(0);
-						}
-						else if(obj is DisplayObjectContainer)
+						if(obj is DisplayObjectContainer)
 						{
 							pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
 						}
-						
 					}
 					
 					// notify
