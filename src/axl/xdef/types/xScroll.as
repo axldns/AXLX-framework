@@ -17,14 +17,15 @@ package axl.xdef.types
 
 	public class xScroll extends xSprite
 	{
-		private var rail:DisplayObject;
-		private var train:DisplayObject;
 		private var boxControll:BoundBox;
-		private var btnUp:xButton;
-		private var btnRight:xButton;
-		private var btnLeft:xButton;
-		private var btnDown:xButton;
 		private var deltaMultiply:Number=1;
+		public var rail:DisplayObject;
+		public var train:DisplayObject;
+		public var btnUp:xButton;
+		public var btnRight:xButton;
+		public var btnLeft:xButton;
+		public var btnDown:xButton;
+		
 		public var wheelScrollAllowed:Boolean=true;
 		
 		public function xScroll(def:XML,rootObj:xRoot)
