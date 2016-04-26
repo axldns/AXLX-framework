@@ -35,6 +35,11 @@ package axl.xdef.types
 		 * @see http://easings.net 
 		 * @default "easeOutQuart" */
 		public var easingType:String;
+		/** Determines if even number of elements should shift carousel center point
+		 * to show nearest child in center (true) or if center point should remain in bretween
+		 * two middle elements (false) 
+		 * @default false */
+		public var autoShiftEven:Boolean=true;
 		
 		/** @param definition - XML definition of this class (properties and children)
 		 *  @param xroot - root object this instance will belong to
@@ -48,9 +53,12 @@ package axl.xdef.types
 		override protected function elementAdded(e:Event):void
 		{
 			super.elementAdded(e);
-			var ar:Array = getChildClosestToCenter();
-			selectedObject = ar[0];
-			movementBit(-ar[1]);
+			if(autoShiftEven)
+			{
+				var ar:Array = getChildClosestToCenter();
+				selectedObject = ar[0];
+				movementBit(-ar[1]);
+			}
 		}
 		private function updateCarusele():void
 		{
