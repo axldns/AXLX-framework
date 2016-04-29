@@ -23,7 +23,7 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.106';
+		private static const ver:String = '0.107';
 		public static function get version():String { return ver }
 		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
@@ -304,6 +304,8 @@ package axl.xdef.types
 		public function get registry():Object { return xsupport.registry }
 		/** Returns any <b>instantiated</b> object which <code>name</code> equals <code>v</code>*/
 		public function registered(v:String):Object { return  xsupport.registered(v) }
+		/** Returns decorator of XML project */
+		public function get support():XSupport{ return xsupport } 
 
 		/** Animates an object if it owns an animation definition defined by <code>screenName</code> 
 		 * @param objName - name of animatable object on the displaylist if param <code>c</code> is null

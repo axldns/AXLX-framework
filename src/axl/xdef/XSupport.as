@@ -17,7 +17,6 @@ package axl.xdef
 	import flash.geom.ColorTransform;
 	import flash.utils.getDefinitionByName;
 	
-	import axl.ui.Carusele;
 	import axl.utils.AO;
 	import axl.utils.Ldr;
 	import axl.utils.U;

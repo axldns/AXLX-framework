@@ -55,25 +55,35 @@ package axl.xdef.types
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		private var actionsOver:Vector.<xAction> = new Vector.<xAction>();
 		private var actionsOut:Vector.<xAction> = new Vector.<xAction>();
+		
 		private var overTarget:Object;
 		private var overKey:String;
 		private var overVals:Object;
+		
 		private var disabledKey:String;
 		private var disabledTarget:Object;
 		private var disabledVals:Object;
+		
 		private var sdisabled:String;
 		private var sover:String; 
 		
-		public var externalExecution:Boolean;
 		private var postSendArgs:Array;
 		private var postObject:ConnectPHP;
 		private var dynamicArgs:Boolean;
 		private var actionOver:Boolean;
 		private var isOver:Boolean;
-		private var addedToStageActions:Vector.<xAction>
 		
-		private var actionOut:Boolean;
+		public var stateOver:DisplayObject;
+		public var stateOut:DisplayObject;
+		public var stateDisabled:DisplayObject;
+		public var stateDown:DisplayObject;
 		public var code:String;
+		public var externalExecution:Boolean;
+		
+		
+		private var currentState:int=0;
+		private var styleName:String;
+		private var actionOut:Boolean;
 		
 		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
@@ -85,6 +95,38 @@ package axl.xdef.types
 		{
 			if(numChildren < 1)
 				texture = child;
+			if(child.name.match(/out/i))
+			{
+				if(stateOut && contains(stateOut))
+					removeChild(stateOut);
+				stateOut = child;
+				if(currentState != 0)
+					return child;
+			}
+			if(child.name.match(/over/i))
+			{
+				if(stateOver && contains(stateOver))
+					removeChild(stateOver);
+				stateOver = child;
+				if(currentState != 1)
+					return child;
+			}
+			if(child.name.match(/down/i))
+			{
+				if(stateDown && contains(stateDown))
+					removeChild(stateDown);
+				stateDown = child;
+				if(currentState != 2)
+					return child;
+			}
+			if(child.name.match(/disabled/i))
+			{
+				if(stateDisabled && contains(stateDisabled))
+					removeChild(stateDisabled);
+				stateDisabled = child;
+				if(currentState != 3)
+					return child;
+			}
 			return super.addChild(child);
 		}
 		//-- internal
@@ -156,7 +198,8 @@ package axl.xdef.types
 		//--click mechanic
 		protected function mouseDown(e:MouseEvent):void
 		{
-			isDown = true;			
+			isDown = true;
+			swapStates(2);
 			U.STG.addEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
 			U.STG.addEventListener(MouseEvent.MOUSE_UP, mouseUp);
 			if(intervalValue > 0)
@@ -224,6 +267,8 @@ package axl.xdef.types
 				else
 					overTarget[overKey] = overVals[val];
 			}
+			if(!isDown)
+				swapStates(isOver ? 1 : 0);
 			
 			executeHover();
 			if(isOver && (intervalHoverValue > 0) && intervalHoverID < 1)
@@ -252,6 +297,27 @@ package axl.xdef.types
 				intervalHoverID = 0;
 			}
 		}
+		
+		private function swapStates(state:int):void
+		{
+			if(state == currentState)
+				return;
+			currentState = state;
+			var allstates:Array = [stateOut, stateOver, stateDown,stateDisabled];
+			var add:DisplayObject = allstates.splice(state,1)[0] as DisplayObject;
+			var rmv:DisplayObject;
+			if(add == null)
+				return;
+			while(allstates.length)
+			{
+				rmv = allstates.pop() as DisplayObject;
+				if(rmv && rmv.parent)
+				{
+					rmv.parent.removeChild(rmv);
+				}
+			}
+			addChildAt(add,0);
+		}
 		// --- --- PUBLIC API --- --- //
 		public function setEnabled(v:Boolean):void { enabled =v }
 		public function get enabled():Boolean {	return isEnabled }
@@ -260,12 +326,14 @@ package axl.xdef.types
 			//if(isEnabled == v) return;
 			isEnabled = v;
 			checkProperties();
+			swapStates(v ? (isDown ? 2 : 0) : 3);
 			if(!isEnabled)
 			{
 				U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
 				U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
 				hover(new MouseEvent("rollout",false));
 			}
+				
 			var f:String = isEnabled ? 'addEventListener' : 'removeEventListener';
 			this[f](MouseEvent.MOUSE_DOWN, mouseDown);
 			this[f](MouseEvent.CLICK, mouseClick);
@@ -276,7 +344,6 @@ package axl.xdef.types
 			useHandCursor = isEnabled;
 			disabledTarget[disabledKey] = this.disabledVals[isEnabled ? 1 : 0];
 		}
-		
 		
 		protected function mouseUp(e:MouseEvent):void { mouseMove(e) }
 		protected function mouseMove(e:MouseEvent):void
@@ -291,6 +358,7 @@ package axl.xdef.types
 			U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
 			U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
 			clearIntervals();
+			swapStates(0);
 			if(e.target != this && executeReleasedOutside)
 				mouseClick(e);
 		}
@@ -371,5 +439,13 @@ package axl.xdef.types
 			xtrans[prop] = val;
 			this.transform.colorTransform = xtrans;
 		}
+		public function set style(v:String):void
+		{
+			if(styleName && v == styleName)
+				return;
+			styleName = v;
+			xroot.support.pushReadyTypes2(xroot.getAdditionDefByName(v),this,'addChild',xroot);
+		}
+		public function get style():String { return styleName }
 	}
 }
