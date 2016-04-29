@@ -28,7 +28,7 @@ package axl.xdef.types
 	
 	public class xButton extends xSprite
 	{
-		public static var defaultOver:String="upstate.alpha:[0.88,1]";
+		public static var defaultOver:String="upstate.alpha:[1,1]";
 		public static var defaultDisabled:String="alpha:[0.66,1]";
 		
 		private var isEnabled:Boolean=true;
