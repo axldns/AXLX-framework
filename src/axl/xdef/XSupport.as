@@ -181,7 +181,7 @@ package axl.xdef
 					return 1;
 				if(reset)
 					target.reset();
-				else if(killCurrent)
+				if(killCurrent)
 					AO.killOff(target);
 				
 				var animNameArray:Array = target.meta[animName];
