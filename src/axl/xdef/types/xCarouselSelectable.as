@@ -53,12 +53,10 @@ package axl.xdef.types
 		override protected function elementAdded(e:Event):void
 		{
 			super.elementAdded(e);
+			var ar:Array = getChildClosestToCenter();
+			selectedObject = ar[0];
 			if(autoShiftEven)
-			{
-				var ar:Array = getChildClosestToCenter();
-				selectedObject = ar[0];
 				movementBit(-ar[1]);
-			}
 		}
 		private function updateCarusele():void
 		{
