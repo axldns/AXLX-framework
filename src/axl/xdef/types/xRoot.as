@@ -13,7 +13,6 @@ package axl.xdef.types
 	import flash.display.DisplayObjectContainer;
 	import flash.utils.setTimeout;
 	
-	import axl.utils.Ldr;
 	import axl.utils.U;
 	import axl.utils.binAgent.RootFinder;
 	import axl.xdef.XSupport;
@@ -30,24 +29,31 @@ package axl.xdef.types
 		protected var xDEBUG:Boolean;
 		protected var CONFIG:XML;
 		private var rootFinder:RootFinder;
-		private var xlauncher:xLauncher;
 		public var map:Object = {};
 		public var onRootAfterAttributes:Function;
+		private var launcher:xLauncher;
+		public var defaultFont:String;
+		public var fileName:String;
+		public var appRemote:String;
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
 		{
 			xsupport = new XSupport();
-			xlauncher = new xLauncher(this,setPermited);
+			rootFinder = new RootFinder(this,XSupport);
 			xsupport.root = this;
 			this.xroot = this;
-			rootFinder = new RootFinder(this,XSupport);
+			launcher = new xLauncher(this,onReady);
 			super(definition);
-			
 		}
+		
+		protected function onReady(v:XML):void {
+			this.CONFIG = v;
+			this.def = v.root[0];
+		}
+		
 		public function get sourcePrefixes():Array {return xsourcePrefixes }
 		public function set sourcePrefixes(v:Array):void { xsourcePrefixes = v}
-		public function get launcher():xLauncher {return xlauncher }
 		public function get DEBUG():Boolean {return xDEBUG }
 		/** Returns reference to XML config - the project definition */
 		public function get config():XML { return CONFIG }
@@ -66,16 +72,6 @@ package axl.xdef.types
 			if(onRootAfterAttributes!=null)
 				onRootAfterAttributes();
 			xsupport.pushReadyTypes2(value, this,'addChildAt',this);
-		}
-		
-		private function setPermited(xml:XML,df:String,dbg:Boolean,srcPrefixes:Array):void
-		{
-			xsupport.defaultFont =df;
-			xDEBUG = dbg;
-			if(dbg == false)
-				Ldr.verbose = null;
-			CONFIG = xml;
-			xsourcePrefixes = srcPrefixes
 		}
 		
 		// ADD - REMOVE
@@ -436,5 +432,8 @@ package axl.xdef.types
 					U.log("EXECUTE >>"+name+"<< NOT AVAILABLE", node);
 			}
 		}
+		
+		/** Exposes logging to console @see axl.utils.U#log()*/
+		public function get log():Function { return U.log}
 	}
 }
