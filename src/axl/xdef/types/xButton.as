@@ -10,6 +10,7 @@
 package axl.xdef.types
 {
 	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.external.ExternalInterface;
@@ -444,8 +445,9 @@ package axl.xdef.types
 			if(styleName && v == styleName)
 				return;
 			styleName = v;
-			xroot.support.pushReadyTypes2(xroot.getAdditionDefByName(v),this,'addChild',xroot);
+			xroot.support.pushReadyTypes2(xroot.getAdditionDefByName(v),this,null,xroot);
 		}
+		
 		public function get style():String { return styleName }
 	}
 }

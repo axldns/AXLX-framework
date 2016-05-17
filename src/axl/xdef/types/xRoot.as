@@ -22,7 +22,7 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.109';
+		private static const ver:String = '0.110';
 		public static function get version():String { return ver }
 		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
@@ -71,7 +71,7 @@ package axl.xdef.types
 			XSupport.applyAttributes(value, this);
 			if(onRootAfterAttributes!=null)
 				onRootAfterAttributes();
-			xsupport.pushReadyTypes2(value, this,'addChildAt',this);
+			xsupport.pushReadyTypes2(value, this,null,this);
 		}
 		
 		// ADD - REMOVE
@@ -90,7 +90,7 @@ package axl.xdef.types
 			if(v is Array)
 				getAdditionsByName(v as Array, gotit,node,onNotExist,forceNewElement);
 			else
-				getAdditionByName(v as String, gotit,node,onNotExist,forceNewElement)
+				getAdditionByName(v as String, gotit,node,onNotExist,forceNewElement);
 			function gotit(d:Object):void
 			{
 				if(!(d is DisplayObject))
@@ -103,6 +103,77 @@ package axl.xdef.types
 				else
 					addChild(d as DisplayObject);
 			}
+		}
+		
+		public function addProto(v:Object,props:Object,to:Object=null,index:int=-1,node:String='additions'):void
+		{
+			var f:Function = (props as Function) || decorator;
+			log("addProto", props, "de", f);
+			var c:DisplayObjectContainer = this;
+			if(to!=null)
+				getContainer(to,gotContainer,node);
+			else
+				getObject();
+			function gotContainer(cont:Object):void
+			{
+				c = cont as DisplayObjectContainer;
+				if(c == null)
+				{
+					if(DEBUG) U.log(this, "[addProto][ERROR] 'intoChild' (" + to +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+					return
+				}
+				getObject();
+			}
+			
+			function getObject():void
+			{
+				if(v is DisplayObject)
+				{
+					f(v as ixDef);
+					gotit(v);
+				}
+				else if(v is Array)
+					getAdditionsByName(v as Array, gotit,node,null,true,f);
+				else
+					getAdditionByName(v as String, gotit,node,null,true,f);
+			}
+			
+			function gotit(o:Object):void
+			{
+				if(DEBUG) U.log(this, o, o.name, '[addProto]', c, c.name);
+				if(index >= 0 && index < c.numChildren-1)
+					c.addChildAt(DisplayObject(o),index);
+				else
+					c.addChild(DisplayObject(o));
+			}
+			function decorator(v:ixDef):void
+			{
+				log("decorating", v, v.name);
+				if(!v) return;
+				for(var s:String in props)
+					v.meta[s] = props[s];
+			}
+		}
+		
+		private function getContainer(container:Object,callback:Function,node:String):void
+		{
+			var c:DisplayObjectContainer = container as DisplayObjectContainer;
+			if(!c)
+			{
+				c =  xsupport.registered(String(container)) as DisplayObjectContainer;
+				if(!c)
+				{
+					c = binCommand(container,this) as DisplayObjectContainer;
+					if(!c)
+						this.getAdditionByName(String(container), callback,node);
+					else
+						callback(c);
+				}
+				else
+					callback(c);
+			}
+			else
+				callback(c);
 		}
 		/** Adds or removes one or more elements (config xml nodes) to any instantiated DisplayObjectContainer descendants.
 		 * @param v - String or Array of Strings - must reffer to <code>name</code> attribute of requested config node
@@ -189,7 +260,8 @@ package axl.xdef.types
 		 * @param node - name of the XML tag (not an attrubute!) that is a parent for searched element to instantiate.
 		 * @see axl.xdef.XSupport#getReadyType2()
 		 */
-		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
+		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,
+										  forceNewElement:Boolean=false,decorator:Function=null):void
 		{
 			if(DEBUG) U.log('[xRoot][getAdditionByName]', v);
 			if(v == null)
@@ -225,18 +297,19 @@ package axl.xdef.types
 					return;
 				}
 			}
-			xsupport.getReadyType2(xml, callback,true,null,this);
+			xsupport.getReadyType2(xml, callback,decorator,null,this);
 		}
 		
 		/** Executes <code>getAdditionByName</code> in a loop. @see #getAdditionByName() */
-		public function getAdditionsByName(v:Array, callback:Function,node:String='additions',onError:Function=null,forceNewElement:Boolean=false):void
+		public function getAdditionsByName(v:Array, callback:Function,node:String='additions',onError:Function=null,
+										   forceNewElement:Boolean=false,decorator:Function=null):void
 		{
 			var i:int = 0, j:int = v.length;
 			next();
 			function next():void
 			{
 				if(i<j)
-					getAdditionByName(v[i++], ready,node,onError,forceNewElement);
+					getAdditionByName(v[i++], ready,node,onError,forceNewElement,decorator);
 			}
 			
 			function ready(v:DisplayObject):void

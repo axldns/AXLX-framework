@@ -358,7 +358,7 @@ package axl.xdef
 		 * @param xroot - root of all XML based objects (stage equivalent)
 		 * @see #getReadyType2()
 		 * */
-		public function pushReadyTypes2(def:XML, container:DisplayObject, command:String='addChild',xroot:xRoot=null,onChildrenCreated:Function=null):void
+		public function pushReadyTypes2(def:XML, container:DisplayObject, decorator:Function=null,xroot:xRoot=null,onChildrenCreated:Function=null):void
 		{
 			if(def == null)
 			{
@@ -378,7 +378,7 @@ package axl.xdef
 			for each(var xml:XML in celements)
 			{
 				//U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2] pushing', xml.@name, 'now');
-				getReadyType2(xml, readyTypeCallback,true, ++i,xroot);
+				getReadyType2(xml, readyTypeCallback,decorator,++i,xroot);
 			}
 			function readyTypeCallback(v:Object, index:int):void
 			{
@@ -397,20 +397,19 @@ package axl.xdef
 						else
 							container.transform.colorTransform = v as  ColorTransform;
 					}
-					else if(command == 'addChildAt' || command == 'addChild')
+					else
 					{
 						if(!(container is DisplayObjectContainer) || !(v is DisplayObject))
 						{
 							finishPushing();
 							return;
 						}
-						if(command == 'addChildAt' && index < container['numChildren']-1)
-							container[command](v, index);
+						if(index < container['numChildren']-1)
+							container['addChildAt'](v, index);
 						else
 							container['addChild'](v);
 					}
-					else
-						container[command](v);
+					
 				}
 				finishPushing();
 			}
@@ -479,7 +478,7 @@ package axl.xdef
 		 * @param callBack2argument - optional second argument for callback. It is in use to <code>pushReadyTypes</code> children order.
 		 * @see webFlow.MainCallback#getAdditionByName()
 		 * */
-		public function getReadyType2(xml:XML, callBack:Function, dynamicLoad:Boolean=true,callBack2argument:Object=null,xroot:xRoot=null):void
+		public function getReadyType2(xml:XML,callBack:Function,decorator:Function=null,callBack2argument:Object=null,xroot:xRoot=null):void
 		{
 			if(xml == null)
 				throw new Error("Undefined XML definition");
@@ -490,10 +489,8 @@ package axl.xdef
 				//U.log("OBJECT PROCEED", xml.name(), xml.@name);
 				var type:String = xml.name();
 				var obj:Object;
-				if(dynamicLoad)
-					checkSource(xml, readyTypeCallback, xroot ? xroot.sourcePrefixes : null, xml.hasOwnProperty('@forceReload'),xroot) ;
-				else
-					readyTypeCallback();
+				checkSource(xml, readyTypeCallback, xroot ? xroot.sourcePrefixes : null, xml.hasOwnProperty('@forceReload'),xroot) ;
+				
 				function readyTypeCallback(sourceTest:String=null):void
 				{
 					//U.log("OBJECT BUILD", type, xml.@name, sourceTest);
@@ -558,6 +555,9 @@ package axl.xdef
 						
 						//APPLYING ATTRIBUTES 1
 						applyAttributes(xml, obj);
+						// decorating parent and children by the same decorator
+						if(decorator != null && obj is ixDef)
+							decorator(obj);
 						//code inject
 						if(obj.hasOwnProperty("inject") && obj.inject != null)
 						{
@@ -566,7 +566,7 @@ package axl.xdef
 						// PUSHING CHILDREN
 						if(obj is DisplayObjectContainer)
 						{
-							pushReadyTypes2(xml, obj as DisplayObjectContainer,'addChild',xroot);
+							pushReadyTypes2(xml, obj as DisplayObjectContainer,decorator,xroot);
 						}
 					}
 					

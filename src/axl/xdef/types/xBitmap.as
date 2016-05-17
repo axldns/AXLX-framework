@@ -13,8 +13,6 @@ package axl.xdef.types
 	import flash.display.BitmapData;
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
-	import flash.utils.clearInterval;
-	import flash.utils.setInterval;
 	
 	import axl.utils.AO;
 	import axl.utils.U;
@@ -30,7 +28,6 @@ package axl.xdef.types
 		private var xtrans:ColorTransform;
 		private var xtransDef:ColorTransform;
 		private var xfilters:Array;
-		private var intervalID:uint;
 		private var metaAlreadySet:Boolean;
 		private var addedToStageActions:Vector.<xAction>;
 		
@@ -81,7 +78,6 @@ package axl.xdef.types
 		protected function removeFromStageHandler(e:Event):void
 		{
 			AO.killOff(this);
-			clearInterval(intervalID);
 			if(onRemovedFromStage != null)
 				xroot.binCommand(onRemovedFromStage,this);
 		}
@@ -96,9 +92,7 @@ package axl.xdef.types
 			if(resetOnAddedToStage)
 				this.reset();
 			if(meta.addedToStage != null)
-			{
-				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
-			}
+				XSupport.animByNameExtra(this, 'addedToStage');
 			if(addedToStageActions != null)
 			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
 				addedToStageActions[i].execute();
