@@ -22,7 +22,7 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.110';
+		private static const ver:String = '0.111';
 		public static function get version():String { return ver }
 		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;

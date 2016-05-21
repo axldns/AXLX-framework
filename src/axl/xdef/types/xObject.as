@@ -50,7 +50,7 @@ package axl.xdef.types
 		}
 		
 		public function get name():String { return xname }
-		public function set name(v:String):void { xname = v; trace("OBJ", v,"REGISTERED")}
+		public function set name(v:String):void { xname = v;}
 		
 		public function get def():XML { return xdef }
 		public function set def(v:XML):void { xdef = v }

@@ -36,7 +36,7 @@ package axl.xdef
 	import axl.xdef.types.xSwf;
 	import axl.xdef.types.xText;
 	import axl.xdef.types.xVOD;
-	
+	import axl.xdef.types.xTimer;	
 	/** Factory class for XML defined elements.<br>
 	 * <ul>
 	 * <li> Creates, registers, decorates and animates all objects</li>
@@ -513,6 +513,7 @@ package axl.xdef
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						case 'script': obj = includeScript(xml,xroot); break;
 						case 'vod' : obj = new xVOD(xml,xroot); break;
+						case 'timer' : obj = new xTimer(xml,xroot); break;
 						default: 
 							if(userTypes[type] is Function)
 								obj = userTypes[type](xml,xroot);
