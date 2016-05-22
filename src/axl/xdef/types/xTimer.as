@@ -22,6 +22,7 @@ package axl.xdef.types
 	public class xTimer implements ixDef
 	{
 		private static var regexp:RegExp = /y+|w+|M+|d+|m+|h+|'.+?'|s+|S+|\s+|\W+/g;
+		public var defaultFormat:String='hh : mm : ss';
 		private var intervalID:uint = 0;
 		private var intervalValue:uint;
 		private var timeoutID:uint;
@@ -45,11 +46,12 @@ package axl.xdef.types
 		private var xmeta:Object;
 		private var xxroot:xRoot;
 		
+		
 		public static function xmlInstantiation(d:XML, r:xRoot):xTimer { return new xTimer(d,r) }
 		public function xTimer(definition:XML,xroot:xRoot=null)
 		{
 			xxroot = xroot;
-			xdef = def;
+			xdef = definition;
 			if(this.xroot != null && definition != null)
 			{
 				var v:String = String(definition.@name);
@@ -284,6 +286,9 @@ package axl.xdef.types
 			xremaining = serverTime;
 		}
 		
+		//---------------------------------------------- INTERVAL SECTION -----------------------------------//
+		//---------------------------------------------- API SECTION -----------------------------------//
+		
 		public function millisecondsTillNext(nextSybiling:String='s',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod)*1000, out:String;
@@ -397,7 +402,7 @@ package axl.xdef.types
 				out = '0' + out;
 			return out;
 		}
-		
+				
 		private function getOffset(mod:int):Number 
 		{
 			if(mod < 0)
@@ -409,9 +414,26 @@ package axl.xdef.types
 			return timing[mod] -xremaining;
 		}
 		
-		public function getFormattedRemaining(v:String=null,mod:int=1):String
+		public function tillNextBit(scale:String,nextSybiling:String=null,mod:int=1,leadingZeros:int=0):String
+		{
+			switch(scale)
+			{
+				case "y": return yearsTillNext(nextSybiling,mod,leadingZeros);
+				case "M": return monthsTillNext(nextSybiling,mod,leadingZeros);
+				case "w": return weeksTillNext(nextSybiling,mod,leadingZeros);
+				case "d": return daysTillNext(nextSybiling,mod,leadingZeros);
+				case "h": return hoursTillNext(nextSybiling,mod,leadingZeros);
+				case "m": return minutesTillNext(nextSybiling,mod,leadingZeros);
+				case "s": return secondsTillNext(nextSybiling,mod,leadingZeros);
+				case "S": return millisecondsTillNext(nextSybiling,mod,leadingZeros);
+				default: return null;
+			}
+		}
+		
+		public function tillNext(v:String=null,mod:int=1):String
 		{
 			updateRemaining();
+			v = v || defaultFormat;
 			var a:Array = v.match(regexp), out:String='';
 			var bm:Object={};
 			for(var i:int =0,j:int = a.length,s:String,l:int; i<j;i++)
@@ -427,7 +449,7 @@ package axl.xdef.types
 					case "M": out += monthsTillNext(bm.y?'y':null,mod,l); break;
 					case "w": out += weeksTillNext(bm.M?'M':(bm.y?'y':null),mod,l); break;
 					case "d": out += daysTillNext(bm.w?'w':(bm.m?'M':(bm.y?'y':null)),mod,l); break;
-					case "h": out += daysTillNext(bm.d?'d':(bm.w?'w':(bm.m?'M':(bm.y?'y':null))),mod,l); break;
+					case "h": out += hoursTillNext(bm.d?'d':(bm.w?'w':(bm.m?'M':(bm.y?'y':null))),mod,l); break;
 					case "m": out += minutesTillNext(bm.h?'h':(bm.d?'d':(bm.w?'w':(bm.m?'M':(bm.y?'y':null)))),mod,l); break;
 					case "s": out += secondsTillNext(bm.m?'m':(bm.h?'h':(bm.d?'d':(bm.w?'w':(bm.m?'M':(bm.y?'y':null))))),mod,l); break;
 					case "S": out += millisecondsTillNext(bm.s?'s':(bm.m?'m':(bm.h?'h':(bm.d?'d':(bm.w?'w':(bm.m?'M':(bm.y?'y':null)))))),mod,l); break;
