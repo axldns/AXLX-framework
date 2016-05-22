@@ -23,6 +23,11 @@ package axl.xdef.types
 	{
 		private static var regexp:RegExp = /y+|w+|M+|d+|m+|h+|'.+?'|s+|S+|\s+|\W+/g;
 		public var defaultFormat:String='hh : mm : ss';
+		public var onTimeIndexChange:Object;
+		public var onComplete:Object;
+		public var onUpdate:Object;
+		public var reparseMetaEverytime:Boolean;
+		
 		private var intervalID:uint = 0;
 		private var intervalValue:uint;
 		private var timeoutID:uint;
@@ -35,19 +40,13 @@ package axl.xdef.types
 		private var xTiming:Array;
 		private var xTimeIndex:int=-2;
 		
-		public var onTimeIndexChange:Object;
-		public var onComplete:Object;
-		public var onUpdate:Object;
 		private var root:xRoot;
 		private var xdef:XML;
 		private var xname:String;
 		private var metaAlreadySet:Boolean;
-		public var reparseMetaEverytime:Boolean;
 		private var xmeta:Object;
 		private var xxroot:xRoot;
 		
-		
-		public static function xmlInstantiation(d:XML, r:xRoot):xTimer { return new xTimer(d,r) }
 		public function xTimer(definition:XML,xroot:xRoot=null)
 		{
 			xxroot = xroot;
@@ -288,7 +287,14 @@ package axl.xdef.types
 		
 		//---------------------------------------------- INTERVAL SECTION -----------------------------------//
 		//---------------------------------------------- API SECTION -----------------------------------//
-		
+		/** Returns number of miliseconds till next period defined in timing array.
+		 * @param nextSybiling (default s) : <ul><li>null - returns absolute number remaining</li><li>one of 
+		 * (<i>s,m,h,d,w,M,y</i>) - returns value relative to next sybiling e.g. 1h 3590000 ms</li></ul>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise. 
+		 * @see #timing @see #timeIndex  */
 		public function millisecondsTillNext(nextSybiling:String='s',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod)*1000, out:String;
@@ -307,6 +313,14 @@ package axl.xdef.types
 			return out;
 		}
 		
+		/** Returns number of seconds till next period defined in timing array.
+		 * @param nextSybiling (default m): <ul><li>null - returns absolute number remaining</li><li>one of 
+		 * (<i>m,h,d,w,M,y</i>) - returns value relative to next sybiling e.g. 1h 3590s</li></ul>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise. 
+		 * @see #timing @see #timeIndex */
 		public function secondsTillNext(nextSybiling:String='m',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod), out:String;
@@ -323,7 +337,14 @@ package axl.xdef.types
 				out = '0' + out;
 			return out;
 		}
-		
+		/** Returns number of minutes till next period defined in timing array.
+		 * @param nextSybiling (default h): <ul><li>null - returns absolute number remaining</li><li>one of 
+		 * (<i>h,d,w,M,y</i>) - returns value relative to next sybiling e.g. 1day 120min </li></ul>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise.  
+		 * @see #timing @see #timeIndex */
 		public function minutesTillNext(nextSybiling:String='h',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod) / 60, out:String;
@@ -340,6 +361,14 @@ package axl.xdef.types
 			return out;
 		}
 		
+		/** Returns number of hours till next period defined in timing array.
+		 * @param nextSybiling (default d): <ul><li>null - returns absolute number remaining</li><li>one of 
+		 * (<i>d,w,M,y</i>) - returns value relative to next sybiling e.g. 1week 36h </li></ul>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise.  
+		 * @see #timing @see #timeIndex */
 		public function hoursTillNext(nextSybiling:String='d',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod) / 3600, out:String;
@@ -355,6 +384,14 @@ package axl.xdef.types
 			return out;
 		}
 		
+		/** Returns number of days till next period defined in timing array.
+		 * @param nextSybiling (default w): <ul><li>null - returns absolute number remaining</li><li>one of 
+		 * (<i>w,M,y</i>) - returns value relative to next sybiling e.g. 1y <b>95</b> days  or 1y 3m <b>2</b>d </li></ul>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise.  
+		 * @see #timing @see #timeIndex */
 		public function daysTillNext(nextSybiling:String='w',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod) / 86400, out:String;
@@ -369,6 +406,14 @@ package axl.xdef.types
 			return out;
 		}
 		
+		/** Returns number of weeks till next period defined in timing array.
+		 * @param nextSybiling (default M): <ul><li>null - returns absolute number remaining</li><li>one of 
+		 * (<i>M,y</i>) - returns value relative to next sybiling e.g. 1y <b>15</b> weeks  or 1y 3m <b>3</b>w </li></ul>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise.  
+		 * @see #timing @see #timeIndex */
 		public function weeksTillNext(nextSybiling:String='M',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod) / 604800, out:String;
@@ -381,7 +426,14 @@ package axl.xdef.types
 				out = '0' + out;
 			return out;
 		}
-		
+		/** Returns number of months till next period defined in timing array.
+		 * @param nextSybiling (default y): <ul><li>null - returns absolute number remaining</li><li>one of 
+		 * (<i>y</i>) - returns value relative to next sybiling e.g. 1y <b>4</b>months  or <b>16</b>months</li></ul>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise.  
+		 * @see #timing @see #timeIndex */
 		public function monthsTillNext(nextSybiling:String='y',mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod) / (365.25/12 * 86400), out:String;
@@ -393,7 +445,13 @@ package axl.xdef.types
 				out = '0' + out;
 			return out;
 		}
-		
+		/** Returns number of years till next period defined in timing array.
+		 * @param nextSybiling - doesn't have any meaning. Kept for consistency with other tillNext functions
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul> 
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise.  
+		 * @see #timing @see #timeIndex */
 		public function yearsTillNext(nextSybiling:String=null,mod:int=1,leadingZeros:int=0):String
 		{
 			var stn:Number = getOffset(mod) / (365.25 * 86400),out:String;
@@ -413,7 +471,16 @@ package axl.xdef.types
 				return -1;
 			return timing[mod] -xremaining;
 		}
-		
+		/** Returns time remaining to next period.  Alias to (y|M|w|d|h|s|S)tillNext functions.
+		 * @param scale - portion of time to express time remaining - one of (y,M,w,d,h,m,s,S)
+		 * @param nextSybiling: <ul><li>null - returns absolute portion remaining</li><li>one of 
+		 * (<i>y,M,w,d,h,m,s,S</i>) - returns value relative to next sybiling e.g.<br>
+		 * <pre>tillNextBit('M',null) // 13<br>tillNextBit('M','y') // 1</pre>
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul>
+		 * @param leadingZeros: - adds as many zeros at the begining of output value as needed to match 
+		 * output value's <u>length</u>. If leadingZeros is positive - returned value is floored, raw otherwise.  
+		 * @see #timing @see #timeIndex */
 		public function tillNextBit(scale:String,nextSybiling:String=null,mod:int=1,leadingZeros:int=0):String
 		{
 			switch(scale)
@@ -429,12 +496,18 @@ package axl.xdef.types
 				default: return null;
 			}
 		}
-		
-		public function tillNext(v:String=null,mod:int=1):String
+		/** Returns well formatted time remaining to next period. Combines (y|M|w|d|h|s|S)tillNext functions.<br>
+		 * Custom formating can be defined similarly to flash.globalization.DateTimeFormatter manner.<br>
+		 * <pre>serverTime = 0;<br>timing = [3667];<br>tillNext("'time left:' dd : hh : mm : s"); // time left 00 : 01 : 01 : 7<br>tillNext("mm 'minutes ' ss 'seconds left'"); // 61 minutes  07 seconds left</pre>
+		 * @param format  - format pattern stirng. Any "non-time" values must be wrapped in a single quotes.
+		 * @param mod (default 1) : <ul><li>positive: next period defined as timeIndex + mod</li>
+		 * <li>negative: next period defined as timing.length + mod (-1 would take "end" value)</li></ul>
+		 * </pre> @see #timing @see #timeIndex */
+		public function tillNext(format:String=null,mod:int=1):String
 		{
 			updateRemaining();
-			v = v || defaultFormat;
-			var a:Array = v.match(regexp), out:String='';
+			format = format || defaultFormat;
+			var a:Array = format.match(regexp), out:String='';
 			var bm:Object={};
 			for(var i:int =0,j:int = a.length,s:String,l:int; i<j;i++)
 				bm[a[i].charAt(0)]= true;
