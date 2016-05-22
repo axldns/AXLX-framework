@@ -312,10 +312,10 @@ package axl.xdef.types
 					getAdditionByName(v[i++], ready,node,onError,forceNewElement,decorator);
 			}
 			
-			function ready(v:DisplayObject):void
+			function ready(v:Object):void
 			{
 				callback(v);
-				next()
+				next();
 			}
 		}
 		
