@@ -163,7 +163,8 @@ package axl.xdef.types
 			var tv:String =  def.toString();
 			if(!def.hasOwnProperty('@font'))
 				tff.font = defaultFont;
-			this.defaultTextFormat = tff;
+			if(!this.styleSheet)
+				this.defaultTextFormat = tff;
 			if(tv.length > 0)
 			{
 				if(def.hasOwnProperty('@html') && def.@html == 'true')
