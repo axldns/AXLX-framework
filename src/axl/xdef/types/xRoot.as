@@ -22,11 +22,10 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.111';
+		private static const ver:String = '0.112';
 		public static function get version():String { return ver }
 		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
-		protected var xDEBUG:Boolean;
 		protected var CONFIG:XML;
 		private var rootFinder:RootFinder;
 		public var map:Object = {};
@@ -54,7 +53,6 @@ package axl.xdef.types
 		
 		public function get sourcePrefixes():Array {return xsourcePrefixes }
 		public function set sourcePrefixes(v:Array):void { xsourcePrefixes = v}
-		public function get DEBUG():Boolean {return xDEBUG }
 		/** Returns reference to XML config - the project definition */
 		public function get config():XML { return CONFIG }
 		/** &lt;root> element definition. Setting it up for the first time fires up chain
@@ -95,7 +93,7 @@ package axl.xdef.types
 			{
 				if(!(d is DisplayObject))
 				{
-					if(DEBUG) U.log('[WARNING]', d, d && d.hasOwnProperty('name') ? d.name : v, "IS NOT A DISPLAY OBJECT");
+					if(debug) U.log('[WARNING]', d, d && d.hasOwnProperty('name') ? d.name : v, "IS NOT A DISPLAY OBJECT");
 					return
 				}
 				if(underChild != null)
@@ -119,7 +117,7 @@ package axl.xdef.types
 				c = cont as DisplayObjectContainer;
 				if(c == null)
 				{
-					if(DEBUG) U.log(this, "[addProto][ERROR] 'intoChild' (" + to +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+					if(debug) U.log(this, "[addProto][ERROR] 'intoChild' (" + to +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
 					return
 				}
 				getObject();
@@ -140,7 +138,7 @@ package axl.xdef.types
 			
 			function gotit(o:Object):void
 			{
-				if(DEBUG) U.log(this, o, o.name, '[addProto]', c, c.name);
+				if(debug) U.log(this, o, o.name, '[addProto]', c, c.name);
 				if(index >= 0 && index < c.numChildren-1)
 					c.addChildAt(DisplayObject(o),index);
 				else
@@ -194,7 +192,7 @@ package axl.xdef.types
 			var c:DisplayObjectContainer = intoChild as DisplayObjectContainer;
 			if(c == null)
 			{
-				if(DEBUG) U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+				if(debug) U.log(this, "[addTo][ERROR] 'intoChild' (" + intoChild +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
 				return
 			}
 				
@@ -203,7 +201,7 @@ package axl.xdef.types
 			else
 				getAdditionByName(v as String, gotIt,node,onNotExist,forceNewElement);
 			function gotIt(o:Object):void {
-				if(DEBUG) U.log(this, o, o.name, '[addTo]', c, c.name, 'via', command);
+				if(debug) U.log(this, o, o.name, '[addTo]', c, c.name, 'via', command);
 				c[command](o);
 			}
 		}
@@ -260,13 +258,13 @@ package axl.xdef.types
 		 * @param node - name of the XML tag (not an attrubute!) that is a parent for searched element to instantiate.
 		 * @see axl.xdef.XSupport#getReadyType2()
 		 */
-		public function getAdditionByName(v:String, callback:Function, node:String='additions',onError:Function=null,
+		public function getAdditionByName(v:String, callback:Function=null, node:String='additions',onError:Function=null,
 										  forceNewElement:Boolean=false,decorator:Function=null):void
 		{
-			if(DEBUG) U.log('[xRoot][getAdditionByName]', v);
+			if(debug) U.log('[xRoot][getAdditionByName]', v);
 			if(v == null)
 			{
-				if(DEBUG) U.log("[xRoot][getAdditionByName] requesting non existing element", v);
+				if(debug) U.log("[xRoot][getAdditionByName] requesting non existing element", v);
 				return;
 			}
 			if(v.charAt(0) == '$')
@@ -277,15 +275,15 @@ package axl.xdef.types
 			}
 			else if((registry[v] != null ) && !forceNewElement)
 			{
-				if(DEBUG) U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
-				callback(registry[v]);
+				if(debug) U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
+				if(callback) callback(registry[v]);
 				return;
 			}
 			
 			var xml:XML = getAdditionDefByName(v,node);
 			if(xml== null)
 			{
-				if(DEBUG) U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
+				if(debug) U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
 				if(onError == null) 
 					throw new Error(v + ' does not exist in additions node');
 				else
@@ -301,7 +299,7 @@ package axl.xdef.types
 		}
 		
 		/** Executes <code>getAdditionByName</code> in a loop. @see #getAdditionByName() */
-		public function getAdditionsByName(v:Array, callback:Function,node:String='additions',onError:Function=null,
+		public function getAdditionsByName(v:Array, callback:Function=null,node:String='additions',onError:Function=null,
 										   forceNewElement:Boolean=false,decorator:Function=null):void
 		{
 			var i:int = 0, j:int = v.length;
@@ -314,7 +312,7 @@ package axl.xdef.types
 			
 			function ready(v:Object):void
 			{
-				callback(v);
+				if(callback) callback(v);
 				next();
 			}
 		}
@@ -341,7 +339,7 @@ package axl.xdef.types
 		public function removeRegistered(v:String):void
 		{
 			var dobj:DisplayObject = xsupport.registered(v) as DisplayObject;
-			if(DEBUG) U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
+			if(debug) U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
 			if(dobj != null && dobj.parent != null)
 				dobj.parent.removeChild(dobj);
 		}
@@ -386,7 +384,7 @@ package axl.xdef.types
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
 		{
 			c = c || this.getChildByName(objName) as ixDef;
-			if(DEBUG) U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
+			if(debug) U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
 				XSupport.animByNameExtra(c, screenName, onComplete,killCurrent,reset,doNotDisturb);
 			else

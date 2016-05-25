@@ -248,7 +248,7 @@ package axl.xdef.types
 				actions[i].execute();
 			if(code!=null)
 				xroot.binCommand(code,this);
-			if(xroot.DEBUG) U.log(this, this.name, '[executed]', j, 'actions');
+			if(debug) U.log(this, this.name, '[executed]', j, 'actions');
 		}
 		
 		protected function hover(e:MouseEvent=null):void

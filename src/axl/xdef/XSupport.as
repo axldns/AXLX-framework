@@ -478,7 +478,7 @@ package axl.xdef
 		 * @param callBack2argument - optional second argument for callback. It is in use to <code>pushReadyTypes</code> children order.
 		 * @see webFlow.MainCallback#getAdditionByName()
 		 * */
-		public function getReadyType2(xml:XML,callBack:Function,decorator:Function=null,callBack2argument:Object=null,xroot:xRoot=null):void
+		public function getReadyType2(xml:XML,callBack:Function=null,decorator:Function=null,callBack2argument:Object=null,xroot:xRoot=null):void
 		{
 			if(xml == null)
 				throw new Error("Undefined XML definition");
@@ -574,7 +574,7 @@ package axl.xdef
 					// notify
 					if(callBack2argument != null)
 						callBack(obj, callBack2argument);
-					else
+					else if (callBack)
 						callBack(obj);
 					additionQueue.shift();
 					if(additionQueue.length > 0)
@@ -586,8 +586,7 @@ package axl.xdef
 		public function includeScript(xml:XML,xroot:xRoot):Object
 		{
 			var scrpt:XML = Ldr.getXML(U.fileNameFromUrl(xml.@src));
-			var doMerge:Boolean = xml.hasOwnProperty('@mergeAdditions') && xml.@mergeAdditions == 'true';
-			if(scrpt != null && doMerge && scrpt.hasOwnProperty('additions'))
+			if(scrpt != null && scrpt.hasOwnProperty('additions'))
 			{
 				var xl:XMLList = scrpt.additions[0].children() as XMLList;
 				var len:int = xl.length();
