@@ -36,25 +36,27 @@ package axl.xdef.types
 		protected var xfilters:Array
 		protected var xtrans:ColorTransform;
 		private var intervalID:uint;
-		
 		private var metaAlreadySet:Boolean;
-		private var addedToStageActions:Vector.<xAction>;
-		private var childrenCreatedAction:Vector.<xAction>;
-		
 		private var xsortZ:Boolean=false;
-		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		
+		/** Function or portion of uncompiled code to execute when all original structure xml children are
+		 * added to container's display list. An argument for binCommand.
 		 * Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onAddedToStage:String;
-		/** Portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
+		public var onChildrenCreated:Object;
+		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
 		 * Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onRemovedFromStage:String;
+		public var onAddedToStage:Object;
+		/** Function or portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRemovedFromStage:Object;
+		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
 		public var inject:String;
-		
 		/** Distributes  children horizontaly with gap specified by this property. 
 		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
 		public var distributeHorizontal:Number;
@@ -156,6 +158,11 @@ package axl.xdef.types
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{	scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return scaleX + scaleY>>1 }
+		
 		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
 		override public function set name(v:String):void
 		{
@@ -164,37 +171,31 @@ package axl.xdef.types
 				this.xroot.registry.v = this;
 		}
 		
-		protected function removeFromStageHandler(e:Event):void	{ 
+		protected function removeFromStageHandler(e:Event):void
+		{ 
 			this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
 			AO.killOff(this);
-			if(onRemovedFromStage != null)
+			if(onRemovedFromStage is String)
 				xroot.binCommand(onRemovedFromStage,this);
+			else if(onRemovedFromStage is Function)
+				onRemovedFromStage();
 		}
-		/** sets both scaleX and scaleY to the same value*/
-		public function set scale(v:Number):void{	scaleX = scaleY = v }
-		/** returns average of scaleX and scaleY */
-		public function get scale():Number { return scaleX + scaleY>>1 }
+	
 		protected function addedToStageHandler(e:Event):void
 		{
 			if(resetOnAddedToStage)
 				this.reset();
 			if(meta.addedToStage != null)
 				XSupport.animByNameExtra(this, 'addedToStage');
-			if(addedToStageActions != null)
-			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
-				addedToStageActions[i].execute();
-				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
-			}
-			if(onAddedToStage != null)
+			if(onAddedToStage is String)
 				xroot.binCommand(onAddedToStage,this);
+			else if(onAddedToStage is Function)
+				onAddedToStage();
 			if(this.sortZ)
 				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
-		protected function elementAdded(e:Event):void
-		{
-			redistribute();
-		}
+		protected function elementAdded(e:Event):void { redistribute();}
 		
 		public function redistribute():void
 		{
@@ -204,14 +205,6 @@ package axl.xdef.types
 				U.distribute(this,distributeVertical,false);
 		}
 		
-		public function onChildrenCreated():void
-		{
-			if(childrenCreatedAction != null)
-			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
-					childrenCreatedAction[i].execute();
-				if(debug) U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
-			}
-		}
 		/**
 		 * <h3>xSprite meta keywords</h3>
 		 * <ul>
@@ -236,23 +229,6 @@ package axl.xdef.types
 			xmeta =v;
 			metaAlreadySet = true;
 			var a:Object, b:Array, i:int, j:int;
-			if(meta.hasOwnProperty('addedToStageAction'))
-			{
-				addedToStageActions = new Vector.<xAction>();
-				a = meta.addedToStageAction;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					addedToStageActions[i] = new xAction(b[i],xroot,this);
-			}
-			
-			if(meta.hasOwnProperty('childrenCreatedAction'))
-			{
-				childrenCreatedAction = new Vector.<xAction>();
-				a = meta.childrenCreatedAction;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					childrenCreatedAction[i] = new xAction(b[i],xroot,this);
-			}
 		}
 		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
 		 * this object

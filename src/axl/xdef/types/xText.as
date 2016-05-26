@@ -15,10 +15,8 @@ package axl.xdef.types
 	import flash.geom.ColorTransform;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
-	import flash.utils.clearInterval;
 	
 	import axl.utils.AO;
-	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
@@ -29,15 +27,14 @@ package axl.xdef.types
 		private var xxroot:xRoot;
 		
 		private var tff:TextFormat;
-		public var onAnimationComplete:Function;
 		private var xfilters:Array;
 		private var xtrans:ColorTransform;
 		private var xtransDef:ColorTransform;
 		private var trigerExt:Object;
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
-		private var addedToStageActions:Vector.<xAction>;
-		private var intervalID:uint;
 		private var defaultFont:String;
+		private var metaAlreadySet:Boolean;
+		
 		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
 		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
 		public var reparseMetaEverytime:Boolean;
@@ -50,22 +47,35 @@ package axl.xdef.types
 		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
 		 * and killing all animations @see #reset() */
 		public var resetOnAddedToStage:Boolean=true;
-		/** Distributes  children horizontaly with gap specified by this property. 
-		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
-		private var metaAlreadySet:Boolean;
+		
 		public var debug:Boolean;
-		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		
+		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
 		 * Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onAddedToStage:String;
-		/** Portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
+		public var onAddedToStage:Object;
+		/** Function or portion of uncompiled code to execute when object is removed from stage. An argument for binCommand.
 		 * Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onRemovedFromStage:String;
+		public var onRemovedFromStage:Object;
+		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
 		public var inject:String;
+		
+		/**
+		 * Property containing uncompiled code for binCommand. <br>
+		 * <code> code='[stage.removeChildren()]'</code>
+		 * <br><b>is the equivalent of:</b><br>
+		 * <code>meta='{"action":[{"type":"binCommand","value":[[stage.removeChildren()]]}]}'</code><br>
+		 * <br>The string is going to be parsed / code evaluated on execution, every execution.<br>
+		 * <b>Confusion</b> may occur as, unlike with other in-attrubute-code-executions, you probably don't want to prepend
+		 * your config "code" attrubute value with dolar sign, unless you want to 
+		 * reference code containing variable to somewhere else.<br>  */
+		public var code:String;
+		
+		public var replace:Array;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
 		{
@@ -105,37 +115,29 @@ package axl.xdef.types
 				ExternalInterface.call.apply(null, trigerExt);
 			for(var i:int = 0, j:int = actions.length; i<j; i++)
 				actions[i].execute();
+			if(code != null)
+				xroot.binCommand(code,this);
 		}
 	
-		protected function removeFromStageHandler(e:Event):void
-		{
-			AO.killOff(this);
-			clearInterval(intervalID);
-			if(onRemovedFromStage != null)
-				xroot.binCommand(onRemovedFromStage,this);
-		}
-		
 		protected function addedToStageHandler(e:Event):void
 		{
 			if(resetOnAddedToStage)
 				this.reset();
 			if(meta.addedToStage != null)
-			{
-				intervalID = XSupport.animByNameExtra(this, 'addedToStage');
-			}
-			if(addedToStageActions != null)
-			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
-					addedToStageActions[i].execute();
-				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
-			}
-			if(onAddedToStage != null)
+				XSupport.animByNameExtra(this, 'addedToStage');
+			if(onAddedToStage is String)
 				xroot.binCommand(onAddedToStage,this);
+			else if(onAddedToStage is Function)
+				onAddedToStage();
 		}
 		
-		private function onComplete():void
+		protected function removeFromStageHandler(e:Event):void
 		{
-			if(onAnimationComplete != null)
-				onAnimationComplete();
+			AO.killOff(this);
+			if(onRemovedFromStage is String)
+				xroot.binCommand(onRemovedFromStage,this);
+			else if(onRemovedFromStage is Function)
+				onRemovedFromStage();
 		}
 		
 		public function get def():XML { return xdef }
@@ -179,9 +181,10 @@ package axl.xdef.types
 				this.height = textHeight + 5;
 		}
 		
-		public function reset():void { 
+		public function reset():void
+		{ 
 			AO.killOff(this);
-			parseDef()
+			parseDef();
 		}
 		
 		public function get meta():Object { return xmeta }
@@ -201,7 +204,6 @@ package axl.xdef.types
 		
 		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
 		public function get filtersOn():Boolean { return filters != null }
-		
 		
 		public function ctransform(prop:String,val:Number):void {
 			if(!xtrans)
@@ -253,52 +255,67 @@ package axl.xdef.types
 				for(var i:int = 0, j:int = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
 			}
-			if(meta.hasOwnProperty('addedToStageAction'))
-			{
-				addedToStageActions = new Vector.<xAction>();
-				a = meta.addedToStageAction;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					addedToStageActions[i] = new xAction(b[i],xroot,this);
-			}
-			replaceTextFieldText();
+			refreshText();
 		}
 		
-		private function replaceTextFieldText():void
+		public function refreshText():void
 		{
 			var a:Array = meta.replace as Array;
 			var s:String = this.htmlText;
 			if(a != null)
+				replaceMeta(a,s);
+			a = replace as Array;
+			s = this.htmlText;
+			if(a != null)
+				replaceReplace(a,s);
+		}
+		
+		private function replaceReplace(a:Array, s:String):void
+		{
+			for(var i:int =0, j:int = a.length;i<j;i++)
 			{
-				for(var i:int = 0; i < a.length;i++)
-				{
-					var rep:Object = a[i];
-					var pattern:RegExp = new RegExp(rep.pattern, rep.options ? rep.options : "g");
-					var source:Object = (rep.source.charAt(0) == '$' ? xroot.binCommand(rep.source.substr(1),this) : rep.source);//XSupport.simpleSourceFinder(this.xroot, rep.source);
-					if(source == null || source is Error)
-						source = rep.source;
-					
-					if(rep.sourceRepPattern)
-					{
-						var sourceRepPattern:RegExp = new RegExp(rep.sourceRepPattern, rep.sourceRepOptions);
-						source = String(source).replace(sourceRepPattern, rep.sourceReplacement);
-					}
-					s= s.replace(pattern, String(source));
-				}
-				super.htmlText = s;
+				var rep:Array = a[i] as Array;
+				if(!rep || rep.length != 2) continue;
+				
+				var pattern:RegExp = new RegExp(rep[0],"g");
+				var source:Object = xroot.binCommand(rep[1],this);
+				if(source == null || source is Error)
+					source = rep[1];
+				s= s.replace(pattern, String(source));
 			}
+			super.htmlText = s;	
+		}
+		
+		private function replaceMeta(a:Array, s:String):void
+		{
+			for(var i:int = 0, j:int=a.length; i < j;i++)
+			{
+				var rep:Object = a[i];
+				var pattern:RegExp = new RegExp(rep.pattern, rep.options ? rep.options : "g");
+				var source:Object = (rep.source.charAt(0) == '$' ? xroot.binCommand(rep.source.substr(1),this) : rep.source);//XSupport.simpleSourceFinder(this.xroot, rep.source);
+				if(source == null || source is Error)
+					source = rep.source;
+				
+				if(rep.sourceRepPattern)
+				{
+					var sourceRepPattern:RegExp = new RegExp(rep.sourceRepPattern, rep.sourceRepOptions);
+					source = String(source).replace(sourceRepPattern, rep.sourceReplacement);
+				}
+				s= s.replace(pattern, String(source));
+			}
+			super.htmlText = s;
 		}
 		
 		override public function set text(value:String):void
 		{
 			super.text = value;
-			replaceTextFieldText();
+			refreshText();
 		}
 		
 		override public function set htmlText(value:String):void
 		{
 			super.htmlText = value;
-			replaceTextFieldText();
+			refreshText();
 		}
 		
 		public function get align():String { return tff.align }

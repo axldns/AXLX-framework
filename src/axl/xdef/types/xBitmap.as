@@ -29,7 +29,16 @@ package axl.xdef.types
 		private var xtransDef:ColorTransform;
 		private var xfilters:Array;
 		private var metaAlreadySet:Boolean;
-		private var addedToStageActions:Vector.<xAction>;
+		
+	
+		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onAddedToStage:Object;
+		/** Function or portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRemovedFromStage:Object;
 		
 		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
 		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
@@ -45,15 +54,7 @@ package axl.xdef.types
 		public var reparsDefinitionEverytime:Boolean=false;
 		/** Determines if debugging info is printed to consle*/
 		public var debug:Boolean;
-		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onAddedToStage:String;
-		/** Portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onRemovedFromStage:String;
-		
+	
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null,definition:XML=null)
 		{
 			this.xroot = xrootObj || xroot;
@@ -75,13 +76,6 @@ package axl.xdef.types
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
-		protected function removeFromStageHandler(e:Event):void
-		{
-			AO.killOff(this);
-			if(onRemovedFromStage != null)
-				xroot.binCommand(onRemovedFromStage,this);
-		}
-		
 		/** sets both scaleX and scaleY to the same value*/
 		public function set scale(v:Number):void{	scaleX = scaleY = v }
 		/** returns average of scaleX and scaleY */
@@ -93,13 +87,19 @@ package axl.xdef.types
 				this.reset();
 			if(meta.addedToStage != null)
 				XSupport.animByNameExtra(this, 'addedToStage');
-			if(addedToStageActions != null)
-			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
-				addedToStageActions[i].execute();
-				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
-			}
-			if(onAddedToStage != null)
+			if(onAddedToStage is String)
 				xroot.binCommand(onAddedToStage,this);
+			else if(onAddedToStage is Function)
+				onAddedToStage();
+		}
+		
+		protected function removeFromStageHandler(e:Event):void
+		{
+			AO.killOff(this);
+			if(onRemovedFromStage is String)
+				xroot.binCommand(onRemovedFromStage,this);
+			else if(onRemovedFromStage is Function)
+				onRemovedFromStage();
 		}
 	
 		public function get meta():Object { return xmeta }
@@ -111,14 +111,6 @@ package axl.xdef.types
 			xmeta =v;
 			metaAlreadySet = true;
 			var a:Object, b:Array, i:int, j:int;
-			if(meta.hasOwnProperty('addedToStageAction'))
-			{
-				addedToStageActions = new Vector.<xAction>();
-				a = meta.addedToStageAction;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					addedToStageActions[i] = new xAction(b[i],xroot,this);
-			}
 		}
 		
 		override public function set name(v:String):void

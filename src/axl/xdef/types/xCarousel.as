@@ -22,21 +22,27 @@ package axl.xdef.types
 		private var xdef:XML;
 		private var xmeta:Object = {}
 		private var xxroot:xRoot;
+		private var metaAlreadySet:Boolean;
 		
 		public var resetOnAddedToStage:Boolean = true;
 		public var reparseMetaEverytime:Boolean=false;
 		public var reparsDefinitionEverytime:Boolean=false;
-		private var metaAlreadySet:Boolean;
-		private var addedToStageActions:Vector.<xAction>;
-		private var childrenCreatedAction:Vector.<xAction>;
-		/** Portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		
+		/** Function or portion of uncompiled code to execute when all original structure xml children are
+		 * added to container's display list. An argument for binCommand.
 		 * Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onAddedToStage:String;
-		/** Portion of uncompiled code to execute when object is removed from stage. An argument for binCommand.
+		public var onChildrenCreated:Object;
+		
+		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
 		 * Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onRemovedFromStage:String;
+		public var onAddedToStage:Object;
+		/** Function or portion of uncompiled code to execute when object is removed from stage. An argument for binCommand.
+		 * Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRemovedFromStage:Object;
+		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
@@ -69,30 +75,20 @@ package axl.xdef.types
 				this.reset();
 			if(meta.addedToStage != null)
 				XSupport.animByNameExtra(this, 'addedToStage');
-			if(addedToStageActions != null)
-			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
-				addedToStageActions[i].execute();
-				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
-			}
-			if(onAddedToStage != null)
+			if(onAddedToStage is String)
 				xroot.binCommand(onAddedToStage,this);
+			else if(onAddedToStage is Function)
+				onAddedToStage();
 		}
 		protected function removeFromStageHandler(e:Event):void
 		{
 			AO.killOff(this);
-			if(onRemovedFromStage != null)
+			if(onRemovedFromStage is String)
 				xroot.binCommand(onRemovedFromStage,this);
+			else if(onRemovedFromStage is Function)
+				onRemovedFromStage();
 		}
-		
-		public function onChildrenCreated():void
-		{
-			if(childrenCreatedAction != null)
-			{	for(var i:int = 0, j:int = childrenCreatedAction.length; i<j; i++)
-					childrenCreatedAction[i].execute();
-				if(debug) U.log(this, this.name, '[childrenCreatedAction]', j, 'actions');
-			}
-		}
-		
+				
 		/** sets both scaleX and scaleY to the same value*/
 		public function set scale(v:Number):void{	scaleX = scaleY = v }
 		/** returns average of scaleX and scaleY */
@@ -108,22 +104,6 @@ package axl.xdef.types
 			xmeta =v;
 			metaAlreadySet = true;
 			var a:Object, b:Array, i:int, j:int;
-			if(meta.hasOwnProperty('addedToStageAction'))
-			{
-				addedToStageActions = new Vector.<xAction>();
-				a = meta.addedToStageAction;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					addedToStageActions[i] = new xAction(b[i],xroot,this);
-			}
-			if(meta.hasOwnProperty('childrenCreatedAction'))
-			{
-				childrenCreatedAction = new Vector.<xAction>();
-				a = meta.childrenCreatedAction;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					childrenCreatedAction[i] = new xAction(b[i],xroot,this);
-			}
 		}
 		public function reset():void { 
 			AO.killOff(this);

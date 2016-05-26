@@ -35,8 +35,8 @@ package axl.xdef
 	import axl.xdef.types.xSprite;
 	import axl.xdef.types.xSwf;
 	import axl.xdef.types.xText;
-	import axl.xdef.types.xVOD;
-	import axl.xdef.types.xTimer;	
+	import axl.xdef.types.xTimer;
+	import axl.xdef.types.xVOD;	
 	/** Factory class for XML defined elements.<br>
 	 * <ul>
 	 * <li> Creates, registers, decorates and animates all objects</li>
@@ -358,7 +358,7 @@ package axl.xdef
 		 * @param xroot - root of all XML based objects (stage equivalent)
 		 * @see #getReadyType2()
 		 * */
-		public function pushReadyTypes2(def:XML, container:DisplayObject, decorator:Function=null,xroot:xRoot=null,onChildrenCreated:Function=null):void
+		public function pushReadyTypes2(def:XML, container:DisplayObject, decorator:Function=null,xroot:xRoot=null):void
 		{
 			if(def == null)
 			{
@@ -416,9 +416,15 @@ package axl.xdef
 			function finishPushing():void
 			{
 				if(numC != 0)
-					return
-				if(container && container.hasOwnProperty('onChildrenCreated') && container['onChildrenCreated'] is Function)
-					container['onChildrenCreated']();
+					return;
+				if(container.hasOwnProperty('debug') && container['debug'])
+					xroot.log("Children created for", container.name);
+				if(container && container.hasOwnProperty('onChildrenCreated'))
+				{
+					var c:* = container['onChildrenCreated'];
+					if(c is String) xroot.binCommand(c,container);
+					else if(c is Function) c();
+				}
 			}
 		}
 		/** Loads resource specified as "src" attribute of xml object. Executes callback with xml as attribute.

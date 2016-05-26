@@ -22,18 +22,21 @@ package axl.xdef.types
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.112';
+		private static const ver:String = '0.113';
 		public static function get version():String { return ver }
 		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
+		
 		protected var CONFIG:XML;
+		
 		private var rootFinder:RootFinder;
-		public var map:Object = {};
-		public var onRootAfterAttributes:Function;
 		private var launcher:xLauncher;
+		
 		public var defaultFont:String;
 		public var fileName:String;
 		public var appRemote:String;
+		public var map:Object = {};
+		public var onRootAfterAttributes:Function;
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
@@ -106,7 +109,6 @@ package axl.xdef.types
 		public function addProto(v:Object,props:Object,to:Object=null,index:int=-1,node:String='additions'):void
 		{
 			var f:Function = (props as Function) || decorator;
-			log("addProto", props, "de", f);
 			var c:DisplayObjectContainer = this;
 			if(to!=null)
 				getContainer(to,gotContainer,node);
@@ -117,7 +119,7 @@ package axl.xdef.types
 				c = cont as DisplayObjectContainer;
 				if(c == null)
 				{
-					if(debug) U.log(this, "[addProto][ERROR] 'intoChild' (" + to +") parameter refers to non existing object or it's not a DisplayObjectContainer descendant");
+					if(debug) U.log(this, "[addProto][ERROR] 'intoChild' (" + to +")");
 					return
 				}
 				getObject();
@@ -146,7 +148,7 @@ package axl.xdef.types
 			}
 			function decorator(v:ixDef):void
 			{
-				log("decorating", v, v.name);
+				if(debug) log("decorating", v, v.name);
 				if(!v) return;
 				for(var s:String in props)
 					v.meta[s] = props[s];
@@ -323,16 +325,6 @@ package axl.xdef.types
 		{
 			rmv.apply(null,args);
 		}
-		/** If child of name specified in argument exists - removes it. All animtions are performed
-		 * based on individual class settings (xBitmap, xSprite, xText, etc)*/
-		public function removeByName(v:String):void	{ removeChild(getChildByName(v)) }
-		
-		/**  removes array of objects from displaylist. can be actual displayObjects or their names */
-		public function removeElements(args:Array):void
-		{
-			for(var i:int = args.length; i-->0;)
-				args[i] is String ? removeByName(args[i]) : removeChild(args[i]);
-		}
 		
 		/**  Uses registry to define child to remove. This can reach inside containers to remove specific element.
 		 * The last registered element of name defined in V will be removed */
@@ -506,5 +498,7 @@ package axl.xdef.types
 		
 		/** Exposes logging to console @see axl.utils.U#log()*/
 		public function get log():Function { return U.log}
+		/** Exposes animating object @see axl.utils.AO#animate()*/
+		public function get animate():Function {return axl.utils.AO.animate}
 	}
 }
