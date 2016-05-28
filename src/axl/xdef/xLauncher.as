@@ -187,10 +187,6 @@ package axl.xdef
 					xroot.debug = (projectSettings.@debug == 'true');
 				else
 					xroot.debug = false;
-				if(projectSettings.hasOwnProperty('@defaultFont'))
-					xroot.support.defaultFont = xroot.defaultFont = String(projectSettings.@defaultFont);
-				else
-					xroot.support.defaultFont = xroot.defaultFont;
 				if(projectSettings.hasOwnProperty('@phpTimeout'))
 					ConnectPHP.globalTimeout = int(projectSettings.@phpTimeout);
 				if(projectSettings.hasOwnProperty('@assetsTimeout'))
