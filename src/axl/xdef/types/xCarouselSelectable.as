@@ -29,8 +29,10 @@ package axl.xdef.types
 		/** Determines number of seconds in which carousel 
 		 * transitions from one element to another @default 0.2 */
 		public var movementSpeed:Number= .2;
-		/** Function to execute when transition from one element to another is complete */
-		public var onMovementComplete:Function;
+		/** Function or portion of uncompiled code to execute when transition 
+		 * from one element to another is complete. This will be fired as many times as <code>poolMovement</code>
+		 *  was requested. Subsequent calls to poolMovement are not fetched. */
+		public var onMovementComplete:Object;
 		/** Determines easing that is used for carousel movement transitions 
 		 * @see http://easings.net 
 		 * @default "easeOutQuart" */
@@ -39,7 +41,7 @@ package axl.xdef.types
 		 * to show nearest child in center (true) or if center point should remain in bretween
 		 * two middle elements (false) 
 		 * @default false */
-		public var autoShiftEven:Boolean=true;
+		public var autoShiftEven:Boolean=false;
 		
 		/** @param definition - XML definition of this class (properties and children)
 		 *  @param xroot - root object this instance will belong to
@@ -67,8 +69,10 @@ package axl.xdef.types
 		private function onCaruseleTarget():void
 		{
 			selectedObject = getChildClosestToCenter()[0];
-			if(onMovementComplete != null)
+			if(onMovementComplete is Function)
 				onMovementComplete();
+			else if(onMovementComplete is String)
+				xroot.binCommand(onMovementComplete,this);
 		}
 		/** Starts animated transition from selected object to next object.
 		 * <ul><li>If dir is negative - moves elements to the left. If positive - to the right.</li>
