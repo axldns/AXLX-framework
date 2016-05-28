@@ -10,7 +10,6 @@
 package axl.xdef.types
 {
 	import flash.display.DisplayObject;
-	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.external.ExternalInterface;

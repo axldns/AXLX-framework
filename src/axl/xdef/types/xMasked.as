@@ -17,9 +17,8 @@ package axl.xdef.types
 	
 	import axl.ui.controllers.BoundBox;
 	import axl.utils.U;
-	import axl.xdef.interfaces.ixDisplay;
 
-	public class xMasked extends xSprite implements ixDisplay
+	public class xMasked extends xSprite
 	{
 		private var xscrollBar:xScroll;
 		
@@ -89,14 +88,6 @@ package axl.xdef.types
 			else
 				container.addChildAt(child,index);
 			return child
-		}
-		
-		override protected function elementAdded(e:Event):void
-		{
-			if(!isNaN(distributeHorizontal))
-				U.distribute(container,distributeHorizontal,true);
-			if(!isNaN(distributeVertical))
-				U.distribute(container,distributeVertical,false);
 		}
 		
 		private function addListeners():void {

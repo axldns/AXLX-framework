@@ -24,15 +24,14 @@ package axl.xdef.types
 	{
 		private static const ver:String = '0.113';
 		public static function get version():String { return ver }
+		
 		protected var xsourcePrefixes:Array
 		protected var xsupport:XSupport;
-		
 		protected var CONFIG:XML;
 		
 		private var rootFinder:RootFinder;
 		private var launcher:xLauncher;
 		
-		public var defaultFont:String;
 		public var fileName:String;
 		public var appRemote:String;
 		public var map:Object = {};
@@ -160,7 +159,7 @@ package axl.xdef.types
 			var c:DisplayObjectContainer = container as DisplayObjectContainer;
 			if(!c)
 			{
-				c =  xsupport.registered(String(container)) as DisplayObjectContainer;
+				c =  xsupport.registry[String(container)] as DisplayObjectContainer;
 				if(!c)
 				{
 					c = binCommand(container,this) as DisplayObjectContainer;
@@ -189,7 +188,7 @@ package axl.xdef.types
 			if(intoChild is String && intoChild.charAt(0) == "$")
 				intoChild = binCommand(intoChild.substr(1),this);//should be calee
 			if(intoChild is String)
-				intoChild =  xsupport.registered(String(intoChild));
+				intoChild =  xsupport.registry[String(intoChild)];
 				
 			var c:DisplayObjectContainer = intoChild as DisplayObjectContainer;
 			if(c == null)
@@ -330,7 +329,7 @@ package axl.xdef.types
 		 * The last registered element of name defined in V will be removed */
 		public function removeRegistered(v:String):void
 		{
-			var dobj:DisplayObject = xsupport.registered(v) as DisplayObject;
+			var dobj:DisplayObject = registry[v] as DisplayObject;
 			if(debug) U.log('removeRegistered', v, dobj, dobj ? dobj.parent != null : null)
 			if(dobj != null && dobj.parent != null)
 				dobj.parent.removeChild(dobj);
@@ -361,8 +360,6 @@ package axl.xdef.types
 		}
 		/** Dictionary of all <b>instantiated</b> objects which can be identified by <code>name</code> attribute*/
 		public function get registry():Object { return xsupport.registry }
-		/** Returns any <b>instantiated</b> object which <code>name</code> equals <code>v</code>*/
-		public function registered(v:String):Object { return  xsupport.registered(v) }
 		/** Returns decorator of XML project */
 		public function get support():XSupport{ return xsupport } 
 

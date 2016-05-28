@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -10,57 +10,64 @@
 package axl.xdef.types
 {
 	import axl.xdef.interfaces.ixDef;
-	
+	/** Lightweight class for loading data and providing an easy acces to its contents, without accessing internal
+	 * assset manager. Instantiated from: <h3><code>&lt;data/&gt;<br></code></h3>
+	 * Data parsing is available right after defining src attribute. Loaded data passes through  
+	 * known types check in order to instantiate valid ActionScript objects, according to <code>Ldr.load</code> Example:<br>
+	 * <pre> &lt;data src='audio.mp3' anything='$this.data.play()'/&gt; 
+	 * @see axl.utils.Ldr */
 	public class xObject implements ixDef
 	{
-		private var xdata:Object;
-		private var xxroot:xRoot;
-		private var xdef:XML;
-		private var xmeta:Object = {};
-		private var xname:String='unnamedObject';
+		protected var xdata:Object;
+		protected var xdef:XML;
+		protected var xmeta:Object;
+		protected var xxroot:xRoot;
+		private var xname:String;
 		public var resetOnAddedToStage:Boolean = true;
-		public var reparseMetaEverytime:Boolean=false;
-		public var reparsDefinitionEverytime:Boolean=false;
-		private var metaAlreadySet:Boolean;
+		/** Lightweight data class instantiated from <code>&lt;data/&gt;<br></code>
+		 * @param definition - xml definition
+		 * @param xroot - reference to parent xRoot object
+		 * @see axl.xdef.types.xObject
+		 * @see axl.xdef.interfaces.ixDef#def
+		 * @see axl.xdef.interfaces.ixDef#xroot
+		 * @see axl.xdef.XSupport#getReadyType2() */
 		public function xObject(definition:XML,xroot:xRoot)
 		{
 			xxroot = xroot;
 			xdef = definition;
-			if(this.xroot != null && definition != null)
-			{
-				var v:String = String(definition.@name);
-				if(v.charAt(0) == '$' )
-					v = xroot.binCommand(v.substr(1), this);
-				this.name = v;
-				xroot.registry[this.name] = this;
-			}
+			xroot.support.register(this);
 		}
+		/** Reference to parent xRoot object @see axl.xdef.types.xRoot
+		 *  @see axl.xdef.interfaces.ixDef#xroot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
-		
-		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void {
-			if(v is String)
-				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
-			if((metaAlreadySet && !reparseMetaEverytime))
-				return;
-			xmeta =v;
-			metaAlreadySet = true;
-		}
-		
-		public function get name():String { return xname }
-		public function set name(v:String):void { xname = v;}
-		
+		/** XML definition of this object @see axl.xdef.interfaces.ixDef#def */
 		public function get def():XML { return xdef }
 		public function set def(v:XML):void { xdef = v }
 		
+		/** Dynamic variables container. It's set up only once. Subsequent applying XML attributes
+		 * or calling reset() will not have an effect. @see axl.xdef.interfaces.ixDef#meta  */
+		public function get meta():Object { return xmeta }
+		public function set meta(v:Object):void 
+		{
+			if(v is String)
+				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
+			if(!v || meta) return;
+			xmeta =v;
+		}
+		
+		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
+		public function get name():String { return xname }
+		public function set name(v:String):void
+		{
+			super.name = xroot.support.requestNameChange(v,this);
+		}
+		/** Whatever content (text, JSON, XML, sound, other) has been loaded/specified in 
+		 * <code>src</code> attribute - it's accesible through this property.*/
 		public function get data():Object { return xdata }
 		public function set data(v:Object):void { xdata = v }
-		
-		public function reset():void
-		{
-		}
-
+		/** Method reset doesn't apply for xObject instance */
+		public function reset():void { }
 	}
 }

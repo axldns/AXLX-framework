@@ -12,155 +12,140 @@ package axl.xdef.types
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.events.Event;
-	import flash.geom.ColorTransform;
 	
 	import axl.utils.AO;
-	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
-	
-	
+	/** Most basic object for displaying images. Since this class extends flash.display.Bitmap -
+	 * it does not dispatch mouse events. 
+	 * Instantiated from:<h3><code>&lt;img/&gt;<br></code></h3>
+	 * Img nodes can not consist sub-nodes translatable to other display object (can't contain children).
+	 * Allowed sub-nodes:<pre><ul><li>&lt;act/&gt;</li><li>&lt;data/&gt;</li><li>&lt;script/&gt;</li><li>&lt;timer/&gt;</li><li>&lt;filters/&gt;</li><li>&lt;colorTransform/&gt;</li></ul></pre>
+	 * @see axl.xdef.XSupport#getReadyType2() */
 	public class xBitmap extends Bitmap implements ixDisplay
 	{
-		protected var xdef:XML;
-		protected var xmeta:Object={};
+		private var xdef:XML;
+		private var xmeta:Object;
 		private var xxroot:xRoot;
-		private var xtrans:ColorTransform;
-		private var xtransDef:ColorTransform;
-		private var xfilters:Array;
-		private var metaAlreadySet:Boolean;
+		private var xonAddedToStage:Object;
+		private var xonRemovedFromStage:Object;
+		private var xresetOnAddedToStage:Boolean = true;
+		private var xstyles:Object;
 		
-	
-		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onAddedToStage:Object;
-		/** Function or portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onRemovedFromStage:Object;
-		
-		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
-		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
-		 * and killing all animations @see #reset() */
-		public var resetOnAddedToStage:Boolean = true;
-		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
-		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
-		public var reparseMetaEverytime:Boolean=false;
-		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
-		 * affects graphics drawing only. Pushing children inside happens only once per existence in
-		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
-		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
-		public var reparsDefinitionEverytime:Boolean=false;
-		/** Determines if debugging info is printed to consle*/
-		public var debug:Boolean;
-	
+		/** Most basic Class for displaying images, instantiated from: <code>&lt;img/&gt;<br></code>
+		 * @param definition - xml definition
+		 * @param xroot - reference to parent xRoot object
+		 * @see axl.xdef.types.xBitmap
+		 * @see axl.xdef.interfaces.ixDef#def
+		 * @see axl.xdef.interfaces.ixDef#xroot
+		 * @see axl.xdef.XSupport#getReadyType2()  */
 		public function xBitmap(bitmapData:BitmapData=null, pixelSnapping:String="auto", smoothing:Boolean=true,xrootObj:xRoot=null,definition:XML=null)
 		{
 			this.xroot = xrootObj || xroot;
-			if(this.xroot != null && definition != null)
-			{
-				var v:String = String(definition.@name);
-				if(v.charAt(0) == '$' )
-					v = xroot.binCommand(v.substr(1), this);
-				this.name = v;
-				xroot.registry[this.name] = this;
-			}
-			else
-				U.log("WARNING - ELEMENT HAS NO ROOT",xroot, 'OR NO DEF', definition? definition.name() + ' - ' + definition.@name : "NO DEF");
+			xdef = definition;
+			xroot.support.register(this);
 			
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
 			super(bitmapData, pixelSnapping, smoothing);
 		}
+		
+		//----------------------- INTERFACE METHODS -------------------- //
+		/** XML definition of this object @see axl.xdef.interfaces.ixDef#def */
+		public function get def():XML { return xdef }
+		public function set def(value:XML):void 
+		{ 
+			if((value == null))
+				return;
+			xdef = value;
+			XSupport.applyAttributes(def, this);
+		}
+		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		 *  @see axl.xdef.interfaces.ixDef#xroot*/
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
+		/**
+		 * Dynamic variables container. It's set up only once. Subsequent applying XML attributes
+		 * or calling reset() will not have an effect. 
+		 * <h3>xBitmap meta keywords</h3>
+		 * <ul>
+		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
+		 * <li>"addChild" - animation to execute when added as a child</li>
+		 * <li>"removeChild" - animation to execute before removing from stage (delays removing from stage)</li>
+		 * instantiated and added to this instance</li>
+		 * </ul>
+		 * @see axl.xdef.XSupport#animByNameExtra()
+		 * @see axl.utils.AO#animate() */
+		public function get meta():Object { return xmeta }
+		public function set meta(v:Object):void 
+		{
+			if(v is String)
+				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
+			if(!v || meta) return;
+			xmeta =v;
+		}
+		
+		/** Sets name and registers object in registry 
+		 * @see axl.xdef.types.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
+		override public function set name(v:String):void
+		{
+			super.name = xroot.support.requestNameChange(v,this);
+		}
+		
+		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
+		 * this object
+		 * @see axl.xdef.XSupport#applyAttrubutes()
+		 * @see #resetOnAddedToStage
+		 * @see #reparseMetaEverytime */
+		public function reset():void 
+		{
+			AO.killOff(this);
+			XSupport.applyAttributes(def, this);	
+		}
+		
+		/** Applies group of properties at once @see axl.xdef.interfaces.ixDisplay#style */
+		public function get styles():Object	{ return xstyles }
+		public function set styles(v:Object):void
+		{
+			xstyles = v;
+			xroot.support.applyStyle(v,this);
+		}
+		
+		/** Function reference or portion of uncompiled code to execute when object is removed from stage.
+		 *  An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		public function get onRemovedFromStage():Object	{ return xonRemovedFromStage }
+		public function set onRemovedFromStage(value:Object):void {	xonRemovedFromStage = value }
+		
+		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public function get onAddedToStage():Object { return xonAddedToStage }
+		public function set onAddedToStage(value:Object):void {	xonAddedToStage = value }
+		
+		/** Determines if object is going to be brought to it's original XML defined values. 
+		 * @see axl.interfaces.ixDisplay#resetOnAddedToStage */
+		public function get resetOnAddedToStage():Boolean {	return xresetOnAddedToStage }
+		public function set resetOnAddedToStage(value:Boolean):void { xresetOnAddedToStage = value}
+		
+		//----------------------- INTERFACE METHODS -------------------- //
+		//----------------------- INTERFACE SUPPORT -------------------- //
+		/** Executes defaultAddedToStageSequence +  Starts listening to ENTER_FRAME events 
+		 * if <code>sortZ=true</code> @see axl.xdef.types.XSuppot#defaultAddedToStageSequence() */
+		protected function addedToStageHandler(e:Event):void
+		{
+			xroot.support.defaultAddedToStageSequence(this);
+		}
+		
+		/**Removes ENTER_FRAME event listener if assigned +  Executes defaultRemovedFromStage
+		 *  @see axl.xdef.types.XSuppot#defaultRemovedFromStageSequence() */
+		protected function removeFromStageHandler(e:Event):void
+		{ 
+			xroot.support.defaultRemovedFromStageSequence(this);
+		}
+		//----------------------- INTERFACE SUPPORT -------------------- //
 		/** sets both scaleX and scaleY to the same value*/
 		public function set scale(v:Number):void{	scaleX = scaleY = v }
 		/** returns average of scaleX and scaleY */
-		public function get scale():Number { return scaleX + scaleY>>1 }
-		
-		protected function addedToStageHandler(e:Event):void
-		{
-			if(resetOnAddedToStage)
-				this.reset();
-			if(meta.addedToStage != null)
-				XSupport.animByNameExtra(this, 'addedToStage');
-			if(onAddedToStage is String)
-				xroot.binCommand(onAddedToStage,this);
-			else if(onAddedToStage is Function)
-				onAddedToStage();
-		}
-		
-		protected function removeFromStageHandler(e:Event):void
-		{
-			AO.killOff(this);
-			if(onRemovedFromStage is String)
-				xroot.binCommand(onRemovedFromStage,this);
-			else if(onRemovedFromStage is Function)
-				onRemovedFromStage();
-		}
-	
-		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void { 
-			if(v is String)
-				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
-			if((metaAlreadySet && !reparseMetaEverytime))
-				return;
-			xmeta =v;
-			metaAlreadySet = true;
-			var a:Object, b:Array, i:int, j:int;
-		}
-		
-		override public function set name(v:String):void
-		{
-			super.name = v;
-			if(this.xroot != null)
-				this.xroot.registry.v = this;
-		}
-		
-		public function get def():XML { return xdef }
-		public function set def(value:XML):void { 
-			if(value == null)
-				return;
-			else if(xdef != null && xdef is XML && !reparsDefinitionEverytime)
-				return;
-			xdef = value;
-		}
-		public function reset():void { 
-			AO.killOff(this);
-			parseDef()
-		}
-		
-		protected function parseDef():void 
-		{ 
-			XSupport.applyAttributes(def, this);
-		}
-		
-		public function get xtransform():ColorTransform { return xtrans }
-		public function set xtransform(v:ColorTransform):void { xtrans =v; this.transform.colorTransform = v;
-			if(xtransDef == null)
-				xtransDef = new ColorTransform();
-		}
-		public function set transformOn(v:Boolean):void { this.transform.colorTransform = (v ? xtrans : xtransDef ) }
-		
-		override public function set filters(v:Array):void
-		{
-			xfilters = v;
-			super.filters=v;
-		}
-		
-		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
-		public function get filtersOn():Boolean { return filters != null }
-		
-		
-		public function ctransform(prop:String,val:Number):void {
-			if(!xtrans)
-				xtrans = new ColorTransform();
-			xtrans[prop] = val;
-			this.transform.colorTransform = xtrans;
-		}
-		
+		public function get scale():Number { return (scaleX + scaleY)/2 }
 	}
 }

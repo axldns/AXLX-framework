@@ -36,7 +36,8 @@ package axl.xdef
 	import axl.xdef.types.xSwf;
 	import axl.xdef.types.xText;
 	import axl.xdef.types.xTimer;
-	import axl.xdef.types.xVOD;	
+	import axl.xdef.types.xVOD;
+
 	/** Factory class for XML defined elements.<br>
 	 * <ul>
 	 * <li> Creates, registers, decorates and animates all objects</li>
@@ -50,8 +51,6 @@ package axl.xdef
 		private static var userTypes:Object={};
 			
 		private var smallRegistry:Object={};
-		/** Default font to apply on xText if <code>font</code> attribute is not specifed @see axl.xdef.types.xText */
-		public var defaultFont:String;
 		/** @see axl.xdef.types.xRoot */
 		public var root:xRoot;
 		private static var reservedAttributes:Array = ['src'];
@@ -61,8 +60,6 @@ package axl.xdef
 		 * <br>Multiple object registered under the same name will cause registry to return only the 
 		 * most recent ones*/
 		public function get registry():Object { return smallRegistry }
-		/** @param v - name of the object (xml "name" attribute) @see #registry() */
-		public function registered(v:String):Object { return smallRegistry[v] }
 		
 		/** Factory class for XML defined elements.<br>
 		 * <ul>
@@ -392,10 +389,7 @@ package axl.xdef
 						U.log("[XSupport]DataObject registered", v.name);
 					else if(v is ColorTransform)
 					{
-						if(container is ixDisplay)
-							container['xtransform'] = v;
-						else
-							container.transform.colorTransform = v as  ColorTransform;
+						container.transform.colorTransform = v as  ColorTransform;
 					}
 					else
 					{
@@ -480,7 +474,6 @@ package axl.xdef
 		 * and groups.
 		 * @param callback - function to execute once element is available.
 		 * <br> It should accept one parameter - loaded element, or two arguments if <code>callBack2argument</code> is specified.
-		 * @param dynamicLoad - if true - checks for attribute <code>src</code> if false - no loading will occur.
 		 * @param callBack2argument - optional second argument for callback. It is in use to <code>pushReadyTypes</code> children order.
 		 * @see webFlow.MainCallback#getAdditionByName()
 		 * */
@@ -505,7 +498,7 @@ package axl.xdef
 					{
 						case 'div': obj = new xSprite(xml,xroot); break;
 						case 'form': obj = new xForm(xml,xroot); break;
-						case 'txt': obj =  new xText(xml,xroot,defaultFont); break;
+						case 'txt': obj =  new xText(xml,xroot); break;
 						case 'scrollBar': obj = new xScroll(xml,xroot); break;
 						case 'msk': obj = new xMasked(xml,xroot); break;
 						case 'btn': obj = new xButton(xml,xroot); break;
@@ -525,19 +518,9 @@ package axl.xdef
 								obj = userTypes[type](xml,xroot);
 							break;
 					}
-					// REGISTRATION
 					if(obj != null)
 					{
-						if(obj.hasOwnProperty('name') && xml.hasOwnProperty('@name'))
-						{
-							var v:String = String(xml.@name)
-							if(v is String && v.charAt(0) == '$' )
-								v = xroot.binCommand(v.substr(1), obj);
-							obj.name = v;
-							smallRegistry[obj.name] = obj;
-						}
-						if(obj.hasOwnProperty('xroot'))
-							obj.xroot = xroot;
+						//objects suppose to add themselves to registry inside constructor function
 					// ATTACHING SRC
 						if(sourceTest != null)
 						{
@@ -554,7 +537,7 @@ package axl.xdef
 								obj.bitmapData = U.getBitmapData(Ldr.getBitmap(sourceTest));
 								obj.smoothing = true;
 							}
-							else if(obj.hasOwnProperty('data'))
+							else if(obj is xObject)
 							{
 								obj.data = b;
 							}
@@ -571,10 +554,7 @@ package axl.xdef
 							xroot.binCommand(obj.inject, obj);
 						}
 						// PUSHING CHILDREN
-						if(obj is DisplayObjectContainer)
-						{
-							pushReadyTypes2(xml, obj as DisplayObjectContainer,decorator,xroot);
-						}
+						pushReadyTypes2(xml, obj as DisplayObject,decorator,xroot);
 					}
 					
 					// notify
@@ -587,6 +567,69 @@ package axl.xdef
 						additionQueue[0]();
 				}
 			}
+		}
+		
+		public function register(v:ixDef):void 
+		{	
+			var d:XML = v.def;
+			if(d != null)
+			{
+				var vname:String = String(d.@name);
+				if(vname.charAt(0) == '$' )
+					vname = root.binCommand(vname.substr(1), v);
+				v.name = vname;
+				smallRegistry[vname] = v;
+			}
+			else if (!(v is xRoot))
+				U.log(v, v.name, "[WARINING] ELEMENT HAS no def')");
+		}
+		
+		public function requestNameChange(newName:String,requester:ixDef):String
+		{
+			if(newName != requester.name)
+			{
+				delete smallRegistry[requester.name];
+				if(newName.charAt(0) == '$' )
+					newName = root.binCommand(newName.substr(1), requester);
+				smallRegistry[newName] = requester;
+			}
+			return newName;
+		}
+		
+		public function applyStyle(v:Object,t:ixDef):void
+		{
+			if(v is Array)
+				for(var i:int = 0,j:int= v.length;i<j;i++)
+					applyStyle(v[i],t);
+			else if(v is Object)
+				for(var p:String in v)
+					if(t['hasOwnProperty'](p))
+						t[p] = v[p];
+		}
+		
+		/**Resets instance to original XML values if <code>resetOnAddedToSage=true</code>.<br>
+		 * Executes <i>meta.addedToStage</i> defined animations if any.<br>
+		 * Executes function or evaluates code assigned to <code>onAddedToStage</code> property.<br>*/
+		public function defaultAddedToStageSequence(t:ixDisplay):void
+		{
+			if(t.resetOnAddedToStage)
+				t.reset();
+			if(t.meta.addedToStage != null)
+				animByNameExtra(t, 'addedToStage');
+			if(t.onAddedToStage is String)
+				root.binCommand(t.onAddedToStage,this);
+			else if(t.onAddedToStage is Function)
+				t.onAddedToStage();
+		}
+		/** Stops all proceeding and scheduled animations on target, 
+		 * Executes function or evaluates code assigned to <code>onRemovedFromStage</code> property.<br>*/
+		public function defaultRemovedFromStageSequence(t:ixDisplay):void
+		{
+			AO.killOff(t);
+			if(t.onRemovedFromStage is String)
+				root.binCommand(t.onRemovedFromStage,t);
+			else if(t.onRemovedFromStage is Function)
+				t.onRemovedFromStage();
 		}
 		
 		public function includeScript(xml:XML,xroot:xRoot):Object

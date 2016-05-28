@@ -12,7 +12,6 @@ package axl.xdef.types
 	import flash.events.Event;
 	import flash.events.TextEvent;
 	import flash.external.ExternalInterface;
-	import flash.geom.ColorTransform;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	
@@ -22,47 +21,24 @@ package axl.xdef.types
 	
 	public class xText extends TextField implements ixDisplay
 	{
-		protected var xdef:XML;
-		protected var xmeta:Object={};
+		private var xdef:XML;
+		private var xmeta:Object;
 		private var xxroot:xRoot;
-		
-		private var tff:TextFormat;
-		private var xfilters:Array;
-		private var xtrans:ColorTransform;
-		private var xtransDef:ColorTransform;
-		private var trigerExt:Object;
-		private var actions:Vector.<xAction> = new Vector.<xAction>();
-		private var defaultFont:String;
-		private var metaAlreadySet:Boolean;
-		
-		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
-		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
-		public var reparseMetaEverytime:Boolean;
-		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
-		 * affects graphics drawing only. Pushing children inside happens only once per existence in
-		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
-		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
-		public var reparsDefinitionEverytime:Boolean;
-		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
-		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
-		 * and killing all animations @see #reset() */
-		public var resetOnAddedToStage:Boolean=true;
-		
-		public var debug:Boolean;
-		
-		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onAddedToStage:Object;
-		/** Function or portion of uncompiled code to execute when object is removed from stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onRemovedFromStage:Object;
+		private var xonAddedToStage:Object;
+		private var xonRemovedFromStage:Object;
+		private var xresetOnAddedToStage:Boolean = true;
+		private var xstyles:Object;
 		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
 		public var inject:String;
+		
+		private var tff:TextFormat;
+		private var trigerExt:Object;
+		private var actions:Vector.<xAction> = new Vector.<xAction>();
+		
+		public var debug:Boolean;
 		
 		/**
 		 * Property containing uncompiled code for binCommand. <br>
@@ -74,146 +50,46 @@ package axl.xdef.types
 		 * your config "code" attrubute value with dolar sign, unless you want to 
 		 * reference code containing variable to somewhere else.<br>  */
 		public var code:String;
-		
+		/** An array of two elementable arrays, where first element is textual pattern to find in textfield's text,
+		 * and second is any text-convertable source to replace pattern in text. 
+		 * <br>Example:<br><code>text = "replacement";<br>replace=[["e","a"],["m","n"]]<br></code>
+		 * result: "raplacant" */
 		public var replace:Array;
+
+		/** Function to execute when a href tag is clicked in textfield. Event type is passed to 
+		 * this function as an argument */
+		public var onLinkEvent:Function;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
 		{
+			this.xroot = xrootObj || xroot;
 			xdef = definition;
-			this.xroot = xrootObj || this.xroot;
+			xroot.support.register(this);
 			
-			if(this.xroot != null && definition != null)
-			{
-				var v:String = String(definition.@name);
-				if(v.charAt(0) == '$' )
-					v = xroot.binCommand(v.substr(1), this);
-				this.name = v;
-				xroot.registry[this.name] = this;
-			}
-					
-			defaultFont = xdefaultFont;
 			tff = new TextFormat();
 			super();
-			if(def!= null)
-				parseDef();
-			this.addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			this.addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
-			this.addEventListener(TextEvent.LINK, linkEvent);
+			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
+			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
+			addEventListener(TextEvent.LINK, linkEvent);
+			parseDef();
 		}
-		
-		public function get xroot():xRoot { return xxroot }
-		public function set xroot(v:xRoot):void	{ xxroot = v }
-		
-		/** sets both scaleX and scaleY to the same value*/
-		public function set scale(v:Number):void{ scaleX = scaleY = v }
-		/** returns average of scaleX and scaleY */
-		public function get scale():Number { return scaleX + scaleY>>1 }
-		
-		protected function linkEvent(e:TextEvent):void
-		{
-			if(trigerExt != null && ExternalInterface.available)
-				ExternalInterface.call.apply(null, trigerExt);
-			for(var i:int = 0, j:int = actions.length; i<j; i++)
-				actions[i].execute();
-			if(code != null)
-				xroot.binCommand(code,this);
-		}
-	
-		protected function addedToStageHandler(e:Event):void
-		{
-			if(resetOnAddedToStage)
-				this.reset();
-			if(meta.addedToStage != null)
-				XSupport.animByNameExtra(this, 'addedToStage');
-			if(onAddedToStage is String)
-				xroot.binCommand(onAddedToStage,this);
-			else if(onAddedToStage is Function)
-				onAddedToStage();
-		}
-		
-		protected function removeFromStageHandler(e:Event):void
-		{
-			AO.killOff(this);
-			if(onRemovedFromStage is String)
-				xroot.binCommand(onRemovedFromStage,this);
-			else if(onRemovedFromStage is Function)
-				onRemovedFromStage();
-		}
-		
+		//----------------------- INTERFACE METHODS -------------------- //
+		/** XML definition of this object @see axl.xdef.interfaces.ixDef#def */
 		public function get def():XML { return xdef }
-		public function set def(value:XML):void {
-			if(value == null)
-				return;
-			else if(xdef != null && xdef is XML && !reparsDefinitionEverytime)
+		public function set def(value:XML):void 
+		{ 
+			if((value == null))
 				return;
 			xdef = value;
 			parseDef();
 		}
-		
-		override public function set name(v:String):void
-		{
-			super.name = v;
-			if(this.xroot != null)
-				this.xroot.registry.v = this;
-		}
-		
-		protected function parseDef():void
-		{
-			if(def == null)
-				throw new Error("Undefined definition for " + this);
-			XSupport.applyAttributes(def, this);
-			var tv:String =  def.toString();
-			if(!def.hasOwnProperty('@font'))
-				tff.font = defaultFont;
-			if(!this.styleSheet)
-				this.defaultTextFormat = tff;
-			if(tv.length > 0)
-			{
-				if(def.hasOwnProperty('@html') && def.@html == 'true')
-					this.htmlText = tv;
-				else
-					this.text = tv;
-			}
-			
-			if(!def.hasOwnProperty('@width'))
-				this.width = textWidth + 5;
-			if(!def.hasOwnProperty('@height'))
-				this.height = textHeight + 5;
-		}
-		
-		public function reset():void
-		{ 
-			AO.killOff(this);
-			parseDef();
-		}
-		
-		public function get meta():Object { return xmeta }
-		
-		public function get xtransform():ColorTransform { return xtrans }
-		public function set xtransform(v:ColorTransform):void { xtrans =v; this.transform.colorTransform = v;
-			if(xtransDef == null)
-				xtransDef = new ColorTransform();
-		}
-		public function set transformOn(v:Boolean):void { this.transform.colorTransform = (v ? xtrans : xtransDef ) }
-		
-		override public function set filters(v:Array):void
-		{
-			xfilters = v;
-			super.filters=v;
-		}
-		
-		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
-		public function get filtersOn():Boolean { return filters != null }
-		
-		public function ctransform(prop:String,val:Number):void {
-			if(!xtrans)
-				xtrans = new ColorTransform();
-			xtrans[prop] = val;
-			this.transform.colorTransform = xtrans;
-		}
+		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		 *  @see axl.xdef.interfaces.ixDef#xroot*/
+		public function get xroot():xRoot { return xxroot }
+		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
 		/**
-		 * <h3>xSprite meta keywords</h3>
+		 * <h3>xText meta keywords</h3>
 		 * <ul>
 		 * <li>"replace" - array of Objects with following keys
 		 * <ol>
@@ -227,7 +103,6 @@ package axl.xdef.types
 		 * against all regular expressions in "replace" array.
 		 * </li>
 		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
-		 * <li>"addedToStageAction" - action(s) to execute when added to stage
 		 * instantiated and added to this instance</li>
 		 * <li>"action" - action(s) to execute when html link is clicked</li>
 		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method
@@ -235,41 +110,122 @@ package axl.xdef.types
 		 * </ul>
 		 * @see axl.xdef.types.xAction
 		 * @see axl.xdef.XSupport#animByNameExtra()
-		 * @see axl.utils.AO#animate()
-		 */
-		public function set meta(v:Object):void
+		 * @see axl.utils.AO#animate() */
+		public function get meta():Object { return xmeta }
+		public function set meta(v:Object):void 
 		{
 			if(v is String)
 				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
-			if((metaAlreadySet && !reparseMetaEverytime))
-				return;
+			if(!v || meta) return;
 			xmeta =v;
-			metaAlreadySet = true;
-			if(meta.hasOwnProperty('js'))
-				trigerExt = meta.js;
-			var a:Object, b:Array;
+			
 			if(meta.hasOwnProperty('action'))
 			{
-				a = meta.action;
-				b = (a is Array) ? a as Array : [a];
+				var a:Object = meta.action;
+				var b:Array = (a is Array) ? a as Array : [a];
 				for(var i:int = 0, j:int = b.length; i<j; i++)
 					actions[i] = new xAction(b[i],xroot,this);
 			}
 			refreshText();
 		}
 		
-		public function refreshText():void
+		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
+		override public function set name(v:String):void
 		{
-			var a:Array = meta.replace as Array;
-			var s:String = this.htmlText;
-			if(a != null)
-				replaceMeta(a,s);
-			a = replace as Array;
-			s = this.htmlText;
-			if(a != null)
-				replaceReplace(a,s);
+			super.name = xroot.support.requestNameChange(v,this);
 		}
 		
+		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
+		 * this object
+		 * @see axl.xdef.XSupport#applyAttrubutes()
+		 * @see #resetOnAddedToStage
+		 * @see #reparseMetaEverytime */
+		public function reset():void 
+		{
+			AO.killOff(this);
+			parseDef();
+		}
+		
+		/** Applies group of properties at once @see axl.xdef.interfaces.ixDisplay#style */
+		public function get styles():Object	{ return xstyles }
+		public function set styles(v:Object):void
+		{
+			xstyles = v;
+			xroot.support.applyStyle(v,this);
+		}
+		
+		/** Function reference or portion of uncompiled code to execute when object is removed from stage.
+		 *  An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		public function get onRemovedFromStage():Object	{ return xonRemovedFromStage }
+		public function set onRemovedFromStage(value:Object):void {	xonRemovedFromStage = value }
+		
+		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public function get onAddedToStage():Object { return xonAddedToStage }
+		public function set onAddedToStage(value:Object):void {	xonAddedToStage = value }
+		
+		/** Determines if object is going to be brought to it's original XML defined values. 
+		 * @see axl.interfaces.ixDisplay#resetOnAddedToStage */
+		public function get resetOnAddedToStage():Boolean {	return xresetOnAddedToStage }
+		public function set resetOnAddedToStage(value:Boolean):void { xresetOnAddedToStage = value}
+		
+		//----------------------- INTERFACE METHODS -------------------- //
+		//----------------------- INTERFACE SUPPORT -------------------- //
+		/** Executes defaultAddedToStageSequence +  Starts listening to ENTER_FRAME events 
+		 * if <code>sortZ=true</code> @see axl.xdef.types.XSuppot#defaultAddedToStageSequence() */
+		protected function addedToStageHandler(e:Event):void
+		{
+			xroot.support.defaultAddedToStageSequence(this);
+		}
+		
+		/**Removes ENTER_FRAME event listener if assigned +  Executes defaultRemovedFromStage
+		 *  @see axl.xdef.types.XSuppot#defaultRemovedFromStageSequence() */
+		protected function removeFromStageHandler(e:Event):void
+		{ 
+			xroot.support.defaultRemovedFromStageSequence(this);
+		}
+		/** Re-asigns original XML values, re-sets the style, autosizes width/height if not specifed */
+		protected function parseDef():void
+		{
+			if(def == null)
+				throw new Error("Undefined definition for " + this);
+			XSupport.applyAttributes(def, this);
+			var tv:String =  def.toString();
+			/*if(!def.hasOwnProperty('@font'))
+				tff.font = defaultFont;*/
+			if(!this.styleSheet)
+				this.defaultTextFormat = tff;
+			if(tv.length > 0)
+			{
+				if(def.hasOwnProperty('@html') && def.@html == 'true')
+					this.htmlText = tv;
+				else
+					this.text = tv;
+			}
+			autoSizeText();
+		}
+		//----------------------- INTERFACE SUPPORT -------------------- //
+		//----------------------- OVERRIDEN METHODS -------------------- //
+		override public function set text(value:String):void
+		{
+			super.text = value;
+			refreshText();
+		}
+		
+		override public function set htmlText(value:String):void
+		{
+			super.htmlText = value;
+			refreshText();
+		}
+		//----------------------- OVERRIDEN METHODS -------------------- //
+		//----------------------- INTERNAL METHODS -------------------- //
+		private function autoSizeText():void
+		{
+			if(!def.hasOwnProperty('@width'))
+				this.width = textWidth + 5;
+			if(!def.hasOwnProperty('@height'))
+				this.height = textHeight + 5;
+		}
 		private function replaceReplace(a:Array, s:String):void
 		{
 			for(var i:int =0, j:int = a.length;i<j;i++)
@@ -305,17 +261,40 @@ package axl.xdef.types
 			}
 			super.htmlText = s;
 		}
-		
-		override public function set text(value:String):void
+		/** Trigers actions when user clicks on a href tag. Available actions:
+		 * meta.js, meta.actions, code (generic) and onLinkEvent (specific) where,
+		 * event type is passed to the function as an argument. */
+		protected function linkEvent(e:TextEvent):void
 		{
-			super.text = value;
-			refreshText();
+			if(trigerExt != null && ExternalInterface.available)
+				ExternalInterface.call.apply(null, trigerExt);
+			for(var i:int = 0, j:int = actions.length; i<j; i++)
+				actions[i].execute();
+			if(code != null)
+				xroot.binCommand(code,this);
+			if(onLinkEvent != null)
+				onLinkEvent(e.type);
 		}
+		//----------------------- INTERNAL METHODS -------------------- //
+		//-----------------------OTHER PUBLIC API -------------------- //
+		/** sets both scaleX and scaleY to the same value*/
+		public function set scale(v:Number):void{ scaleX = scaleY = v }
+		/** returns average of scaleX and scaleY */
+		public function get scale():Number { return (scaleX + scaleY)/2 }
 		
-		override public function set htmlText(value:String):void
+		/** Reevaluates replace statements defined in meta.replace array and attribute 
+		 * <i>replace</i> array. Re-asignes text of textfield in according to these. */
+		public function refreshText():void
 		{
-			super.htmlText = value;
-			refreshText();
+			var a:Array = meta.replace as Array;
+			var s:String = this.htmlText;
+			if(a != null)
+				replaceMeta(a,s);
+			a = replace as Array;
+			s = this.htmlText;
+			if(a != null)
+				replaceReplace(a,s);
+			autoSizeText();
 		}
 		
 		public function get align():String { return tff.align }

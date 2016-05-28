@@ -17,7 +17,6 @@ package axl.xdef.types
 
 	public class xForm extends xSprite
 	{
-		
 		private var currentFocused:xText;
 		private var indicatorProperties:Object = {thickness:2,color:0xFFFFFF,alpha:1,pixelHinting:true,scaleMode:"normal",caps:null,joints:null,miterLimit:3};
 
@@ -68,7 +67,7 @@ package axl.xdef.types
 			currentFocused.parent.addChild(indicator);
 		}
 		
-		override protected function elementAdded(e:Event):void
+		override protected function elementAddedHandler(e:Event):void
 		{
 			super.elementAdded(e);
 			var xb:xButton = e.target as xButton;

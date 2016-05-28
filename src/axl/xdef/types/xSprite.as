@@ -10,7 +10,6 @@
 package axl.xdef.types
 {
 	import flash.display.DisplayObject;
-	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.ColorTransform;
@@ -20,236 +19,198 @@ package axl.xdef.types
 	import axl.utils.U;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
+	import axl.xdef.interfaces.ixDisplayContainer;
 	
-	/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.
+	/** 
+	 * Main DisplayObjectContainer class for XML defined objects. Can contain any children.<br>
+	 * Instantiated from:<h3>
+	 * <code>&lt;div&gt;<br>&lt;/div&gt;</code></h3>
 	 * Overrides standard addChild, addChildAt, removeChild, removeChildAt methods in order
-	 * to maintain meta-keyword-defined animations before removing children or after adding them to display list.
+	 * to maintain meta-keyword-defined animations before removal or after addition children to display list.
 	 * Self-listens for adding and removing from stage in order to maintain meta.addedToStage defined animation
 	 * and to kill all existing animations when removed.
+	 * <h3>Adding children to display list of xSprite container</h3>
+	 * Children of xml node will automatically become children of xSprite instance. Example:<br>
+	 * <pre>&lt;div&gt;<br>&#9;&lt;img src='image1.png'/&gt;<br><br>&#9;&lt;img src='image2.png'/&gt;<br>&lt;/div&gt;</pre>
 	 * @see #meta() */
-	public class xSprite extends Sprite implements ixDisplay
+	public class xSprite extends Sprite implements ixDisplayContainer
 	{
-		protected var xdef:XML;
-		protected var xmeta:Object={};
+		private var xdef:XML;
+		private var xmeta:Object;
 		private var xxroot:xRoot;
-		public var debug:Boolean;
-		protected var xfilters:Array
-		protected var xtrans:ColorTransform;
-		private var intervalID:uint;
-		private var metaAlreadySet:Boolean;
+		private var xonAddedToStage:Object;
+		private var xonRemovedFromStage:Object;
+		private var xonChildrenCreated:Object;
+		private var xonElementAdded:Object;
+		private var xresetOnAddedToStage:Boolean=true;
+		private var xstyles:Object;
 		private var xsortZ:Boolean=false;
 		
-		/** Function or portion of uncompiled code to execute when all original structure xml children are
-		 * added to container's display list. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onChildrenCreated:Object;
-		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onAddedToStage:Object;
-		/** Function or portion of uncompiled code to execute when object isremoved from stage. An argument for binCommand.
-		 * Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var onRemovedFromStage:Object;
+		public var debug:Boolean;
+		protected var xtrans:ColorTransform;
 		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
 		public var inject:String;
-		/** Distributes  children horizontaly with gap specified by this property. 
-		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
-		public var distributeHorizontal:Number;
-		/** Distributes  children verticaly with gap specified by this property. 
-		 * If not set - no distrbution occur @see axl.utils.U#distribute() */
-		public var distributeVertical:Number;
+		/** Distributes  children horizontaly with gap specified by this property.
+		 * This can be an array of gaps or single number. If not set - no distrbution occurs.
+		 *  @see axl.utils.U#distribute()  @see axl.utils.U#distributePattern()*/
+		public var distributeHorizontal:Object;
+		/** Distributes  children verticaly with gap specified by this property.
+		 * This can be an array of gaps or single number. If not set - no distrbution occurs.
+		 *  @see axl.utils.U#distribute()  @see axl.utils.U#distributePattern()*/ 
+		public var distributeVertical:Object;
 		
-		/** Every time META object is set (directly or indirectly - via <code>reset - XSupport.applyAttributes</code>
-		 * method) object can be rebuild or set just once per existence @default false @see #reset() */
-		public var reparseMetaEverytime:Boolean;
-		/** Every time object XML definition is set definition can be re-read. For <code>xSprite</code> it 
-		 * affects graphics drawing only. Pushing children inside happens only once per existence in
-		 *  <code>XSupport.getReadyType2 - pushReadyTypes2</code>  @default false 
-		 * @see axl.xdef.XSupport#getReadyType2() @see axl.xdef.XSupport#pushReadyTypes2() */
-		public var reparsDefinitionEverytime:Boolean;
-		/** Every time object is (re)added to stage method <code>reset</code> can be called. 
-		 * Aim of method reset is to bring object to its initial state (defined by xml) by reparsing it's attributes
-		 * and killing all animations @see #reset() */
-		public var resetOnAddedToStage:Boolean=true;
-		
-		/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.
-		 * Overrides standard addChild, addChildAt, removeChild, removeChildAt methods in order
-		 * to maintain meta-keyword-defined animations before removing children or after adding them to display list.
-		 * Self-listens for adding and removing from stage in order to maintain meta.addedToStage defined animation
-		 * and to kill all existing animations when removed.
-		 * @see #meta() */
+		/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.<br>
+		 * @param definition - xml definition
+		 * @param xroot - reference to parent xRoot object
+		 * @see axl.xdef.types.xSprite
+		 * @see axl.xdef.interfaces.ixDef#def
+		 * @see axl.xdef.interfaces.ixDef#xroot
+		 * @see axl.xdef.XSupport#getReadyType2()  */
 		public function xSprite(definition:XML=null,xrootObj:xRoot=null)
 		{
-			addEventListener(Event.ADDED, elementAdded);
+			this.xroot = xrootObj || this.xroot;
+			this.xdef = definition;
+			xroot.support.register(this);
+			
+			addEventListener(Event.ADDED, elementAddedHandler);
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removeFromStageHandler);
-			this.xroot = xrootObj || this.xroot;
-			if(this.xroot != null && definition != null)
-			{
-				var v:String = String(definition.@name);
-				if(v.charAt(0) == '$' )
-					v = xroot.binCommand(v.substr(1), this);
-				this.name = v;
-				xroot.registry[this.name] = this;
-			}
-			else if (!(this is xRoot))
-				U.log(this, this.name, "[WARINING] ELEMENT HAS" ,xroot,  'as root and ', definition? definition.name() : "null", 'node as def.', this is xRoot)
-			xdef = definition;
+			
 			super();
 			parseDef();
-			
 		}
-		public function get sortZ():Boolean { return xsortZ;}
-		public function set sortZ(v:Boolean):void
-		{
-			if(xsortZ == v)
-				return
-			xsortZ = v;
-			if(!v)
-				this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
-			else if(v && this.stage != null)
-				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		//----------------------- INTERFACE METHODS -------------------- //
+
+		/** XML definition of this object @see axl.xdef.interfaces.ixDef#def */
+		public function get def():XML { return xdef }
+		public function set def(value:XML):void 
+		{ 
+			if((value == null))
+				return;
+			xdef = value;
+			parseDef();
 		}
-		
-		private function onEnterFrame(event:Event):void
-		{
-			if(this.parent)
-				sort(this.parent);
-		}
-		
-		public function sort(targetContainer:DisplayObjectContainer=null):void 
-		{
-			var i:int;
-			
-			var distArray:Array=[];
-			
-			var curMid:Vector3D;
-			
-			var curDist:Number;
-			var observerPos:Vector3D=new Vector3D();
-			observerPos.x=root.transform.perspectiveProjection.projectionCenter.x;
-			observerPos.y=root.transform.perspectiveProjection.projectionCenter.y;
-			observerPos.z=-root.transform.perspectiveProjection.focalLength;
-			var numc:int = this.numChildren;
-			var sortMethod:String = 'distObserver';
-			var c:DisplayObject;
-			for(i=0;i<numc;i++)
-			{
-				c = this.getChildAt(i);
-				curMid=c.transform.getRelativeMatrix3D(root).position.clone();
-				curDist=Math.sqrt(Math.pow(curMid.x-observerPos.x,2)+Math.pow(curMid.y-observerPos.y,2)+Math.pow(curMid.z-observerPos.z,2));
-				distArray[i] = {distance:curDist,child:c}
-			}
-			
-			distArray.sortOn("distance", Array.NUMERIC | Array.DESCENDING);
-			i = distArray.length;
-			while(i-->0)
-			{
-				//U.log(distArray[i].child.name, 'on distance', distArray[i].distance);
-				this.setChildIndex(distArray[i].child, i);
-			}
-		}
-		/** reference to parent xRoot object @see axl.xdef.types.xRoot */
+		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		 * @see axl.xdef.interfaces.ixDef#xroot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
-		/** sets both scaleX and scaleY to the same value*/
-		public function set scale(v:Number):void{	scaleX = scaleY = v }
-		/** returns average of scaleX and scaleY */
-		public function get scale():Number { return scaleX + scaleY>>1 }
-		
-		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
-		override public function set name(v:String):void
-		{
-			super.name = v;
-			if(this.xroot != null)
-				this.xroot.registry.v = this;
-		}
-		
-		protected function removeFromStageHandler(e:Event):void
-		{ 
-			this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
-			AO.killOff(this);
-			if(onRemovedFromStage is String)
-				xroot.binCommand(onRemovedFromStage,this);
-			else if(onRemovedFromStage is Function)
-				onRemovedFromStage();
-		}
-	
-		protected function addedToStageHandler(e:Event):void
-		{
-			if(resetOnAddedToStage)
-				this.reset();
-			if(meta.addedToStage != null)
-				XSupport.animByNameExtra(this, 'addedToStage');
-			if(onAddedToStage is String)
-				xroot.binCommand(onAddedToStage,this);
-			else if(onAddedToStage is Function)
-				onAddedToStage();
-			if(this.sortZ)
-				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
-		}
-		
-		protected function elementAdded(e:Event):void { redistribute();}
-		
-		public function redistribute():void
-		{
-			if(!isNaN(distributeHorizontal))
-				U.distribute(this,distributeHorizontal,true);
-			if(!isNaN(distributeVertical))
-				U.distribute(this,distributeVertical,false);
-		}
-		
 		/**
+		 *  Dynamic variables container. It's set up only once. Subsequent applying XML attributes
+		 * or calling reset() will not have an effect. 
 		 * <h3>xSprite meta keywords</h3>
 		 * <ul>
 		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
 		 * <li>"addChild" - animation to execute when added as a child</li>
 		 * <li>"removeChild" - animation to execute before removing from stage (delays removing from stage)</li>
-		 * <li>"addedToStageAction" - action(s) to execute when added to stage</li>
-		 * <li>"childrenCreatedAction" - acction(s) to execute when all initial children (from xml children nodes) are
 		 * instantiated and added to this instance</li>
 		 * </ul>
-		 * @see axl.xdef.types.xAction
 		 * @see axl.xdef.XSupport#animByNameExtra()
-		 * @see axl.utils.AO#animate()
-		 */
+		 * @see axl.utils.AO#animate() */
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void 
 		{
 			if(v is String)
 				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
-			if(!v || (metaAlreadySet && !reparseMetaEverytime))
-				return;
+			if(!v || meta) return;
 			xmeta =v;
-			metaAlreadySet = true;
-			var a:Object, b:Array, i:int, j:int;
 		}
+		
+		/** Sets name and registers object in registry 
+		 * @see axl.xdef.types.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
+		override public function set name(v:String):void
+		{
+			super.name = xroot.support.requestNameChange(v,this);
+		}
+		
 		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
 		 * this object
 		 * @see axl.xdef.XSupport#applyAttrubutes()
 		 * @see #resetOnAddedToStage
-		 * @see #reparseMetaEverytime
-		 * */
-		public function reset():void {
+		 * @see #reparseMetaEverytime */
+		public function reset():void 
+		{
 			AO.killOff(this);
 			XSupport.applyAttributes(def, this);	
 		}
-		/** XML definition of this object*/
-		public function get def():XML { return xdef }
-		public function set def(value:XML):void 
-		{ 
-			if((value == null) || (xdef != null && xdef is XML && !reparsDefinitionEverytime))
-				return;
-			xdef = value;
-			parseDef();
+		
+		/** Applies group of properties at once @see axl.xdef.interfaces.ixDisplay#style */
+		public function get styles():Object	{ return xstyles }
+		public function set styles(v:Object):void
+		{
+			xstyles = v;
+			xroot.support.applyStyle(v,this);
 		}
 		
+		/** Function reference or portion of uncompiled code to execute when object is removed from stage.
+		 *  An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		public function get onRemovedFromStage():Object	{ return xonRemovedFromStage }
+		public function set onRemovedFromStage(value:Object):void {	xonRemovedFromStage = value }
+		
+		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public function get onAddedToStage():Object { return xonAddedToStage }
+		public function set onAddedToStage(value:Object):void {	xonAddedToStage = value }
+		
+		/** Determines if object is going to be brought to it's original XML defined values. 
+		 * @see axl.interfaces.ixDisplay#resetOnAddedToStage */
+		public function get resetOnAddedToStage():Boolean {	return xresetOnAddedToStage }
+		public function set resetOnAddedToStage(value:Boolean):void { xresetOnAddedToStage = value}
+		
+		/** Function or portion of uncompiled code to execute when all original structure xml children are
+		 * added to container's display list. An argument for binCommand.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public function get onChildrenCreated():Object { return xonChildrenCreated }
+		public function set onChildrenCreated(value:Object):void { xonChildrenCreated = value }
+		
+		/** Function or portion of uncompiled code to execute when any DisplayObject is added to
+		 * this instance display list. An argument for binCommand.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public function get onElementAdded():Object { return xonElementAdded }
+		public function set onElementAdded(value:Object):void { xonElementAdded = value }
+		
+		
+		//----------------------- INTERFACE METHODS -------------------- //
+		//----------------------- INTERFACE SUPPORT -------------------- //
+		/** Draws graphic commands  */
+		protected function parseDef():void
+		{
+			if(xdef==null)
+				return;
+			XSupport.drawFromDef(def.graphics[0], this);
+		}
+		
+		/** Executes defaultAddedToStageSequence +  Starts listening to ENTER_FRAME events 
+		 * if <code>sortZ=true</code> @see axl.xdef.types.XSuppot#defaultAddedToStageSequence() */
+		protected function addedToStageHandler(e:Event):void
+		{
+			xroot.support.defaultAddedToStageSequence(this);
+			if(this.sortZ)
+				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		}
+		
+		/**Removes ENTER_FRAME event listener if assigned +  Executes defaultRemovedFromStage
+		 *  @see axl.xdef.types.XSuppot#defaultRemovedFromStageSequence() */
+		protected function removeFromStageHandler(e:Event):void
+		{ 
+			this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+			xroot.support.defaultRemovedFromStageSequence(this);
+		}
+		/** Executes <code>onElementAdded</code> if defined and redistributes children if 
+		 * <code>distributeHorizontal</code> or <code>distrubuteVertical</code> defined*/
+		protected function elementAddedHandler(e:Event):void 
+		{ 
+			if(onElementAdded is String)
+				xroot.binCommand(onElementAdded,this);
+			else if(onElementAdded is Function)
+				onElementAdded();
+			redistribute();
+		}
+		//----------------------- INTERFACE SUPPORT -------------------- //
+		//----------------------- OVERRIDEN METHODS -------------------- //
 		override public function addChild(child:DisplayObject):DisplayObject
 		{
 			super.addChild(child);
@@ -261,6 +222,7 @@ package axl.xdef.types
 			}
 			return child;
 		}
+		
 		override public function addChildAt(child:DisplayObject, index:int):DisplayObject
 		{
 			super.addChildAt(child, index);
@@ -300,21 +262,80 @@ package axl.xdef.types
 			function acomplete():void { f(index) }
 			return c as DisplayObject;
 		}
-		
-		protected function parseDef():void
+		//----------------------- OVERRIDEN METHODS -------------------- //
+		//----------------------- INTERNAL METHODS -------------------- //
+		private function onEnterFrame(e:Event):void
 		{
-			if(xdef==null)
-				return;
-			XSupport.drawFromDef(def.graphics[0], this);
+			sort();
+		}
+		//----------------------- INTERNAL METHODS -------------------- //
+		//----------------------- OTHER PUBLIC API -------------------- //
+		/** Enables or disables depth sorting  */
+		public function get sortZ():Boolean { return xsortZ;}
+		public function set sortZ(v:Boolean):void
+		{
+			if(xsortZ == v)
+				return
+			xsortZ = v;
+			if(!v)
+				this.removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+			else if(v && this.stage != null)
+				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
-		override public function set filters(v:Array):void
+		public function sort():void 
 		{
-			xfilters = v;
-			super.filters=v;
+			var i:int;
+			var distArray:Array=[];
+			var curMid:Vector3D;
+			var curDist:Number;
+			var observerPos:Vector3D=new Vector3D();
+			observerPos.x=root.transform.perspectiveProjection.projectionCenter.x;
+			observerPos.y=root.transform.perspectiveProjection.projectionCenter.y;
+			observerPos.z=-root.transform.perspectiveProjection.focalLength;
+			var numc:int = this.numChildren;
+			var sortMethod:String = 'distObserver';
+			var c:DisplayObject;
+			for(i=0;i<numc;i++)
+			{
+				c = this.getChildAt(i);
+				curMid=c.transform.getRelativeMatrix3D(root).position.clone();
+				curDist=Math.sqrt(Math.pow(curMid.x-observerPos.x,2)+Math.pow(curMid.y-observerPos.y,2)+Math.pow(curMid.z-observerPos.z,2));
+				distArray[i] = {distance:curDist,child:c}
+			}
+			
+			distArray.sortOn("distance", Array.NUMERIC | Array.DESCENDING);
+			i = distArray.length;
+			while(i-->0)
+			{
+				this.setChildIndex(distArray[i].child, i);
+			}
 		}
-		/** Sets assigned  filters on or off @see #filters */
-		public function set filtersOn(v:Boolean):void {	super.filters = (v ? xfilters : null) }
-		public function get filtersOn():Boolean { return filters != null }
+		
+		/** Combined scaleX and scaleY properties. Useful for maintaining aspect ratio whilst animations */
+		public function set scale(v:Number):void{	scaleX = scaleY = v }
+		public function get scale():Number { return scaleX + scaleY>>1 }
+		
+		/** If <code>distributeHorizontal</code> or <code>distributeVertical</code> specified,
+		 * runs through every child of this container and distributes it horizontally and/or 
+		 * vertically. Called automatically on every Evetn.ADDED. @see #distributeHorizontal  
+		 * @see #distributeVertical @see axl.utils.U#distribute()  @see axl.utils.U#distributePattern()*/
+		public function redistribute():void
+		{
+			if(distributeHorizontal != null)
+			{
+				if(distributeHorizontal is Array)
+					U.distributePattern(this,distributeHorizontal,true);
+				else if(!isNaN(Number(distributeHorizontal)))
+					U.distribute(this,Number(distributeHorizontal),true);
+			}
+			if(distributeVertical != null)
+			{
+				if(distributeVertical is Array)
+					U.distributePattern(this,distributeVertical,false);
+				else if(!isNaN(Number(distributeVertical)))
+					U.distribute(this,Number(distributeVertical),false);
+			}
+		}
 	}
 }

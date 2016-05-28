@@ -53,9 +53,9 @@ package axl.xdef.types
 			boxControll.box = train;
 		}
 		
-		override protected function elementAdded(e:Event):void
+		override protected function elementAddedHandler(e:Event):void
 		{
-			super.elementAdded(e);
+			super.elementAddedHandler(e);
 			switch (e.target.name)
 			{
 				case 'rail': rail = boxControll.bound = e.target as DisplayObject; break;
