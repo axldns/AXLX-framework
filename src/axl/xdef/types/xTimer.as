@@ -9,13 +9,17 @@
  */
 package axl.xdef.types
 {
+	import axl.utils.AO;
 	import axl.utils.Counter;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
-
+	/** Non-displayable class that provides advanced timer functions. Instantiated 
+	 * from: <h3><code>&lt;timer/&gt;</code></h3>
+	 * Extends axl.utils.Counter by providing XML interface to it. Additionaly,
+	 * ancestor's callback can be defined as uncompiled portion of code - an
+	 * arguments for xRoot.binCommand. @see axl.utils.Counter @see axl.xdef.types.xRoot#binCommand */
 	public class xTimer extends Counter implements ixDef
 	{
-		public var reparseMetaEverytime:Boolean;
 		private var root:xRoot;
 		private var xdef:XML;
 		private var xname:String;
@@ -23,37 +27,63 @@ package axl.xdef.types
 		private var xmeta:Object;
 		private var xxroot:xRoot;
 		
-		public function xTimer(definition:XML,xroot:xRoot=null)
+		/** Non-displayable class that provides advanced timer functions. Instantiated 
+		 * from <code>&lt;timer/&gt;</code> 
+		 * @param definition - xml definition @param xroot - reference to parent xRoot object
+		 * @see axl.xdef.types.xTimer
+		 * @see axl.xdef.interfaces.ixDef#def
+		 * @see axl.xdef.interfaces.ixDef#xroot
+		 * @see axl.xdef.XSupport#getReadyType2() */
+		public function xTimer(definition:XML,xrootObj:xRoot=null)
 		{
-			xxroot = xroot;
-			xdef = definition;
-			if(this.xroot != null && definition != null)
-			{
-				var v:String = String(definition.@name);
-				if(v.charAt(0) == '$' )
-					v = xroot.binCommand(v.substr(1), this);
-				this.name = v;
-				xroot.registry[this.name] = this;
-			}
+			this.xroot = xrootObj || this.xroot;
+			this.xdef = definition;
+			xroot.support.register(this);
 		}
+		//----------------------- INTERFACE METHODS -------------------- //
+		/** XML definition of this object @see axl.xdef.interfaces.ixDef#def */
+		public function get def():XML { return xdef }
+		public function set def(value:XML):void 
+		{ 
+			if((value == null))
+				return;
+			xdef = value;
+			XSupport.applyAttributes(def, this);	
+		}
+		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		 * @see axl.xdef.interfaces.ixDef#xroot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
+		/** Dynamic variables container. It's set up only once. Subsequent applying XML attributes
+		 * or calling reset() will not have an effect. 
+		 * @see axl.xdef.interfaces#meta */
 		public function get meta():Object { return xmeta }
 		public function set meta(v:Object):void 
 		{
 			if(v is String)
 				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
-			if((metaAlreadySet && !reparseMetaEverytime))
-				return;
+			if(!v || meta) return;
 			xmeta =v;
-			metaAlreadySet = true;
 		}
 		
-		public function get def():XML { return xdef }
-		public function set def(v:XML):void { xdef = v }
+		/** Sets name and registers object in registry 
+		 * @see axl.xdef.types.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
+		override public function set name(v:String):void
+		{
+			super.name = xroot.support.requestNameChange(v,this);
+		}
 		
-		public function reset():void {	XSupport.applyAttributes(def,this) }
+		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
+		 * this object
+		 * @see axl.xdef.XSupport#applyAttrubutes()
+		 * @see #resetOnAddedToStage
+		 * @see #reparseMetaEverytime */
+		public function reset():void 
+		{
+			AO.killOff(this);
+			XSupport.applyAttributes(def, this);	
+		}
 		
 		override protected function executeOnTimeIndexChange():void
 		{
