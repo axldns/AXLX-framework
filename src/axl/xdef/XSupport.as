@@ -22,6 +22,7 @@ package axl.xdef
 	import axl.utils.U;
 	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.interfaces.ixDisplay;
+	import axl.xdef.interfaces.ixDisplayContainer;
 	import axl.xdef.types.xActionSet;
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
@@ -355,7 +356,7 @@ package axl.xdef
 		 * @param xroot - root of all XML based objects (stage equivalent)
 		 * @see #getReadyType2()
 		 * */
-		public function pushReadyTypes2(def:XML, container:DisplayObject, decorator:Function=null,xroot:xRoot=null):void
+		public function pushReadyTypes2(def:XML, container:Object, decorator:Function=null,xroot:xRoot=null):void
 		{
 			if(def == null)
 			{
@@ -411,14 +412,14 @@ package axl.xdef
 			{
 				if(numC != 0)
 					return;
-				if(container.hasOwnProperty('debug') && container['debug'])
+				var cont:ixDisplayContainer = container as ixDisplayContainer;
+				if(cont == null) return;
+				if(cont['debug'])
 					xroot.log("Children created for", container.name);
-				if(container && container.hasOwnProperty('onChildrenCreated'))
-				{
-					var c:* = container['onChildrenCreated'];
-					if(c is String) xroot.binCommand(c,container);
-					else if(c is Function) c();
-				}
+				if(cont.onChildrenCreated is Function)
+					cont.onChildrenCreated();
+				else if(cont.onChildrenCreated is String)
+					xroot.binCommand(cont.onChildrenCreated,cont);
 			}
 		}
 		/** Loads resource specified as "src" attribute of xml object. Executes callback with xml as attribute.
@@ -612,9 +613,10 @@ package axl.xdef
 		 * Executes function or evaluates code assigned to <code>onAddedToStage</code> property.<br>*/
 		public function defaultAddedToStageSequence(t:ixDisplay):void
 		{
+			if(!t) return;
 			if(t.resetOnAddedToStage)
 				t.reset();
-			if(t.meta.addedToStage != null)
+			if(t.meta && t.meta.addedToStage != null)
 				animByNameExtra(t, 'addedToStage');
 			if(t.onAddedToStage is String)
 				root.binCommand(t.onAddedToStage,this);
