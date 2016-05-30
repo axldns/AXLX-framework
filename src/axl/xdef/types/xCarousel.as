@@ -15,7 +15,14 @@ package axl.xdef.types
 	import axl.utils.AO;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplayContainer;
-	
+
+	/** Class makes use of axl.ui.Carusele class and provides XML interface to it. 
+	 * Instantiated from: <h3><code>&lt;carousel/&gt;</code></h3>Distributes all children from center 
+	 * registration point. Allows to shift children horizontaly or vertically and re-aranges them
+	 * when shifting point reaches <code>maxOffset</code> value. Movements defined by <code>movementBit</code>
+	 * function is defined in pixels - it isn't "next element aware". To provide 
+	 * transitioning from element to element use axl.xdef.types.CarouselSelectable class.
+	 * @see axl.ui.Carusele @see axl.ui.Carusele#movementBit() @see axl.xdef.types.CarouselSelectable */
 	public class xCarousel extends Carusele implements ixDisplayContainer
 	{
 		private var xdef:XML;
@@ -32,7 +39,11 @@ package axl.xdef.types
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
 		 * @see axl.xdef.types.xRoot#binCommand() */
 		public var inject:String;
-		
+		/** Class makes use of axl.ui.Carusele class and provides XML interface to it.  Instantiated from:
+		 * <h3><code>&lt;carousel/&gt;</code></h3>Distributes all children from center  registration point.
+		 * @param definition - xml definition  @param xroot - reference to parent xRoot object
+		 * @see axl.xdef.types.xCarousel  @see axl.xdef.interfaces.ixDef#def
+		 * @see axl.xdef.interfaces.ixDef#xroot @see axl.xdef.XSupport#getReadyType2() */
 		public function xCarousel(definition:XML,xrootObj:xRoot=null)
 		{
 			this.xroot = xrootObj || this.xroot;
@@ -90,10 +101,7 @@ package axl.xdef.types
 		}
 		
 		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
-		 * this object
-		 * @see axl.xdef.XSupport#applyAttrubutes()
-		 * @see #resetOnAddedToStage
-		 * @see #reparseMetaEverytime */
+		 * this object @see axl.xdef.XSupport#applyAttrubutes() @see #resetOnAddedToStage */
 		public function reset():void 
 		{
 			AO.killOff(this);
@@ -159,7 +167,7 @@ package axl.xdef.types
 		{ 
 			xroot.support.defaultRemovedFromStageSequence(this);
 		}
-		
+		/** Executes <code>onElementAdded</code> if defined and redistributes children*/
 		protected function elementAddedHandler(e:Event):void 
 		{ 
 			if(onElementAdded is String)
