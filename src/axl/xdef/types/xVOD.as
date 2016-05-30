@@ -41,58 +41,97 @@ package axl.xdef.types
 		private var FIRST_FILL:Boolean=true;
 		private var IS_PAUSED:Boolean=false;
 		
-		//------------------- PUBLIC -------------//
-		public var AUTOPLAY:Boolean = true;
-		public var useStageVideo:Boolean=false;
-		public var keepAspectRatio:Boolean=true;
-		public var netStausEventFunctionMap:Object = {};
 		
+		//------------------- PUBLIC -------------//
+		/** Determines if video is going to start playing ASAP or stays paused waiting
+		 * for play command.  */
+		public var AUTOPLAY:Boolean = true;
+		/** Not supported yet */
+		public var useStageVideo:Boolean=false;
+		/** Determines if setting width / height should allow to squeeze video (false)
+		 * or always maintain aspect ratio (true) @default true */
+		public var keepAspectRatio:Boolean=true;
+		/** Allows to define user actions on not covered cases in response to 
+		 * event.info.code of NetStatusEvent. Currently covered cases:
+		 * <ul><li>NetConnection<ul><li>Connect.Success</li><li>Connect.Rejected</li>
+		 * <li>Connect.Closed</li><li>Call.failed</li></ul></li>
+		 * <li>NetStream<ul><li>Play.StreamNotFound</li><li>Play.Failed</li><li>Play.Start</li>
+		 * <li>Play.Stop</li><li>Buffer.Full</li><li>Buffer.Empty</li>* <li>Pause.Notify</li>
+		 * <li>Unause.Notify</li></ul></li> </ul> */
+		public var netStausEventFunctionMap:Object = {};
+		/** Sets the initial number of seconds of video that has to be loaded before it's available to play. */
 		public var bufferInitial:Number = 1;
+		/** Determines if instance should be disposed once video is finished. Disposed instances can not 
+		 * be re-used @default true*/
 		public var destroyOnEnd:Boolean=true;
+		/** Specifies number of miliseconds before re-connect if previous connection attempt failed and 
+		 * <code>reconnectAttemptsNo > 0</code> @see #reconnectAttemptsNo*/
 		public var reconnectGapMs:int = 2;
+		/** If server has rejected connection request or internet connection is down, player can try to re-connect.
+		 * This property defines how many times the reconnect attempt should be made before giving up (destroy)
+		 * @see #reconnectGapMs @see #destroy() */
 		public var reconnectAttemptsNo:int;
 		
-		public var onExit:Function;
-		public var onPlayStart:Function;
-		public var onBufferFull:Function;
-		public var onBufferEmpty:Function;
-		public var onComplete:Function;
-		public var onPlayStop:Function;
-		
+		/** Function or portion of uncompiled code to execute when video playback reaches an end, before 
+		 * posible exit sequence. An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onComplete:Object;
+		/** Function or portion of uncompiled code to execute when an exit sequence occurs.
+		 * This may happen for various reasons: video reaches an end, video has been removed from stage,
+		 * <code>destroy</code> method has been called manually, security error on net connection occured, exceeded 
+		 * amount of re-connections, NetConnection.Call.Failed, NetConnection.Connect.Closed, NetStream.Play.StreamNotFound,
+		 * NetStream.Play.Failed.<br>An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onExit:Object;
+		/** Function or portion of uncompiled code to execute when video starts playing. Both initial and unpause states.
+		 * An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onPlayStart:Object;
+		/** Function or portion of uncompiled code to execute when video buffer reaches it's maximum value (
+		 * <code>bufferInitial</code>, then switched to <code>bufferPlayback</code>). Tracking execution of
+		 * this callback allows to increase buffer and if hit again - interpretate as sign of
+		 *  good bandwidth, hence potential juggle to better quality should be considered (if available).
+		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onBufferFull:Object;
+		/** Function or portion of uncompiled code to execute when video buffer gets empty, typically bandwidth
+		 * can't keep up, hence potential juggle to lower quality should be considered (if available). 
+		 * This may also happen as a consequence of internet connection loss.
+		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onBufferEmpty:Object;
+		/** Function or portion of uncompiled code to execute when video is paused. First execution may occur
+		 * right after video is available for play but <code>AUTOPLAY = false</code> (video is paused then). 
+		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onPlayStop:Object;
 		
 		public function xVOD(definition:XML=null, xrootObj:xRoot=null)
 		{
 			super(definition, xrootObj);
-			//THE CHAIN: nc---connect---netStatusHandler---ON_CONNECTED---[build net stream, build video, attach stream]--play stream---netStatusHandler---NetStream.Play.Start---
 		}
 		
-		private function dealWithStage(xrootObj:xRoot):void
+		private function dealWithStage():void
 		{
-			if(xrootObj.stage)
-				getStageVideos(xrootObj.stage);
+			if(xroot.stage)
+				getStageVideos(xroot.stage);
 			else
 			{	
-				xrootObj.addEventListener(Event.ADDED_TO_STAGE, function xrootObjOnStage(e:Event):void
+				xroot.addEventListener(Event.ADDED_TO_STAGE, function xrootObjOnStage(e:Event):void
 				{
-					xrootObj.removeEventListener(Event.ADDED_TO_STAGE, xrootObjOnStage);
-					getStageVideos(xrootObj.stage);
+					xroot.removeEventListener(Event.ADDED_TO_STAGE, xrootObjOnStage);
+					getStageVideos(xroot.stage);
 				});
 			}
 		}		
 		
 		private function getStageVideos(stage:Stage):void
 		{
-			U.log(this, '[getStageVideos]', stage);
+			if(debug) U.log(this, '[getStageVideos]', stage);
 		}
 	
 		//------------------------------------------------------ END OF STAGE SECTION ------------------------------------------------------//
 		//------------------------------------------------------ CONNECTION SECTION ------------------------------------------------------//
 		private function build_netConnection():void
 		{
-			U.log(this,"build_netConnection");
+			if(debug) U.log(this,"build_netConnection");
 			if(nc && nc.connected && (nc.uri == rtmp))
 			{
-				U.log(this, 'already connected');
+				if(debug) U.log(this, 'already connected');
 				ON_CONNECTED();
 			}
 			else
@@ -103,13 +142,13 @@ package axl.xdef.types
 				nc.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
 				nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
 				nc.connect(null);
-				U.log(this, rtmp);
+				if(debug) U.log(this, rtmp);
 			}
 		}
 		
 		private function build_netStream():void
 		{
-			U.log("build_netStream", ns);
+			if(debug) U.log("build_netStream", ns);
 			destroyNS();
 			FIRST_FILL = true;
 			xns = new NetStream(nc);
@@ -129,7 +168,7 @@ package axl.xdef.types
 		private function build_video():void
 		{
 			if(useStageVideo)
-				dealWithStage(xroot);
+				dealWithStage();
 			else
 				buildClassicVideo();
 		}
@@ -179,7 +218,7 @@ package axl.xdef.types
 		
 		protected function netStatusHandler(event:NetStatusEvent):void
 		{
-			U.log(this,'+++++++++ netStatusHandler +++++++++', event.info.code);
+			if(debug) U.log(this,'+++++++++ netStatusHandler +++++++++', event.info.code);
 			switch (event.info.code) 
 			{
 				//1
@@ -226,13 +265,6 @@ package axl.xdef.types
 				case "NetStream.Buffer.Empty":
 					ON_BUFFER_EMPTY();
 					break;
-				//12
-				case "NetStream.Play.Transition":
-					//transitionStart();
-					break;
-				//13
-				case "NetStream.Video.DimensionChange":
-					break;
 				//14
 				case "NetStream.Pause.Notify":
 					ON_PAUSE();
@@ -242,21 +274,23 @@ package axl.xdef.types
 					ON_PLAY_START();
 					break;
 				default:
-					var f:Function = netStausEventFunctionMap[event.info.code] as Function;
-					f != null ? f() : U.log(this,"[netStatusHandler] no behaviour defined for", event.info.code);
+					var f:Object = netStausEventFunctionMap[event.info.code];
+					if(f is Function) f();
+					else if(f is String) xroot.binCommand(f,this);
+					else if(debug) U.log(this,"[netStatusHandler] no behaviour defined for", event.info.code);
 					break;
 			}
 		}
 		
 		protected function securityErrorHandler(e:SecurityErrorEvent):void
 		{
-			U.log(e);
+			if(debug) U.log(e);
 			EXIT_SEQUENCE();
 		}
 		
 		public function onPlayStatus(info:Object):void 
 		{
-			U.log(U.bin.structureToString(info))
+			if(debug) U.log(U.bin.structureToString(info))
 			if('code' in info)
 			{
 				switch(info.code)
@@ -265,23 +299,23 @@ package axl.xdef.types
 						resolveVideoComplete();
 						break;
 					default:
-						U.log(this,"[onPlayStatus] no behaviour defined for", info.code);
+						if(debug) U.log(this,"[onPlayStatus] no behaviour defined for", info.code);
 						break;
 				}
 			}
 		}
 		public function onMetaData(info:Object):void 
 		{
-			U.log(this, "onMetaData\n"/*, U.bin.structureToString(info)*/);
+			if(debug) U.log(this, "onMetaData\n"/*, U.bin.structureToString(info)*/);
 			xvideoMeta = info;
 			var w:Number = info.width as Number;
 			var h:Number = info.height as Number;
-			U.log('original dim', w + 'x' + h);
+			if(debug) U.log('original dim', w + 'x' + h);
 			if(!isNaN(w) && !isNaN(h) && w > 0 && h > 0)
 			{
 				xvideoAspectRatio = w/h;
 				updateDimensions();
-				U.log("videoAspectRatio", videoAspectRatio, "actual video object dimensions:", video ? (video.width + "x" + video.height) : '');
+				if(debug) U.log("videoAspectRatio", videoAspectRatio, "actual video object dimensions:", video ? (video.width + "x" + video.height) : '');
 			}
 		}
 		
@@ -294,49 +328,54 @@ package axl.xdef.types
 				restart();
 			else
 			{
-				if(onComplete!=null)
-					onComplete();
-				destroyOnEnd ? EXIT_SEQUENCE() : U.log(this, "destroyOnEnd=false, call EXIT_SEQUENCE or destroy() to dispose this content");
+				if(onComplete is String) xroot.binCommand(onComplete,this);
+				else if(onComplete is Function)	onComplete();
+				
+				if(destroyOnEnd)
+					EXIT_SEQUENCE()
+				else if(debug) U.log(this, "destroyOnEnd=false, call EXIT_SEQUENCE or destroy() to dispose this content");
 			}
 		}
 		
 		private function ON_CONNECTED():void
 		{
-			U.log("ON_CONNECTED");
+			if(debug) U.log("ON_CONNECTED");
 			if(DESTROYED)
 			{
-				U.log("connected while destroyed, return");
+				if(debug) U.log("connected while destroyed, return");
 				EXIT_SEQUENCE();
 				return;
 			}
 			build_netStream(); // BUILDING NET STREAM
 			build_video(); // DECIDING WHICH AND BUILDING VIDEO
-			U.log(this,"NS PLAY!", rtmp);
+			if(debug) U.log(this,"NS PLAY!", rtmp);
 			ns.play(rtmp); // PLAY MEANS FILL THE BUFFER IN FACT. ACTUAL PLAY OCCURES ON_PLAY_START
 		}
 		
 		private function ON_PLAY_START():void
 		{
-			U.log("ON_PLAY_START");
+			if(debug) U.log("ON_PLAY_START");
 			IS_PAUSED = false;
-			if(onPlayStart != null)
-				onPlayStart();
+			
+			if(onPlayStart is String) xroot.binCommand(onPlayStart,this);
+			else if(onPlayStart is Function) onPlayStart();
+			
 			if(FIRST_FILL)
 			{
 				if(AUTOPLAY)
 				{
-					U.log(this,"[ON_PLAY_START] AUTOPLAY = true - NOT PAUSING");
+					if(debug) U.log(this,"[ON_PLAY_START] AUTOPLAY = true - NOT PAUSING");
 					ns.bufferTime = bufferPlayback;
 				}
 				else
 				{
-					U.log(this,"[ON_PLAY_START] AUTOPLAY = false - PAUSING");
+					if(debug) U.log(this,"[ON_PLAY_START] AUTOPLAY = false - PAUSING");
 					ns.pause();
 				}	
 			}
 			else if(FIRST_FILL = false)
 			{
-				U.log(this,"[ON_PLAY_START] FIRST_FILL = false");
+				if(debug) U.log(this,"[ON_PLAY_START] FIRST_FILL = false");
 				ns.bufferTime = bufferPlayback;
 			}
 			FIRST_FILL = false;
@@ -344,57 +383,57 @@ package axl.xdef.types
 		private function ON_PAUSE():void
 		{
 			IS_PAUSED = true;
-			if(onPlayStop != null)
-				onPlayStop();
+			if(onPlayStop is String) xroot.binCommand(onPlayStop,this);
+			else if(onPlayStop is Function) onPlayStop();
 		}
 		
 		private function ON_BUFFER_FULL():void
 		{
-			U.log("ON_BUFFER_FULL");
+			if(debug) U.log("ON_BUFFER_FULL");
 			EMPTY_BUFFER = false;
-			//Wheel.stop();
 			if(FIRST_FILL)
 			{
-				// THIS DOES NOT CHANGE BUFFER FROM INITIAL TO PLAYBACK BECAUSE ONLY PLAY CAN DO IT. PLAY ON FIRST FILL SO FIRST_FILL ALSO REMAINS UNTOUCHED
-				U.log(this, "bufferInitialMs  filled", bufferInitial);
+				// THIS DOES NOT CHANGE BUFFER FROM INITIAL TO PLAYBACK BECAUSE ONLY PLAY CAN DO IT
+				//PLAY ON FIRST FILL SO FIRST_FILL ALSO REMAINS UNTOUCHED
+				if(debug) U.log(this, "bufferInitialMs  filled", bufferInitial);
 				if(AUTOPLAY)
 				{
-					U.log(this,"[ON_BUFFER_FULL] AUTOPLAY = true - NOT PAUSING");
+					if(debug) U.log(this,"[ON_BUFFER_FULL] AUTOPLAY = true - NOT PAUSING");
 				}
 				else
 				{
-					U.log(this,"[ON_BUFFER_FULL] AUTOPLAY = false - PAUSING");
+					if(debug) U.log(this,"[ON_BUFFER_FULL] AUTOPLAY = false - PAUSING");
 					ns.pause();
 				}	
 			}
 			else
 			{
-				U.log(this,"[ON_BUFFER_FULL] FIRST_FILL = false");
+				if(debug) U.log(this,"[ON_BUFFER_FULL] FIRST_FILL = false");
 			}
 		
-			U.log(this,"NEW BUFFER TIME :", ns.bufferTime);
-			if(onBufferFull != null)
-				onBufferFull();
+			if(debug) U.log(this,"NEW BUFFER TIME :", ns.bufferTime);
+			if(onBufferFull is String) xroot.binCommand(onBufferFull,this);
+			else if(onBufferFull is Function) onBufferFull();
 		}		
 		
 		private function ON_BUFFER_EMPTY():void
 		{
-			U.log("ON_BUFFER_EMPTY");
+			if(debug) U.log("ON_BUFFER_EMPTY");
 			EMPTY_BUFFER = true;
-			if(onBufferEmpty != null)
-				onBufferEmpty();
+			if(onBufferEmpty is String) xroot.binCommand(onBufferEmpty,this);
+			else if(onBufferEmpty is Function) onBufferEmpty();
 		}
 		
 		private function tryReconnect():void
 		{
-			U.log("tryReconnect",reconnectAttemptsNo);
+			if(debug) U.log("tryReconnect",reconnectAttemptsNo);
 			if(--reconnectAttemptsNo > 0)
 			{
 				setTimeout(build_netConnection, reconnectGapMs);
 			}
 			else
 			{
-				U.log(" ☠ ☠ ☠ "+reconnectAttemptsNo+" RECCONECTS FAIL ☠ ☠ ☠ ");
+				if(debug) U.log(" ☠ ☠ ☠ "+reconnectAttemptsNo+" RECCONECTS FAIL ☠ ☠ ☠ ");
 				EXIT_SEQUENCE();
 			}
 		}
@@ -403,11 +442,11 @@ package axl.xdef.types
 		{
 			if(!DESTROYED)
 			{
-				U.log("EXIT_SEQUENCE");
+				if(debug) U.log("EXIT_SEQUENCE");
 				onFrame = null;
 				destroyAll();
-				if(onExit is Function)
-					onExit();
+				if(onExit is String) xroot.binCommand(onExit,this);
+				else if(onExit is Function) onExit();
 			}
 			
 		}
@@ -416,7 +455,7 @@ package axl.xdef.types
 		
 		private function destroyAll():void
 		{
-			U.log(this,"DESTROY ALL");
+			if(debug) U.log(this,"DESTROY ALL");
 			DESTROYED = true;
 			IS_PAUSED = false;
 			xvideoMeta = null;
@@ -430,7 +469,7 @@ package axl.xdef.types
 		{
 			if(nc)
 			{
-				U.log("DESTROY NET CONNECTION");
+				if(debug) U.log("DESTROY NET CONNECTION");
 				nc.removeEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
 				nc.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
 				nc.close();
@@ -444,7 +483,7 @@ package axl.xdef.types
 		{
 			if(ns)
 			{
-				U.log("DESTROY NET STREAM");
+				if(debug) U.log("DESTROY NET STREAM");
 				ns.removeEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
 				try
 				{
@@ -464,7 +503,7 @@ package axl.xdef.types
 		{
 			if(video)
 			{
-				U.log("DESTROY VIDEO");
+				if(debug) U.log("DESTROY VIDEO");
 				video.attachNetStream(null);
 				video.clear();
 				if(video.parent)
@@ -489,7 +528,7 @@ package axl.xdef.types
 		{
 			if(v == xrtmp)
 				return;
-			U.log("SETTING RTMP", v);
+			if(debug) U.log("SETTING RTMP", v);
 			destroyAll();
 			xrtmp = v;
 			build_netConnection();
@@ -597,7 +636,7 @@ package axl.xdef.types
 		
 		public function pause():void { ns ? ns.pause() : null }
 		public function stop():void { ns ? ns.pause() : null }
-		public function destroy():void { destroyAll() }
+		public function destroy():void { EXIT_SEQUENCE(); }
 		public function manualPlay():void
 		{
 			if(nc && nc.connected && ns)
