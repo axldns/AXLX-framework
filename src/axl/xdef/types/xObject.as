@@ -23,7 +23,6 @@ package axl.xdef.types
 		protected var xmeta:Object;
 		protected var xxroot:xRoot;
 		private var xname:String;
-		public var resetOnAddedToStage:Boolean = true;
 		/** Lightweight data class instantiated from <code>&lt;data/&gt;<br></code>
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object
@@ -61,7 +60,7 @@ package axl.xdef.types
 		public function get name():String { return xname }
 		public function set name(v:String):void
 		{
-			super.name = xroot.support.requestNameChange(v,this);
+			xname = xroot.support.requestNameChange(v,this);
 		}
 		/** Whatever content (text, JSON, XML, sound, other) has been loaded/specified in 
 		 * <code>src</code> attribute - it's accesible through this property.*/
