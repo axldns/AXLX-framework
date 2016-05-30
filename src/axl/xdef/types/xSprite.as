@@ -215,9 +215,9 @@ package axl.xdef.types
 		{
 			super.addChild(child);
 			var c:ixDisplay = child as ixDisplay;
-			if(c != null && c.meta.addChild != null)
+			if(!c) return child;
+			if(c.meta && c.meta.addChild != null)
 			{
-				c.reset();
 				XSupport.animByNameExtra(c, 'addChild');
 			}
 			return child;
@@ -227,9 +227,9 @@ package axl.xdef.types
 		{
 			super.addChildAt(child, index);
 			var c:ixDisplay = child as ixDisplay;
-			if(c != null && c.meta.addChild != null)
+			if(!c) return child;
+			if(c.meta && c.meta.addChild != null)
 			{
-				c.reset();
 				XSupport.animByNameExtra(c, 'addChild');
 			}
 			return child;
