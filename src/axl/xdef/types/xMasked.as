@@ -15,12 +15,21 @@ package axl.xdef.types
 	
 	import axl.ui.controllers.BoundBox;
 
-	/** Class instantiated from  &lt;msk/&gt; node, extends xSprite by adding three functionalites:
+	/** Class instantiated from  &lt;msk/&gt; node, extends xSprite by adding three functionalites:<br><br>
 	 * <ul><li>provides ready to use and already assigned, rectangular mask - controllable  by properties <i>visibleWidth,
 	 * visibleHeight, visibleX, visibleY</i></li>
 	 * <li>provides <code>controller</code> property - an instance of BoundBox class, which allows to scroll, drag and move
 	 * masked contents within masked area</li><li>exposes ability to make bi-directional connections with any other BoundBox controllers,
-	 * e.g. members of <code>xScroll</code> (&lt;scrollBar/&gt;) instance </li></ul>*/
+	 * e.g. members of <code>xScroll</code> (&lt;scrollBar/&gt;) instance </li></ul>
+	 * <br>Instance auto-recognizes xScroll instance added to it's display list, places it outside of masked container
+	 * and auto-connects scroll bar's controller to xMasked controller.<br><br>
+	 * Since method above is just a short-hand kept for backward ccompatibility, 
+	 * all other controllers should be connected via <code>connectController</code> function.
+	 * Initial controller initial values can be overriden, default values as follows:<br>
+	 * <code>ctrl.horizontal = true;<br>ctrl.vertical = true;<br>ctrl.horizontalBehavior = BoundBox.described;
+	 * <br>ctrl.verticalBehavior = BoundBox.described;<br>ctrl.liveChanges = true;</code></br>
+	 * Values for bound and box of controller should never be changed.
+	 * @see #connectController() */
 	public class xMasked extends xSprite
 	{
 		private var controllers:Vector.<BoundBox>;
@@ -34,17 +43,16 @@ package axl.xdef.types
 		private var vWid:Number=1;
 		private var vHeight:Number=1;
 		
-		/** Determines scroll efficiency default 1. For container containing textfields optimal value is 15*/
+		/** Determines scroll efficiency default 1. For container containing text fields optimal value is 15*/
 		public var deltaMultiplier:Number=1;
 		/** Deterimines if masked content movement can be triggered by mouse wheel events.  @see #deltaMultiplier */
 		public var wheelScrollAllowed:Boolean = false;
 		
-		/** Class instantiated from  &lt;msk/&gt; node. Easy masking and movable/scorllable container.
+		/** Class instantiated from <b> &lt;msk/&gt;</b>.<br>Easy masking and movable/scorllable container, 
+		 * with ability to "connect" multiple controllers. Auto-recognition of &lt;scrollBar/&gt; children.
 		 * @param definition - xml definition
-		 * @param xroot - reference to parent xRoot object
-		 * @see axl.xdef.types.xObject
-		 * @see axl.xdef.interfaces.ixDef#def
-		 * @see axl.xdef.interfaces.ixDef#xroot
+		 * @param xroot - reference to parent xRoot object @see axl.xdef.types.xMasked
+		 * @see axl.xdef.interfaces.ixDef#def  @see axl.xdef.interfaces.ixDef#xroot
 		 * @see axl.xdef.XSupport#getReadyType2() */
 		public function xMasked(definiton:XML=null,xroot:xRoot=null)
 		{
@@ -58,6 +66,11 @@ package axl.xdef.types
 			super.addChild(shapeMask);
 			
 			redrawMask();
+			ctrl.horizontal = true;
+			ctrl.vertical = true;
+			ctrl.horizontalBehavior = BoundBox.described;
+			ctrl.verticalBehavior = BoundBox.described;
+			ctrl.liveChanges = true;
 			ctrl.bound = shapeMask;
 			ctrl.box = container;
 			addListeners();
@@ -97,36 +110,7 @@ package axl.xdef.types
 		// -------------------OVERRIDEN METHODS  --------------- //
 		// ------------------- CONTROLLERS LOGIC --------------- //
 		
-		/** Allows to make bi-directional connection between scrollBar instance and masked container.
-		 * Bi-directional means that both scroll bar can update container and container can update scrollbar. */
-		public function get scrollBar():xScroll	{ return xscrollBar }
-		public function set scrollBar(v:xScroll):void
-		{
-			xscrollBar = v;
-			if(!xscrollBar) return;
-			if(xscrollBar.controller == null)
-				throw new Error("scrollBar element needs elements named 'rail' and 'train'");
-			addController(v.controller);
-		}
-		/** Allows to make bi-directional connection between controller of masked container of this instance and  any other
-		 * controller. Bi-directional means both scroll bar can update container and container can update scrollbar. 
-		 * Controllers orientation have to match to receive updates stream. @see axl.ui.controllers.BoundBox */
-		public function addController(v:BoundBox):void
-		{
-			if(v && controllers.indexOf(v) < 0)
-			{
-				v.onChange = onSubControllerChange;
-				controllers.push(v);
-			}
-		}
-		/** Removes contoller from initiators/receivers list and terminates connection between them (onChange null asignnemt)
-		 * @see #addController()*/
-		public function removeController(v:BoundBox):void
-		{
-			var i:int = controllers.indexOf(v);
-			if(i < 0) return
-			controllers.splice(i,1)[0].onChange = null;
-		}
+		
 		private function onControllerChange(e:Object=null):void
 		{
 			var initiator:BoundBox = e as BoundBox;
@@ -187,6 +171,49 @@ package axl.xdef.types
 		}
 		// ----------------- INTERNAL  --------------//
 		// ----------------- PUBLIC API  --------------//
+		
+		/** Allows to make bi-directional connection between scrollBar instance and masked container.
+		 * Bi-directional means that both scroll bar can update container and container can update scroll bar.
+		 * <br>Getter returns only most recent scroll bar added. Multiple scroll bars can be set/added. */
+		public function get scrollBar():xScroll	{ return xscrollBar }
+		public function set scrollBar(v:xScroll):void
+		{
+			xscrollBar = v;
+			if(!xscrollBar) return;
+			if(xscrollBar.controller == null)
+				throw new Error("xScroll (" + xscrollBar.name + ") controller not found.");
+			connectController(v.controller);
+		}
+		/** Allows to make bi-directional connection between controller of masked container of this instance and  any other
+		 * controller. Bi-directional means both scroll bar can update container and container can update scrollbar. 
+		 * Controllers orientation have to match to receive updates stream. @see axl.ui.controllers.BoundBox */
+		public function connectController(v:BoundBox):void
+		{
+			if(v && controllers.indexOf(v) < 0)
+			{
+				v.onChange = onSubControllerChange;
+				controllers.push(v);
+			}
+		}
+		/** Removes contoller from initiators/receivers list and terminates connection between them (onChange null asignnemt)
+		 * @see #connectController()*/
+		public function disconnectController(v:BoundBox):void
+		{
+			var i:int = controllers.indexOf(v);
+			if(i < 0) return
+			controllers.splice(i,1)[0].onChange = null;
+		}
+		/** Removes all contollers from initiators/receivers list and terminates connection between
+		 * them (onChange null asignnemt) @see #connectController()*/
+		public function disconnectAllControllers():void
+		{
+			while(controllers.length)
+				controllers.pop().onChange = null;
+		}
+		
+		/** List of active controllers (but instance owner) */
+		public function listControllers():Vector.<BoundBox> { return controllers }
+		
 		/** Height of internal mask */
 		public function get visibleHeight():Number { return vHeight }
 		public function set visibleHeight(value:Number):void
