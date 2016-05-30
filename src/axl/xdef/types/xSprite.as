@@ -83,7 +83,6 @@ package axl.xdef.types
 			parseDef();
 		}
 		//----------------------- INTERFACE METHODS -------------------- //
-
 		/** XML definition of this object @see axl.xdef.interfaces.ixDef#def */
 		public function get def():XML { return xdef }
 		public function set def(value:XML):void 

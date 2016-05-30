@@ -29,16 +29,14 @@ package axl.xdef.types
 		private var xresetOnAddedToStage:Boolean = true;
 		private var xstyles:Object;
 		
-		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
-		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
-		public var inject:String;
-		
 		private var tff:TextFormat;
 		private var trigerExt:Object;
 		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		
-		public var debug:Boolean;
+		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
+		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var inject:String;
 		
 		/**
 		 * Property containing uncompiled code for binCommand. <br>
@@ -60,7 +58,7 @@ package axl.xdef.types
 		 * this function as an argument */
 		public var onLinkEvent:Function;
 		
-		public function xText(definition:XML=null,xrootObj:xRoot=null,xdefaultFont:String=null)
+		public function xText(definition:XML=null,xrootObj:xRoot=null)
 		{
 			this.xroot = xrootObj || xroot;
 			xdef = definition;
@@ -286,7 +284,7 @@ package axl.xdef.types
 		 * <i>replace</i> array. Re-asignes text of textfield in according to these. */
 		public function refreshText():void
 		{
-			var a:Array = meta.replace as Array;
+			var a:Array = meta ? meta.replace as Array : null;
 			var s:String = this.htmlText;
 			if(a != null)
 				replaceMeta(a,s);

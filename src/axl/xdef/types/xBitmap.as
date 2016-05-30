@@ -17,7 +17,7 @@ package axl.xdef.types
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	/** Most basic object for displaying images. Since this class extends flash.display.Bitmap -
-	 * it does not dispatch mouse events. 
+	 * it does not dispatch/receive mouse events. 
 	 * Instantiated from:<h3><code>&lt;img/&gt;<br></code></h3>
 	 * Img nodes can not consist sub-nodes translatable to other display object (can't contain children).
 	 * Allowed sub-nodes:<pre><ul><li>&lt;act/&gt;</li><li>&lt;data/&gt;</li><li>&lt;script/&gt;</li><li>&lt;timer/&gt;</li><li>&lt;filters/&gt;</li><li>&lt;colorTransform/&gt;</li></ul></pre>
