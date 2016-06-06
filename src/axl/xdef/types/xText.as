@@ -21,6 +21,8 @@ package axl.xdef.types
 	
 	public class xText extends TextField implements ixDisplay
 	{
+		public static var defaultStyles:Object ={};
+		
 		private var xdef:XML;
 		private var xmeta:Object;
 		private var xxroot:xRoot;
@@ -187,12 +189,17 @@ package axl.xdef.types
 		{
 			if(def == null)
 				throw new Error("Undefined definition for " + this);
+			
+			if(!def.hasOwnProperty('@styles'))
+				this.styles = xText.defaultStyles;
+			
 			XSupport.applyAttributes(def, this);
 			var tv:String =  def.toString();
 			/*if(!def.hasOwnProperty('@font'))
 				tff.font = defaultFont;*/
 			if(!this.styleSheet)
 				this.defaultTextFormat = tff;
+			
 			if(tv.length > 0)
 			{
 				if(def.hasOwnProperty('@html') && def.@html == 'true')
