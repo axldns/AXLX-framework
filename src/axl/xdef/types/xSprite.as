@@ -62,6 +62,9 @@ package axl.xdef.types
 		 *  @see axl.utils.U#distribute()  @see axl.utils.U#distributePattern()*/ 
 		public var distributeVertical:Object;
 		
+		/** LEGACY METHOD **/
+		private var addedToStageActions:Vector.<xAction>;
+		
 		/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.<br>
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object
@@ -116,6 +119,15 @@ package axl.xdef.types
 				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
 			if(!v || meta) return;
 			xmeta =v;
+			var a:Object, b:Array, i:int, j:int;
+			if(meta.hasOwnProperty('addedToStageAction'))
+			{
+				addedToStageActions = new Vector.<xAction>();
+				a = meta.addedToStageAction;
+				b = (a is Array) ? a as Array : [a];
+				for(i = 0, j = b.length; i<j; i++)
+					addedToStageActions[i] = new xAction(b[i],xroot,this);
+			}
 		}
 		
 		/** Sets name and registers object in registry 
@@ -187,6 +199,13 @@ package axl.xdef.types
 		protected function addedToStageHandler(e:Event):void
 		{
 			xroot.support.defaultAddedToStageSequence(this);
+			// LEGACY METHOD
+			if(addedToStageActions != null)
+			{	for(var i:int = 0, j:int = addedToStageActions.length; i<j; i++)
+				addedToStageActions[i].execute();
+				if(debug) U.log(this, this.name, '[addedToStage]', j, 'actions');
+			}
+			// END OF LEGACY METHOD
 			if(this.sortZ)
 				this.addEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
