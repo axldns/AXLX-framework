@@ -148,7 +148,7 @@ package axl.xdef.types
 			function decorator(v:ixDef):void
 			{
 				if(debug) log("decorating", v, v.name);
-				if(!v) return;
+				if(!v || !v.meta) return;
 				for(var s:String in props)
 					v.meta[s] = props[s];
 			}

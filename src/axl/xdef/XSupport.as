@@ -173,7 +173,7 @@ package axl.xdef
 		 * @see axl.xdef.interfaces.ixDef#reset() */
 		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false,doNotDisturb:Boolean=false):uint
 		{
-			if(target.meta.hasOwnProperty(animName))
+			if(target.meta && target.meta.hasOwnProperty(animName))
 			{
 				if(doNotDisturb && AO.contains(target))
 					return 1;
@@ -387,7 +387,10 @@ package axl.xdef
 					if(v is Array)
 						container.filters = v as Array;
 					else if(v is xObject)
+					{
 						U.log("[XSupport]DataObject registered", v.name);
+						xObject(v).parent = container;
+					}
 					else if(v is ColorTransform)
 					{
 						container.transform.colorTransform = v as  ColorTransform;

@@ -23,6 +23,7 @@ package axl.xdef.types
 		protected var xmeta:Object;
 		protected var xxroot:xRoot;
 		private var xname:String;
+		private var xparent:Object;
 		/** Lightweight data class instantiated from <code>&lt;data/&gt;<br></code>
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object
@@ -68,5 +69,10 @@ package axl.xdef.types
 		public function set data(v:Object):void { xdata = v }
 		/** Method reset doesn't apply for xObject instance */
 		public function reset():void { }
+		
+		/** Allows to asign owner of this object. By default it's whichever node
+		 * that contains it in xml */
+		public function get parent():Object { return xparent }
+		public function set parent(v:Object):void {  xparent = v}
 	}
 }
