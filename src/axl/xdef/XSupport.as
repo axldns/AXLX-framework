@@ -32,6 +32,7 @@ package axl.xdef
 	import axl.xdef.types.xMasked;
 	import axl.xdef.types.xObject;
 	import axl.xdef.types.xRoot;
+	import axl.xdef.types.xScript;
 	import axl.xdef.types.xScroll;
 	import axl.xdef.types.xSprite;
 	import axl.xdef.types.xSwf;
@@ -449,6 +450,8 @@ package axl.xdef
 				}
 				else
 				{
+					if(xml.hasOwnProperty('@cachebust') && xml.@cachebust != 'false')
+						source = source + (source.indexOf('?') > -1 ? "&" : "?") + "cachebust=" + String(new Date().time); 
 					Ldr.load(source, function():void{callBack(source)},null,null,sourcePrefixes, overwriteInLib ? Ldr.behaviours.loadOverwrite : Ldr.behaviours.loadSkip);
 				}
 			}
@@ -514,7 +517,7 @@ package axl.xdef
 						case 'act' : obj = new xActionSet(xml,xroot);break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
-						case 'script': obj = includeScript(xml,xroot); break;
+						case 'script': obj = new xScript(xml,xroot); break;
 						case 'vod' : obj = new xVOD(xml,xroot); break;
 						case 'timer' : obj = new xTimer(xml,xroot); break;
 						default: 
@@ -529,6 +532,7 @@ package axl.xdef
 						if(sourceTest != null)
 						{
 							var b:Object = Ldr.getAny(sourceTest); 
+							
 							if(obj is DisplayObjectContainer)
 							{
 								if(b is Bitmap)
@@ -552,6 +556,8 @@ package axl.xdef
 						// decorating parent and children by the same decorator
 						if(decorator != null && obj is ixDef)
 							decorator(obj);
+						if(obj is xScript && obj.autoInclude)
+							obj.includeScript();
 						//code inject
 						if(obj.hasOwnProperty("inject") && obj.inject != null)
 						{
@@ -608,7 +614,7 @@ package axl.xdef
 			else if(v is Object)
 				for(var p:String in v)
 					if(t['hasOwnProperty'](p))
-						t[p] = v[p];
+						t[p] = ((v[p] is String && v[p].charAt(0) == "$") ? root.binCommand(v[p],t) : v[p]);
 		}
 		
 		/**Resets instance to original XML values if <code>resetOnAddedToSage=true</code>.<br>
@@ -635,21 +641,6 @@ package axl.xdef
 				root.binCommand(t.onRemovedFromStage,t);
 			else if(t.onRemovedFromStage is Function)
 				t.onRemovedFromStage();
-		}
-		
-		public function includeScript(xml:XML,xroot:xRoot):Object
-		{
-			var scrpt:XML = Ldr.getXML(U.fileNameFromUrl(xml.@src));
-			if(scrpt != null && scrpt.hasOwnProperty('additions'))
-			{
-				var xl:XMLList = scrpt.additions[0].children() as XMLList;
-				var len:int = xl.length();
-				var target:XML =this.root.config.additions[0];
-				for(var i:int=0; i<len;i++)
-					target.appendChild(xl[i]);
-				U.log(len,"elements included to additions from", xml.@src);
-			}
-			return { xroot : xroot, data : scrpt, name : xml.@name }
 		}
 		
 		/** Private function to support objects instantiation in order. Hold's delegates 
