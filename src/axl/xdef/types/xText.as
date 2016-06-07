@@ -21,7 +21,7 @@ package axl.xdef.types
 	
 	public class xText extends TextField implements ixDisplay
 	{
-		public static var defaultStyles:Object ={};
+		public static var defaultFont:String;
 		
 		private var xdef:XML;
 		private var xmeta:Object;
@@ -54,7 +54,7 @@ package axl.xdef.types
 		 * and second is any text-convertable source to replace pattern in text. 
 		 * <br>Example:<br><code>text = "replacement";<br>replace=[["e","a"],["m","n"]]<br></code>
 		 * result: "raplacant" */
-		public var replace:Array;
+		public var replace:Object;
 
 		/** Function to execute when a href tag is clicked in textfield. Event type is passed to 
 		 * this function as an argument */
@@ -189,14 +189,11 @@ package axl.xdef.types
 		{
 			if(def == null)
 				throw new Error("Undefined definition for " + this);
-			
-			if(!def.hasOwnProperty('@styles'))
-				this.styles = xText.defaultStyles;
-			
+						
 			XSupport.applyAttributes(def, this);
 			var tv:String =  def.toString();
-			/*if(!def.hasOwnProperty('@font'))
-				tff.font = defaultFont;*/
+			if(!def.hasOwnProperty('@font'))
+				tff.font = defaultFont;
 			if(!this.styleSheet)
 				this.defaultTextFormat = tff;
 			
@@ -226,9 +223,9 @@ package axl.xdef.types
 		//----------------------- INTERNAL METHODS -------------------- //
 		private function autoSizeText():void
 		{
-			if(!def.hasOwnProperty('@width'))
+			if(!def.hasOwnProperty('@width') && (!styles || !styles.hasOwnProperty('width')))
 				this.width = textWidth + 5;
-			if(!def.hasOwnProperty('@height'))
+			if(!def.hasOwnProperty('@height') && (!styles || !styles.hasOwnProperty('height')))
 				this.height = textHeight + 5;
 		}
 		private function replaceReplace(a:Array, s:String):void
@@ -239,7 +236,7 @@ package axl.xdef.types
 				if(!rep || rep.length != 2) continue;
 				
 				var pattern:RegExp = new RegExp(rep[0],"g");
-				var source:Object = xroot.binCommand(rep[1],this);
+				var source:Object = rep[1].charAt(0) == '$' ? xroot.binCommand(rep[1].substr(1),this) : rep[1];
 				if(source == null || source is Error)
 					source = rep[1];
 				s= s.replace(pattern, String(source));
@@ -291,14 +288,15 @@ package axl.xdef.types
 		 * <i>replace</i> array. Re-asignes text of textfield in according to these. */
 		public function refreshText():void
 		{
-			var a:Array = meta ? meta.replace as Array : null;
+			var a:Object = meta ? meta.replace as Array : null;
 			var s:String = this.htmlText;
 			if(a != null)
-				replaceMeta(a,s);
-			a = replace as Array;
-			s = this.htmlText;
-			if(a != null)
-				replaceReplace(a,s);
+				replaceMeta(a as Array,s);
+			a = replace;
+			if(a is String)
+				a = a.charAt(0) == '$' ? xroot.binCommand(a.substr(1),this) : a;
+			if(a is Array)
+				replaceReplace(a as Array,s);
 			autoSizeText();
 		}
 		
