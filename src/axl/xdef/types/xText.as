@@ -199,10 +199,7 @@ package axl.xdef.types
 			
 			if(tv.length > 0)
 			{
-				if(def.hasOwnProperty('@html') && def.@html == 'true')
-					this.htmlText = tv;
-				else
-					this.text = tv;
+				this.htmlText = tv;
 			}
 			autoSizeText();
 		}
