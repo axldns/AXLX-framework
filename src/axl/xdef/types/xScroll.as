@@ -86,6 +86,7 @@ package axl.xdef.types
 				ctrl.movementHor(deltaMultiplier,false,this);
 			else if(controller.vertical)
 				ctrl.movementVer(deltaMultiplier,false,this);
+			this.xbtnIncrease.execute();
 		}
 		
 		private function onBtnDecrease(e:Event=null):void
@@ -94,6 +95,7 @@ package axl.xdef.types
 				ctrl.movementHor(-deltaMultiplier,false,this);
 			else if(controller.vertical)
 				ctrl.movementVer(-deltaMultiplier,false,this);
+			this.xbtnDecrease.execute();
 		}
 		
 		/** Receives wheel events and passes delta * deltaMultipy values to controller. */
@@ -123,9 +125,9 @@ package axl.xdef.types
 		public function set btnDecrease(v:xButton):void
 		{
 			if(xbtnDecrease != null || xbtnDecrease != v)
-				xbtnDecrease.onClick = null;
+				xbtnDecrease.externalExecution = null;
 			xbtnDecrease = v;
-			xbtnDecrease.onClick = onBtnDecrease;
+			xbtnDecrease.externalExecution = onBtnDecrease;
 		}
 		
 		/** Moves horizontal scroll bar's train right and/or vertical scroll bar trains' down. */
@@ -133,9 +135,9 @@ package axl.xdef.types
 		public function set btnIncrease(v:xButton):void
 		{
 			if(xbtnIncrease != null || xbtnIncrease != v)
-				xbtnIncrease.onClick = null;
+				xbtnIncrease.externalExecution = null;
 			xbtnIncrease = v;
-			xbtnIncrease.onClick = onBtnIncrease;
+			xbtnIncrease.externalExecution = onBtnIncrease;
 		}
 		
 		/** Returns controller @see axl.ui.controllers.BoundBox */
