@@ -33,7 +33,6 @@ package axl.xdef.types
 		
 		private var tff:TextFormat;
 		private var trigerExt:Object;
-		private var actions:Vector.<xAction> = new Vector.<xAction>();
 		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
@@ -108,7 +107,6 @@ package axl.xdef.types
 		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method
 		 * when htmlText hyperLink is clicked</li>
 		 * </ul>
-		 * @see axl.xdef.types.xAction
 		 * @see axl.xdef.XSupport#animByNameExtra()
 		 * @see axl.utils.AO#animate() */
 		public function get meta():Object { return xmeta }
@@ -123,8 +121,6 @@ package axl.xdef.types
 			{
 				var a:Object = meta.action;
 				var b:Array = (a is Array) ? a as Array : [a];
-				for(var i:int = 0, j:int = b.length; i<j; i++)
-					actions[i] = new xAction(b[i],xroot,this);
 			}
 			refreshText();
 		}
@@ -267,8 +263,6 @@ package axl.xdef.types
 		{
 			if(trigerExt != null && ExternalInterface.available)
 				ExternalInterface.call.apply(null, trigerExt);
-			for(var i:int = 0, j:int = actions.length; i<j; i++)
-				actions[i].execute();
 			if(code != null)
 				xroot.binCommand(code,this);
 			if(onLinkEvent != null)

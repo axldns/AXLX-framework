@@ -23,7 +23,7 @@ package axl.xdef
 	import axl.xdef.interfaces.ixDef;
 	import axl.xdef.interfaces.ixDisplay;
 	import axl.xdef.interfaces.ixDisplayContainer;
-	import axl.xdef.types.xActionSet;
+	import axl.xdef.types.xAction;
 	import axl.xdef.types.xBitmap;
 	import axl.xdef.types.xButton;
 	import axl.xdef.types.xCarousel;
@@ -514,7 +514,7 @@ package axl.xdef
 						case 'carousel' : obj = new xCarousel(xml,xroot); break;
 						case 'carouselSelectable' : obj = new xCarouselSelectable(xml,xroot);break;
 						case 'swf': obj = new xSwf(null,xroot); break;
-						case 'act' : obj = new xActionSet(xml,xroot);break;
+						case 'act' : obj = new xAction(xml,xroot);break;
 						case 'filters': obj = filtersFromDef(xml); break;
 						case 'colorTransform' : obj = getColorTransformFromDef(xml); break;
 						case 'script': obj = new xScript(xml,xroot); break;
