@@ -1,7 +1,7 @@
 /**
  *
  * AXLX Framework
- * Copyright 2014-2015 Denis Aleksandrowicz. All Rights Reserved.
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
  *
  * This program is free software. You can redistribute and/or modify it
  * in accordance with the terms of the accompanying license agreement.
@@ -10,92 +10,280 @@
 package axl.xdef.types
 {
 	import flash.display.DisplayObject;
-	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.external.ExternalInterface;
 	import flash.geom.ColorTransform;
 	import flash.net.URLRequest;
 	import flash.net.navigateToURL;
 	import flash.utils.clearInterval;
-	import flash.utils.clearTimeout;
 	import flash.utils.setInterval;
-	import flash.utils.setTimeout;
 	
 	import axl.utils.ConnectPHP;
-	import axl.utils.U;
-	import axl.xdef.XSupport;
 	
-	
+	/** Typical interactive button class. Does not require adding any event listeners - all listeners are
+	 * added internally - requires to define callback functions instead.<br>
+	 * Allows to set of custom actions and states and common styling by providing just a textual reference.<br>
+	 * Actions can be defined on click, on hover, on hover out, * on press, on release.<br> States: over, out, enabled, disabled.<br>
+	 * Hover and press functions execution can be repeated in certain intervals just by defining number of miliseconds
+	 * gap between execution. 
+	 * @see #states 
+	 * @see #execute() */
 	public class xButton extends xSprite
 	{
-		public static var defaultOver:String="upstate.alpha:[1,1]";
-		public static var defaultDisabled:String="alpha:[0.66,1]";
-		
 		private var isEnabled:Boolean=true;
-		private var texture:DisplayObject;
-		
-		public var intervalValue:int=0;
-		public var intervalDelay:int = 0;
-		public var intervalHoverValue:int=0;
-		public var executeReleasedOutside:Boolean;
-		
-		private var userClickHandler:Function;
-		private var eventClick:Event = new Event("clickButton",true);
-		private var isRotated:Boolean;
-		
-		private var trigerUrl:URLRequest;
-		private var trigerEvent:Event;
-		private var trigerExt:Array;
-		private var trigerUrlWindow:String;
 		private var isDown:Boolean;
-		private var delayID:uint;
-		private var intervalID:uint;
+		private var isOver:Boolean;
+		private var currentState:int=0;
+		
+		private var downIntervalID:uint;
 		private var intervalHoverID:uint;
 		
-		private var actions:Vector.<xAction> = new Vector.<xAction>();
-		private var actionsOver:Vector.<xAction> = new Vector.<xAction>();
-		private var actionsOut:Vector.<xAction> = new Vector.<xAction>();
-		
-		private var overTarget:Object;
-		private var overKey:String;
-		private var overVals:Object;
-		
-		private var disabledKey:String;
-		private var disabledTarget:Object;
-		private var disabledVals:Object;
-		
-		private var sdisabled:String;
-		private var sover:String; 
-		
-		private var postSendArgs:Array;
 		private var postObject:ConnectPHP;
-		private var dynamicArgs:Boolean;
-		private var actionOver:Boolean;
-		private var isOver:Boolean;
-		
-		public var stateOver:DisplayObject;
-		public var stateOut:DisplayObject;
-		public var stateDisabled:DisplayObject;
-		public var stateDown:DisplayObject;
-		public var code:String;
-		public var externalExecution:Boolean;
-		
-		
-		private var currentState:int=0;
+		private var URLReq:URLRequest;
 		private var styleName:String;
-		private var actionOut:Boolean;
 		
+		/** Allows to define display object which will be added to buttons display list at index 0 
+		 * when mouse pointer rolls over the button. This property can be set automatically by adding to buttons display list
+		 * an element which name matches /over/i RegExp. @see #states */
+		public var stateOver:DisplayObject;
+		/** Allows to define display object which will be added to buttons display list at index 0 
+		 * when mouse pointer is NOT over the button. This property can be set automatically by adding to buttons display list
+		 * an element which name matches /out/i RegExp. @see #states */
+		public var stateOut:DisplayObject;
+		/** Allows to define display object which will be added to buttons display list at index 0 
+		 * when <code>enabled</code> is set to false. This property can be set automatically by adding to buttons display list
+		 * an element which name matches /disabled/i RegExp. @see #states */
+		public var stateDisabled:DisplayObject;
+		/** Allows to define display object which will be added to buttons display list at index 0 
+		 * when mouse pointer is over the button and button is pressed down. This property can be set automatically by adding to buttons display list
+		 * an element which name matches /down/i RegExp. @see #states */
+		public var stateDown:DisplayObject;
+		/** Action defined in <code>onDown</code> property can be repeated multiple times (till release, till setting disabled). This
+		 * property defines how frequent (ms) action should be repeated. Values equal and less than 0 disable repetitions. */
+		public var intervalDown:int=0;
+		/** Action defined in <code>onHover</code> property can be repeated multiple times (till roll out, till setting disabled). This
+		 * property defines how frequent (ms) action should be repeated. Values equal and less than 0 disable repetitions. */
+		public var intervalHover:int=0;
+		/** Determines if pressing button down, moving mouse/finger outside the button and releasing touch/press there should cause 
+		 * main execution of the button too. This action wouldn't produce "mouseClick" event in this scenario. @default false @see #execute() */
+		public var executeReleasedOutside:Boolean;
+		/** If defined, default on click actions are not executed - externalExecution function is executed instead (default on click actions 
+		 * can be executed "manually" by calling <code>execute</code> method. @see #execute() */
+		public var externalExecution:Function;
+		/** Portion of uncompiled code to execute/evaluate when button is clicked.
+		 * @see #execute()
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var code:String;
+		/** Function or portion of uncompiled code to execute/evaluate when mouse pointer is over the button.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onOver:Object;
+		/** Function or portion of uncompiled code to execute/evaluate when mouse pointer rolls out of the button.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onOut:Object;
+		/** Function or portion of uncompiled code to execute/evaluate when mouse or touch presses the button.
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onDown:Object;
+		/** Function or portion of uncompiled code to execute/evaluate when mouse or touch releases the button (after press).
+		 * @see axl.xdef.types.xRoot#binCommand() */
+		public var onRelease:Object;
+		
+		/** Typical interactive button class.
+		 * @param definition - xml definition
+		 * @param xroot - reference to parent xRoot object 
+		 * @see axl.xdef.types.xButton */
 		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
 			super(definition,xroot);
 			enabled = isEnabled;
 		}
-		
+		//---------------------------------------- OVERRIDEN METHODS -----------------------------------//
 		override public function addChild(child:DisplayObject):DisplayObject
 		{
-			if(numChildren < 1)
-				texture = child;
-			if(child.name.match(/out/i))
+			var c:DisplayObject = stateInspection(child);
+			if(c) return c;
+			return super.addChild(child);
+		}
+		
+		override public function set meta(v:Object):void
+		{
+			super.meta = v;
+			if(meta.hasOwnProperty('url'))
+				URLReq = new URLRequest();
+			if(meta.hasOwnProperty('post'))
+				postObject = new ConnectPHP();
+		}
+		//---------------------------------------- OVERRIDEN METHODS -----------------------------------//
+		//---------------------------------------- MOUSE EVENTS -----------------------------------//
+		/** Common for ROLL_OVER and ROLL_OUT event handler. Returns if isEnabled = false, otherwise swaps states,
+		 * executes onOver or onOut. Sets interval if <i>hoverInterval<i> &gt; 0 */
+		protected function onMouseHover(e:MouseEvent=null):void
+		{
+			if(!isEnabled)
+				return;
+			isOver = (e.type == MouseEvent.ROLL_OVER);
+			if(!isDown)
+				swapStates(isOver ? 1 : 0);
+			executeHover();
+			if(isOver && (intervalHover > 0))
+				intervalHoverID = setInterval(executeHover, intervalHover);
+		}
+		
+		/** Returns if isEnabled = false, otherwise swaps states, adds move/up mouse event listeners (to stage),
+		 *  executes onDown. Sets interval if <i>downInterval</i> &gt; 0  */
+		protected function onMouseDown(e:MouseEvent):void
+		{
+			if(!isEnabled)
+				return;
+			isDown = true;
+			swapStates(2);
+			xroot.stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+			xroot.stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+			executeDown();
+			if(intervalDown > 0)
+				downIntervalID = setInterval(executeDown, intervalDown);
+		}
+		/** Validates if button is still down (as may be released outside). */
+		protected function onMouseMove(e:MouseEvent):void
+		{
+			if(isDown && !e.buttonDown)
+				touchEnd(e);
+		}
+		/** Swaps states, removes move/up listeners from stage, clears all intervals. If happend to be outside 
+		 * button area - main execution won't be fired unless <i>executeReleasedOutside</i> is set to true. <i>onRelease</i>
+		 * is fired anyway. */
+		protected function onMouseUp(e:MouseEvent):void 
+		{ 
+			onMouseMove(e);
+		}
+		
+		/** Calls main execute, unless <i>externalExecution</i> is set */
+		protected function onMouseClick(e:MouseEvent):void
+		{
+			if(!externalExecution)
+				execute(e);
+		}
+		//---------------------------------------- MOUSE EVENTS -----------------------------------//
+		//---------------------------------------- MOUSE EVENTS SUPPORT -----------------------------------//
+		private function touchEnd(e:MouseEvent):void
+		{
+			if(!isDown) return;
+			isDown = false;
+			xroot.stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+			xroot.stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+			clearDownInterval();
+			swapStates(0);
+			if(e.target != this && executeReleasedOutside)
+				onMouseClick(e);
+			lenientExec(onRelease);
+		}
+		
+		private function executeHover():void
+		{
+			if(isOver)
+				lenientExec(onOver);
+			else
+			{
+				clearHoverInterval();
+				lenientExec(onOut);
+			}
+		}
+		private function executeDown():void
+		{
+			if(isDown)
+				lenientExec(onDown);
+			else
+				clearDownInterval();
+		}
+		
+		private function clearHoverInterval():void
+		{
+			clearInterval(intervalHoverID);
+			intervalHoverID = 0;
+		}
+		
+		private function clearDownInterval():void
+		{
+			clearInterval(downIntervalID);
+			downIntervalID=0;
+		}
+		
+		private function lenientExec(property:Object):void
+		{
+			if(property is String)
+				xroot.binCommand(property,this);
+			if(property is Function)
+				property();
+		}
+		//---------------------------------------- MOUSE EVENTS SUPPORT -----------------------------------//
+		//---------------------------------------- MAIN EXECUTION  -----------------------------------//
+		/** Performs main execution (<code>code</code> attribute + meta keywords)  in pre-defined order.
+		 * Typically called automatically on event of CLICK (not mouse down), but this can be dependent on few factors:
+		 * <ul><li>If <code>externalExecution</code> is defined - execute won't be called on CLICK</li>
+		 * <li>If <code>executeReleasedOutside = true</code> - execution will be called even though CLICK event isn't fired in this case.</li>
+		 * </ul>
+		 * For example <code>xForm</code> instances by default automatically detect <code>xButton</code> instances and "intercept" their functionalty by
+		 * defining <i>externalExecution</i> where internal form validation is checked and <code>execute</code> is called only when passed.
+		 * <h3>Execution order</h3>
+		 * <ol>
+		 * <li>meta.url - if defined, navigates to url. Can be URL string or an Array where first element is URL String, second "window type",eg. "_self"</li>
+		 * <li>meta.js - if defined and available, performs ExternalInterface.call, where js should supply an Array of arguments for call function</li>
+		 * <li>meta.post - if defined, used as an Array of arguments for <code>sendData</code> function from ConnectPHP class</li>
+		 * <li>code - evaluates portion of uncompiled code assigned to it, String argument for <code>binCommand</code> function</li>
+		 * </ol>*/
+		public function execute(e:MouseEvent=null):void
+		{
+			if(meta != null)
+			{
+				executeNavigateToURL();
+				executeJS();
+				executePost();
+			}
+			if(code!=null)
+				xroot.binCommand(code,this);
+		}
+		
+		private function executePost():void
+		{
+			if(postObject != null)
+			{
+				if(meta.post is String && meta.post.charAt(0) == "$")
+					postObject.sendData.apply(null, xroot.binCommand(meta.post.substr(1),this));
+				else if(meta.post is Array)
+					postObject.sendData.apply(null, meta.post);
+				else throw new Error("Invalid meta.post on btn " + this.name + ". Must be an array or String reference to array.")
+			}
+		}
+		
+		private function executeJS():void
+		{
+			if(meta.js && ExternalInterface.available)
+				ExternalInterface.call.apply(null, meta.js);
+		}
+		
+		private function executeNavigateToURL():void
+		{
+			if(!meta.url)
+				return;
+			var url:String;
+			var windw:String=null;
+			if(meta.url is Array)
+			{
+				url = meta.url[0];
+				windw = meta.url[1];
+			}
+			else
+				url = meta.url;
+			if(url.charAt(0) == "$")
+				url= xroot.binCommand(meta.post.substr(1),this);
+			navigateRequest.url = url;
+			navigateToURL(navigateRequest,  windw);
+		}
+		//---------------------------------------- MAIN EXECUTION  -----------------------------------//
+		//---------------------------------------- STATES MECHANIC  -----------------------------------//
+		private function stateInspection(child:DisplayObject):DisplayObject
+		{
+			var cn:String = child.name;
+			if(cn.match(/out/i))
 			{
 				if(stateOut && contains(stateOut))
 					removeChild(stateOut);
@@ -103,7 +291,7 @@ package axl.xdef.types
 				if(currentState != 0)
 					return child;
 			}
-			if(child.name.match(/over/i))
+			if(cn.match(/over/i))
 			{
 				if(stateOver && contains(stateOver))
 					removeChild(stateOver);
@@ -111,7 +299,7 @@ package axl.xdef.types
 				if(currentState != 1)
 					return child;
 			}
-			if(child.name.match(/down/i))
+			if(cn.match(/down/i))
 			{
 				if(stateDown && contains(stateDown))
 					removeChild(stateDown);
@@ -119,7 +307,7 @@ package axl.xdef.types
 				if(currentState != 2)
 					return child;
 			}
-			if(child.name.match(/disabled/i))
+			if(cn.match(/disabled/i))
 			{
 				if(stateDisabled && contains(stateDisabled))
 					removeChild(stateDisabled);
@@ -127,175 +315,7 @@ package axl.xdef.types
 				if(currentState != 3)
 					return child;
 			}
-			return super.addChild(child);
-		}
-		//-- internal
-		override public function set meta(v:Object):void
-		{
-			super.meta = v;
-			var a:Object, b:Array, i:int, j:int;
-			if(meta is String)
-				return
-			if(meta.hasOwnProperty('url'))
-			{
-				if(meta.url is Array)
-				{
-					trigerUrl =  new URLRequest(meta.url[0]);
-					trigerUrlWindow = meta.url[1];
-				}
-				else
-					trigerUrl = new URLRequest(meta.url);
-			}
-			if(meta.hasOwnProperty('event'))
-				trigerEvent  = new Event(meta.event,true);
-			if(meta.hasOwnProperty('js'))
-				trigerExt = meta.js;
-			if(meta.hasOwnProperty('action'))
-			{
-				a = meta.action;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					actions[i] = new xAction(b[i],xroot,this);
-			}
-			if(meta.hasOwnProperty('actionOver'))
-			{
-				actionOver = true;
-				a = meta.actionOver;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					actionsOver[i] = new xAction(b[i],xroot,this);
-			}
-			if(meta.hasOwnProperty('actionOut'))
-			{
-				actionOut = true;
-				a = meta.actionOut;
-				b = (a is Array) ? a as Array : [a];
-				for(i = 0, j = b.length; i<j; i++)
-					actionsOut[i] = new xAction(b[i],xroot,this);
-			}
-			if(meta.hasOwnProperty('post'))
-			{
-				if(meta.post.hasOwnProperty('dynamicArgs'))
-				{
-					postSendArgs // will be asigned right before execution
-					dynamicArgs = true;
-				}
-				else
-					postSendArgs = meta.post.sendArgs;
-				postObject = new ConnectPHP();
-				U.asignProperties(postObject, meta.post.connectProperties);
-			}
-		}
-		
-		private function checkProperties():void
-		{
-			if(overTarget == null)
-				over = defaultOver;
-			if(disabledTarget ==null)
-				disabled = defaultDisabled;
-		}
-		
-		//--click mechanic
-		protected function mouseDown(e:MouseEvent):void
-		{
-			isDown = true;
-			swapStates(2);
-			U.STG.addEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
-			U.STG.addEventListener(MouseEvent.MOUSE_UP, mouseUp);
-			if(intervalValue > 0)
-				delayID = setTimeout(repeatEvent, intervalDelay);
-			
-			function repeatEvent():void
-			{
-				if(isDown)
-					intervalID = setInterval(mouseClick, intervalValue,e);
-				else
-					clearIntervals();
-			}
-		}
-		
-		protected function mouseClick(e:MouseEvent):void
-		{
-			this.dispatchEvent(eventClick);
-			if(userClickHandler != null) 
-			{
-				if(userClickHandler.length > 0)
-					userClickHandler(e);
-				else
-					userClickHandler();
-			}
-			if(!externalExecution)
-				execute(e);
-		}
-		
-		public function execute(e:MouseEvent=null):void
-		{
-			if(trigerUrl)
-				navigateToURL(trigerUrl, trigerUrlWindow);
-			if(trigerEvent != null)
-				this.dispatchEvent(this.trigerEvent);
-			if(this.trigerExt && ExternalInterface.available)
-				ExternalInterface.call.apply(null, trigerExt);
-			if(this.postObject != null)
-			{
-				if(dynamicArgs)
-					this.postObject.sendData.apply(null, XSupport.getDynamicArgs(meta.post.sendArgs, this.xroot,this) as Array);
-				else
-					this.postObject.sendData.apply(null, this.postSendArgs);
-			}
-			for(var i:int = 0, j:int = actions.length; i<j; i++)
-				actions[i].execute();
-			if(code!=null)
-				xroot.binCommand(code,this);
-			if(debug) U.log(this, this.name, '[executed]', j, 'actions');
-		}
-		
-		protected function hover(e:MouseEvent=null):void
-		{
-			if(!isEnabled)
-				return;
-			checkProperties();
-			
-			isOver = (e.type == MouseEvent.ROLL_OVER);
-			
-			var val:int =  isOver ? 0 : 1;
-			
-			if(overTarget)
-			{
-				if(overTarget[overKey] is Function)
-					overTarget[overKey].apply(null, overVals[val]);
-				else
-					overTarget[overKey] = overVals[val];
-			}
-			if(!isDown)
-				swapStates(isOver ? 1 : 0);
-			
-			executeHover();
-			if(isOver && (intervalHoverValue > 0) && intervalHoverID < 1)
-				intervalHoverID = setInterval(repeatHoverActions, intervalHoverValue,e);
-			
-			function repeatHoverActions():void { (isOver) ?  executeHover() : clearHoverInterval(); }
-			function executeHover():void
-			{
-				if(isOver && actionOver)
-				{
-					for(var i:int = 0, j:int = actionsOver.length; i<j; i++)
-						actionsOver[i].execute();
-				}
-				else
-					clearHoverInterval();
-				
-				if(!isOver && actionOut)
-				{
-					for(var k:int = 0,l:int = actionsOver.length; k<l; k++)
-						actionsOut[k].execute();
-				}
-			}
-			function clearHoverInterval():void
-			{
-				flash.utils.clearInterval(intervalHoverID);
-				intervalHoverID = 0;
-			}
+			return null;
 		}
 		
 		private function swapStates(state:int):void
@@ -318,135 +338,82 @@ package axl.xdef.types
 			}
 			addChildAt(add,0);
 		}
-		// --- --- PUBLIC API --- --- //
-		public function setEnabled(v:Boolean):void { enabled =v }
+		
+		private function setDisabled():void
+		{
+			listeners(false);
+			xroot.stage.removeEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+			xroot.stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+			swapStates(3);
+		}
+		
+		private function setEnabled():void
+		{
+			swapStates(isDown ? 2 : (isOver ? 1 : 0));
+			listeners(true);
+		}
+		
+		private function listeners(add:Boolean):void
+		{
+			var f:String = add ? 'addEventListener' : 'removeEventListener';
+			this[f](MouseEvent.MOUSE_DOWN, onMouseDown);
+			this[f](MouseEvent.CLICK, onMouseClick);
+			this[f](MouseEvent.ROLL_OVER, onMouseHover);
+			this[f](MouseEvent.ROLL_OUT, onMouseHover);
+		}
+		//---------------------------------------- STATES MECHANIC  -----------------------------------//
+		//---------------------------------------- PUBLIC API  -----------------------------------//
+		/** Enables / disables button: makes it clickable/unclickable, swaps states. */
 		public function get enabled():Boolean {	return isEnabled }
 		public function set enabled(v:Boolean):void
 		{
 			//if(isEnabled == v) return;
-			isEnabled = v;
-			checkProperties();
-			swapStates(v ? (isDown ? 2 : 0) : 3);
-			if(!isEnabled)
-			{
-				U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
-				U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
-				hover(new MouseEvent("rollout",false));
-			}
-				
-			var f:String = isEnabled ? 'addEventListener' : 'removeEventListener';
-			this[f](MouseEvent.MOUSE_DOWN, mouseDown);
-			this[f](MouseEvent.CLICK, mouseClick);
-			this[f](MouseEvent.ROLL_OVER, hover);
-			this[f](MouseEvent.ROLL_OUT, hover);
-			
-			buttonMode = isEnabled;
-			useHandCursor = isEnabled;
-			disabledTarget[disabledKey] = this.disabledVals[isEnabled ? 1 : 0];
+			isEnabled = buttonMode = useHandCursor = v;
+			isEnabled ? setEnabled() : setDisabled();
 		}
-		
-		protected function mouseUp(e:MouseEvent):void { mouseMove(e) }
-		protected function mouseMove(e:MouseEvent):void
+		/** Allows to set ColorTransform instance properties and asign it to this object.
+		 * @param prop - String (name of ColorTransform property) or object key-value style
+		 * @param val - If properties is single property (string) - value for this property. If properties is key-val object,
+		 * val is ignored. */
+		public function ctransform(properties:Object,val:Number):void 
 		{
-			if(isDown && !e.buttonDown)
-				touchEnd(e);
-		}
-		
-		private function touchEnd(e:MouseEvent):void
-		{
-			isDown = false;
-			U.STG.removeEventListener(MouseEvent.MOUSE_UP, mouseUp);
-			U.STG.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMove);
-			clearIntervals();
-			swapStates(0);
-			if(e.target != this && executeReleasedOutside)
-				mouseClick(e);
-		}
-		
-		private function clearIntervals():void
-		{
-			flash.utils.clearInterval(intervalID);
-			flash.utils.clearTimeout(delayID);
-		}
-		
-		/** impulse over event*/
-		public function get onClick():Function { return userClickHandler }
-		public function set onClick(v:Function):void { userClickHandler = v	}
-		
-		public function get over():String { return sover }
-		public function set over(v:String):void
-		{
-			sover = v;
-			overKey = v.substring(0, v.lastIndexOf(':'));
-			var val:String = v.substring(v.lastIndexOf(':')+1);
-			
-			var keys:Array = overKey.split('.');
-			overKey = keys.pop();
-			overTarget = this;
-			while(keys.length)
-				overTarget = overTarget[keys.shift()];
-			overVals = JSON.parse(val);
-		}
-		public function get disabled():String { return sdisabled}
-		public function set disabled(v:String):void
-		{
-			sdisabled = v;
-			disabledKey = v.substring(0, v.lastIndexOf(':'));
-			var val:String = v.substring(v.lastIndexOf(':')+1);
-			
-			var keys:Array = disabledKey.split('.');
-			disabledKey = keys.pop();
-			disabledTarget = this;
-			while(keys.length)
-				disabledTarget = disabledTarget[keys.shift()];
-			disabledVals = JSON.parse(val);
-		}
-		
-		public function get upstate():DisplayObject { return texture }
-		public function set upstate(v:DisplayObject):void
-		{
-			if(texture != null && contains(texture) && texture != v)
-				this.removeChild(texture);
-			texture = v;
-			if(upstate !=null)
-				this.addChild(texture);
-			rotated = rotated;
-		}
-		
-		public function get rotated():Boolean { return isRotated }
-		public function set rotated(v:Boolean):void
-		{
-			isRotated = v;
-			if(!texture)
-				return;
-			if(isRotated)
-			{
-				texture.rotation = 180;
-				texture.x = texture.width;
-				texture.y = texture.height;
-			}
-			else
-			{
-				texture.rotation = 0;
-				texture.x = 0;
-				texture.y =0;
-			}
-		}
-		
-		public function ctransform(prop:String,val:Number):void {
 			if(!xtrans)
 				xtrans = new ColorTransform();
-			xtrans[prop] = val;
+			if(properties is String)
+				xtrans[properties] = val;
+			else if(properties is Object)
+				for(var s:String in properties)
+					xtrans[s] = properties[s];
 			this.transform.colorTransform = xtrans;
 		}
-		public function set style(v:String):void
+		/** Allows to set displayable objects as button states (over, out, down, disabled).<br>
+		 * Value for this property should match name of the element available within config's <i>additions</i> node.
+		 * Element should contain one or more children with name(s) matching state's name(s) (<i>out,over,down,disabled</i>). 
+		 * Children of it are instantiated and pushed to button's display list, where internal filter assigns these to particular button states. Assigning
+		 * the same style name more than once does not cause multiple instantiation. Asigning diferent button style during runtime
+		 * removes old states from buttons display list but does not dispose them. Only one state is displayed at the time.
+		 * It is available to define some states while not defining others without quirky results.
+		 * Asigning same style to different buttons does not cause "stealing" children.<br>Example style:<br>
+		 * <code>&lt;div name='standardButton'&gt;<br>
+		 *    &lt;img name='out' src='/assets/btnOut.png'&gt;<br>
+		 *    &lt;img name='over' src='/assets/btnOver.png'&gt;<br>
+		 * &lt;/div&gt;<br></code> */
+		public function get states():String { return styleName }
+		public function set states(v:String):void
 		{
 			if(styleName && v == styleName)
 				return;
 			styleName = v;
 			xroot.support.pushReadyTypes2(xroot.getAdditionDefByName(v),this,null,xroot);
 		}
-		
-		public function get style():String { return styleName }
+		/** If meta.url was not specified - returns null. Otherwise returns instance of URLRequest which will be used to navigate to url. 
+		 * Since meta object is dynamic variables container, URLRequest.url, propety is being re-read and re-asigned on execution (meta.url gets
+		 * re-evaluated). @see #execute() */
+		public function get navigateRequest():URLRequest { return URLReq }
+		/** If meta.post was not set to this button - returns null. Otherwise returns an instance of <code>ConnectPHP</code> class
+		 * which of method <code>sendData</code> will be used to make POST/GET request. meta.post provides arguments array for sendData.
+		 * @see #execute() @see axl.utils.ConnectPHP#sendData() */
+		public function get POSTGETObject():ConnectPHP { return postObject }
+
 	}
 }
