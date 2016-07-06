@@ -4,6 +4,7 @@ package axl.xdef
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.system.Capabilities;
 	import flash.system.Security;
 	
 	import axl.utils.ConnectPHP;
@@ -69,8 +70,21 @@ package axl.xdef
 				{
 					U.log(tname, framesCounter, '/', framesAwaitingLimit, 'limit reached. loaderInfo property not found. ABORT');
 					xroot.removeEventListener(Event.ENTER_FRAME, onEnterFrames);
+					if(!Ldr.fileInterfaceAvailable)
+						throw new Error("Unknown loaderInfo.url");
+					else
+						getFileNameFromFileClass();
 				}
 			}
+		}
+		
+		private function getFileNameFromFileClass():void
+		{
+			U.log("loaderInfo", xroot.loaderInfo, "file class", Ldr.FileClass);
+			isLocal = ['app:'];
+			xroot.fileName = xroot.fileName || U.fileNameFromUrl(Ldr.FileClass.applicationDirectory.resolvePath('..').nativePath,true);
+			U.log(tname +" fileName =", xroot.fileName, ' isLocal:', isLocal);
+			fileNameFound()
 		}
 		
 		private function onLoaderInfoAvailable(e:Event=null):void
@@ -86,7 +100,7 @@ package axl.xdef
 			xroot.fileName = xroot.fileName || xroot.loaderInfo.parameters.fileName || U.fileNameFromUrl(xroot.loaderInfo.parameters.loadedURL,true) || U.fileNameFromUrl(xroot.loaderInfo.url,true);
 			
 			U.log(tname +" fileName =", xroot.fileName, ' isLocal:', isLocal);
-			fileNameFound()
+			fileNameFound();
 		}
 		
 		private function fileNameFound():void
@@ -97,16 +111,24 @@ package axl.xdef
 			loadConfig();
 		}
 		
-		private function resolveDirectories(configPath:String=null):void
+		private function resolveDirectories():void
 		{
-			NetworkSettings.configPath = configPath || '/cfg.xml';
+			var c:Object = flash.system.Capabilities;
+			NetworkSettings.configPath = NetworkSettings.configPath || '/cfg.xml';
 			pathPrefixes = [];
 			if(isLocal)
 			{
-				if(xroot.loaderInfo.parameters.hasOwnProperty('loadedURL')) // to work with promo loader LOCALLY
+				if(xroot.loaderInfo && xroot.loaderInfo.parameters.hasOwnProperty('loadedURL'))
 				{
-					var v:String = xroot.loaderInfo.parameters.loadedURL.substr(0,xroot.loaderInfo.parameters.loadedURL.lastIndexOf('/')+1) + '../';
-					pathPrefixes.unshift(v);
+						var v:String = xroot.loaderInfo.parameters.loadedURL.substr(0,xroot.loaderInfo.parameters.loadedURL.lastIndexOf('/')+1) + '../';
+						pathPrefixes.unshift(v);
+				}
+				else if(c.os.match(/(android|iphone)/i))
+				{
+					pathPrefixes = [
+						Ldr.FileClass.applicationStorageDirectory.url,
+						Ldr.FileClass.applicationDirectory.url
+					];
 				}
 				else
 				{
@@ -120,13 +142,18 @@ package axl.xdef
 				NetworkSettings.configPath =  '/' + fileNameNoExtension + '.xml';
 			}
 			
+			if(xroot.loaderInfo && xroot.loaderInfo.parameters["remote"])
+			{
+				pathPrefixes.push(xroot.loaderInfo.parameters["remote"]);
+			}
+			else
+				pathPrefixes.push(xroot.appRemote);
 			NetworkSettings.configPath += '?cacheBust=' + String(new Date().time).substr(0,-3);
-			pathPrefixes.push(xroot.loaderInfo.parameters["remote"] || xroot.appRemote);
 		}
 		
 		private function loadConfig():void
 		{
-			U.log(tname,'[runFlow] PathPrefixes', pathPrefixes);
+			U.log(tname,'[load config] PathPrefixes', pathPrefixes);
 			U.log("[]FILENAME", xroot.fileName,'\n[]APPREMOTE',xroot.appRemote, "\n[]CONFIG PATH", NetworkSettings.configPath);
 			Ldr.load(NetworkSettings.configPath,onConfigLoaded,null,null,pathPrefixes);
 		}
@@ -201,7 +228,7 @@ package axl.xdef
 		}
 		private function getSourcePrefixes(cfg:XML):Array
 		{
-			U.log(tname + '[getSourcePrefixes] local:', isLocal, xroot.loaderInfo.url);
+			U.log(tname + '[getSourcePrefixes] local:', isLocal);
 			var o:Array = [xroot.appRemote];
 			if(cfg.hasOwnProperty('remote') && cfg.remote.hasOwnProperty('0') && cfg.remote[0].hasOwnProperty('children'))
 			{
@@ -211,14 +238,13 @@ package axl.xdef
 					o.unshift(xmll[i].toString());
 			}
 			if(isLocal)
-				o.unshift(pathPrefixes[0]);
+				o = pathPrefixes.concat(o);//o.unshift(pathPrefixes[0]);
 			return o;
 		}
 		
 		private function destroy():void
 		{
 			U.log('[xLauncher][DESTROY]');
-			isLocal = undefined; 
 		}
 	}
 }
