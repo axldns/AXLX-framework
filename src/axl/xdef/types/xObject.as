@@ -10,6 +10,8 @@
 package axl.xdef.types
 {
 	import axl.xdef.interfaces.ixDef;
+	import axl.xdef.types.display.xRoot;
+
 	/** Lightweight class for loading data and providing an easy acces to its contents, without accessing internal
 	 * assset manager. Instantiated from: <h3><code>&lt;data/&gt;<br></code></h3>
 	 * Data parsing is available right after defining src attribute. Loaded data passes through  

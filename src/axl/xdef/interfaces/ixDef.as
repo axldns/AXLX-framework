@@ -9,7 +9,7 @@
  */
 package axl.xdef.interfaces
 {
-	import axl.xdef.types.xRoot;
+	import axl.xdef.types.display.xRoot;
 	/** Interface that allows to identify, parse and proceed valid XML children of config file to
 	 * functional elements of the project. */
 	public interface ixDef

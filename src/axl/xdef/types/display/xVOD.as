@@ -1,4 +1,4 @@
-package axl.xdef.types
+package axl.xdef.types.display
 {
 	import flash.display.Stage;
 	import flash.events.Event;

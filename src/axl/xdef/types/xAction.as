@@ -10,6 +10,8 @@
 package axl.xdef.types
 {
 	import axl.xdef.interfaces.ixDef;
+	import axl.xdef.types.display.xRoot;
+
 	/**
 	 * Class that allows to execute at runtime XML defined funciton or set of functions.<br>
 	 * This class is instantiated from &lt;act/> node and can be referenced from registry.

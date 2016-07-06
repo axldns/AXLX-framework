@@ -13,6 +13,8 @@ package axl.xdef.types
 	import axl.utils.Counter;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
+	import axl.xdef.types.display.xRoot;
+
 	/** Non-displayable class that provides advanced timer functions. Instantiated 
 	 * from: <h3><code>&lt;timer/&gt;</code></h3>
 	 * Extends axl.utils.Counter by providing XML interface to it. Additionaly,

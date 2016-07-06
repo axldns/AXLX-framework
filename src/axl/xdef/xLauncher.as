@@ -13,7 +13,7 @@ package axl.xdef
 	import axl.utils.LiveAranger;
 	import axl.utils.NetworkSettings;
 	import axl.utils.U;
-	import axl.xdef.types.xRoot;
+	import axl.xdef.types.display.xRoot;
 
 	public class xLauncher
 	{

@@ -7,7 +7,7 @@
  * in accordance with the terms of the accompanying license agreement.
  *
  */
-package axl.xdef.types
+package axl.xdef.types.display
 {
 	import flash.display.DisplayObject;
 	import flash.events.MouseEvent;

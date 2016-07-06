@@ -11,6 +11,7 @@ package axl.xdef.types
 {
 	import axl.utils.U;
 	import axl.xdef.XSupport;
+	import axl.xdef.types.display.xRoot;
 
 	public class xScript extends xObject
 	{

@@ -24,21 +24,21 @@ package axl.xdef
 	import axl.xdef.interfaces.ixDisplay;
 	import axl.xdef.interfaces.ixDisplayContainer;
 	import axl.xdef.types.xAction;
-	import axl.xdef.types.xBitmap;
-	import axl.xdef.types.xButton;
-	import axl.xdef.types.xCarousel;
-	import axl.xdef.types.xCarouselSelectable;
-	import axl.xdef.types.xForm;
-	import axl.xdef.types.xMasked;
+	import axl.xdef.types.display.xBitmap;
+	import axl.xdef.types.display.xButton;
+	import axl.xdef.types.display.xCarousel;
+	import axl.xdef.types.display.xCarouselSelectable;
+	import axl.xdef.types.display.xForm;
+	import axl.xdef.types.display.xMasked;
 	import axl.xdef.types.xObject;
-	import axl.xdef.types.xRoot;
+	import axl.xdef.types.display.xRoot;
 	import axl.xdef.types.xScript;
-	import axl.xdef.types.xScroll;
-	import axl.xdef.types.xSprite;
-	import axl.xdef.types.xSwf;
-	import axl.xdef.types.xText;
+	import axl.xdef.types.display.xScroll;
+	import axl.xdef.types.display.xSprite;
+	import axl.xdef.types.display.xSwf;
+	import axl.xdef.types.display.xText;
 	import axl.xdef.types.xTimer;
-	import axl.xdef.types.xVOD;
+	import axl.xdef.types.display.xVOD;
 
 	/** Factory class for XML defined elements.<br>
 	 * <ul>

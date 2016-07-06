@@ -13,7 +13,7 @@ package axl.xdef
 	
 	import axl.utils.LiveAranger;
 	import axl.xdef.interfaces.ixDef;
-	import axl.xdef.types.xSprite;
+	import axl.xdef.types.display.xSprite;
 	
 	public class xLiveAranger extends LiveAranger
 	{
