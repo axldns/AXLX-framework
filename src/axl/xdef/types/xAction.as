@@ -97,13 +97,13 @@ package axl.xdef.types
 		 * @see arguments
 		 * @see iteration
 		 *  */
-		public function execute(...args):void
+		public function execute(...args):*
 		{
 			executeArgs = args;
 			if(code!=null)
 			{
 				if(isNaN(repeat))
-					xroot.binCommand(code,this,debug);
+					return xroot.binCommand(code,this,debug);
 				else
 					for(iterationIndex=0; iterationIndex < repeat;iterationIndex++)
 						xroot.binCommand(code,this,debug);
