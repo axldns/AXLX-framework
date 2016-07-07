@@ -9,7 +9,6 @@
  */
 package axl.xdef.types
 {
-	import axl.utils.AO;
 	import axl.utils.Counter;
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDef;
@@ -83,7 +82,7 @@ package axl.xdef.types
 		 * @see #reparseMetaEverytime */
 		public function reset():void 
 		{
-			AO.killOff(this);
+			if(debug) log("[Counter][" + this.name+"[RESET]");
 			XSupport.applyAttributes(def, this);	
 		}
 		
