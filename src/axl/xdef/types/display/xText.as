@@ -58,6 +58,7 @@ package axl.xdef.types.display
 		/** Function to execute when a href tag is clicked in textfield. Event type is passed to 
 		 * this function as an argument */
 		public var onLinkEvent:Function;
+		private var originalText:String;
 		
 		public function xText(definition:XML=null,xrootObj:xRoot=null)
 		{
@@ -107,6 +108,7 @@ package axl.xdef.types.display
 		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method
 		 * when htmlText hyperLink is clicked</li>
 		 * </ul>
+		 * @see axl.xdef.types.xAction
 		 * @see axl.xdef.XSupport#animByNameExtra()
 		 * @see axl.utils.AO#animate() */
 		public function get meta():Object { return xmeta }
@@ -116,13 +118,7 @@ package axl.xdef.types.display
 				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
 			if(!v || meta) return;
 			xmeta =v;
-			
-			if(meta.hasOwnProperty('action'))
-			{
-				var a:Object = meta.action;
-				var b:Array = (a is Array) ? a as Array : [a];
-			}
-			refreshText();
+			performReplace();
 		}
 		
 		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
@@ -187,30 +183,35 @@ package axl.xdef.types.display
 				throw new Error("Undefined definition for " + this);
 						
 			XSupport.applyAttributes(def, this);
-			var tv:String =  def.toString();
+			
 			if(!def.hasOwnProperty('@font'))
 				tff.font = defaultFont;
 			if(!this.styleSheet)
 				this.defaultTextFormat = tff;
-			
-			if(tv.length > 0)
-			{
-				this.htmlText = tv;
-			}
+			setOriginalText();
 			autoSizeText();
+		}
+		
+		private function setOriginalText():void
+		{
+			originalText =  def.toString();
+			if(originalText.length > 0)
+			{
+				this.htmlText = originalText;
+			}
 		}
 		//----------------------- INTERFACE SUPPORT -------------------- //
 		//----------------------- OVERRIDEN METHODS -------------------- //
 		override public function set text(value:String):void
 		{
 			super.text = value;
-			refreshText();
+			performReplace();
 		}
 		
 		override public function set htmlText(value:String):void
 		{
 			super.htmlText = value;
-			refreshText();
+			performReplace();
 		}
 		//----------------------- OVERRIDEN METHODS -------------------- //
 		//----------------------- INTERNAL METHODS -------------------- //
@@ -278,6 +279,10 @@ package axl.xdef.types.display
 		/** Reevaluates replace statements defined in meta.replace array and attribute 
 		 * <i>replace</i> array. Re-asignes text of textfield in according to these. */
 		public function refreshText():void
+		{
+			setOriginalText();
+		}
+		private function performReplace():void
 		{
 			var a:Object = meta ? meta.replace as Array : null;
 			var s:String = this.htmlText;
