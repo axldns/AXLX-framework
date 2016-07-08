@@ -628,7 +628,7 @@ package axl.xdef
 			if(t.meta && t.meta.addedToStage != null)
 				animByNameExtra(t, 'addedToStage');
 			if(t.onAddedToStage is String)
-				root.binCommand(t.onAddedToStage,this);
+				root.binCommand(t.onAddedToStage,t);
 			else if(t.onAddedToStage is Function)
 				t.onAddedToStage();
 		}
