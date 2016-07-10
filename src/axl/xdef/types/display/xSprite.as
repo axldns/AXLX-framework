@@ -314,7 +314,7 @@ package axl.xdef.types.display
 		
 		/** Combined scaleX and scaleY properties. Useful for maintaining aspect ratio whilst animations */
 		public function set scale(v:Number):void{	scaleX = scaleY = v }
-		public function get scale():Number { return scaleX + scaleY>>1 }
+		public function get scale():Number { return (scaleX + scaleY)/2 }
 		
 		/** If <code>distributeHorizontal</code> or <code>distributeVertical</code> specified,
 		 * runs through every child of this container and distributes it horizontally and/or 
