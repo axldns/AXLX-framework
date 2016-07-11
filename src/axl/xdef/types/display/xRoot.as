@@ -353,7 +353,7 @@ package axl.xdef.types.display
 				else if(v is Array)
 					removeRegisteredGroup(v as Array);
 				else if(v is DisplayObject)
-					removeChild(v as DisplayObject)
+					v.parent.removeChild(v as DisplayObject)
 				else
 					U.log("[xRoot][rmv][WARNING] - Can't remove: " + v + " - is unknow type");
 			}
