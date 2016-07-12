@@ -614,7 +614,7 @@ package axl.xdef
 			else if(v is Object)
 				for(var p:String in v)
 					if(t['hasOwnProperty'](p))
-						t[p] = ((v[p] is String && v[p].charAt(0) == "$") ? root.binCommand(v[p],t) : v[p]);
+						t[p] = ((v[p] is String && v[p].charAt(0) == "$") ? root.binCommand(v[p].substr(1),t) : v[p]);
 		}
 		
 		/**Resets instance to original XML values if <code>resetOnAddedToSage=true</code>.<br>
