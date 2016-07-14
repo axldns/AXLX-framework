@@ -372,7 +372,7 @@ package axl.xdef.types.display
 		 * */
 		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
 		{
-			c = c || this.getChildByName(objName) as ixDef;
+			c = c || this.getChildByName(objName) as ixDef || xsupport.registry[objName] as ixDef;
 			if(debug) U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
 			if(c != null && c.meta.hasOwnProperty(screenName))
 				XSupport.animByNameExtra(c, screenName, onComplete,killCurrent,reset,doNotDisturb);
