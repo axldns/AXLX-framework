@@ -100,9 +100,9 @@ package axl.xdef.types.display
 		
 		override protected function elementAddedHandler(e:Event):void
 		{
-			super.elementAdded(e);
+			super.elementAddedHandler(e);
 			var t:xText = e.target as xText;
-			if(t && t.meta.hasOwnProperty('regexp') && toValidate.indexOf(t) < 0)
+			if(t && t.meta && t.meta.hasOwnProperty('regexp') && toValidate.indexOf(t) < 0)
 				toValidate.push(t);
 		}
 		/** Validates all children xText instances (&lt;txt/&gt;) against their meta.regexp and either 
