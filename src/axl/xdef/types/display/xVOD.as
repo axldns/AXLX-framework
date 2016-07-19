@@ -11,6 +11,7 @@ package axl.xdef.types.display
 	import flash.net.NetStreamPlayOptions;
 	import flash.utils.setTimeout;
 	
+	import axl.utils.Counter;
 	import axl.utils.U;
 	import axl.xdef.XSupport;
 	/** Simple Video On Demand class that applies minimal mechanic for right net-events respnses and
@@ -24,7 +25,7 @@ package axl.xdef.types.display
 	 * At the moment despite property <code>useStageVideo</code> presence, there's no stage video support. */
 	public class xVOD extends xSprite
 	{
-		public static const version:String = '0.9';
+		public static const version:String = '0.91';
 		private var tname:String = '[xVOD ' + version +']';
 		private var xrtmp:String;
 		private var xvideoMeta:Object;
@@ -38,6 +39,7 @@ package axl.xdef.types.display
 		private var xwidth:Number=0;
 		private var xbufferPlayback:Number = 1;
 		private var xvolume:Number = 0.1;
+
 		private var xonFrame:Function; 
 		private var infiniteLoop:Boolean = false;
 		
@@ -106,6 +108,23 @@ package axl.xdef.types.display
 		 * right after video is available for play but <code>AUTOPLAY = false</code> (video is paused then). 
 		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
 		public var onPlayStop:Object;
+		/** Function or portion of uncompiled code to execute when video meta data is first received. 
+		 * Accessible via <code>videoMeta</code>
+		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onMeta:Object;
+		private var xcounter:Counter;
+		private var xtimePassed:String;
+		private var xtimeRemaining:String;
+		/** Format for requesting timeRemaing and timePassed. @see axl.utils.Counter#defaultFormat*/
+		public var timeFormat:String;
+		
+		/** When duration of video is known, internal timer updates two properties:
+		 * timePassed and timeRemaining accordong to timeFormat. Once this is done, 
+		 * Function or portion of uncompiled hold by this field can be executed. 
+		 * @see #timePassed @see #timeRemaining
+		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		public var onTimerUpdate:Object;
+	
 		
 		/** Simple Video On Demand class that applies minimal mechanic for right net-events respnses and
 		 * video display. Instantiated from &lt;vod/&gt; 
@@ -118,6 +137,23 @@ package axl.xdef.types.display
 		public function xVOD(definition:XML=null, xrootObj:xRoot=null)
 		{
 			super(definition, xrootObj);
+			xcounter = new Counter();
+			xcounter.autoStart = false;
+			xcounter.interval = 1;
+		}
+		
+		private function xOnTimerUpdate():void
+		{
+			if(!ns || !videoMeta || !videoMeta.hasOwnProperty('duration'))
+				return;
+			xcounter.timing = [0, int(videoMeta.duration)];
+			xcounter.time = ns.time;
+			xtimeRemaining = xcounter.tillNext(timeFormat,-1);
+			xtimePassed =  xcounter.tillNext(timeFormat,-2);
+			if(onTimerUpdate is String)
+				xroot.binCommand(onTimerUpdate,this);
+			if(onTimerUpdate is Function)
+				onTimerUpdate(xtimeRemaining);
 		}
 		
 		private function dealWithStage():void
@@ -334,6 +370,13 @@ package axl.xdef.types.display
 				updateDimensions();
 				if(debug) U.log("videoAspectRatio", videoAspectRatio, "actual video object dimensions:", video ? (video.width + "x" + video.height) : '');
 			}
+			xcounter.timing = [0, int(xvideoMeta.duration)];
+			xcounter.time = ns.time;
+			xcounter.onUpdate = xOnTimerUpdate;
+			if(onMeta is String)
+				xroot.binCommand(onMeta,this);
+			if(onMeta is Function)
+				onMeta();
 		}
 		
 		//-------------------------------------------------------------- END OF EVENT HANDLING SECTION ------------------------------------------------------//
@@ -372,6 +415,7 @@ package axl.xdef.types.display
 		private function ON_PLAY_START():void
 		{
 			if(debug) U.log("ON_PLAY_START");
+			xcounter.interval =1;
 			IS_PAUSED = false;
 			
 			if(onPlayStart is String) xroot.binCommand(onPlayStart,this);
@@ -403,6 +447,8 @@ package axl.xdef.types.display
 			IS_PAUSED = true;
 			if(onPlayStop is String) xroot.binCommand(onPlayStop,this);
 			else if(onPlayStop is Function) onPlayStop();
+			xcounter.timing = [0, int(xvideoMeta.duration)];
+			xcounter.time = ns.time;
 		}
 		
 		private function ON_BUFFER_FULL():void
@@ -481,7 +527,7 @@ package axl.xdef.types.display
 			destroyNS();
 			destroyVideo();
 			xrtmp = null;
-			
+			xcounter.stopAll();
 		}
 		private function destroyNC():void
 		{
@@ -692,5 +738,12 @@ package axl.xdef.types.display
 				build_netConnection();
 			}
 		}
+		/** Returns formatted according to <code>timeFormat</code> String describing current video
+		 * playback remaining till video end time @see #timeFormat */
+		public function get timeRemaining():String { return xtimeRemaining }
+		/** Returns formatted according to <code>timeFormat</code> String describing current video
+		 * playback time @see #timeFormat */
+		public function get timePassed():String { return xtimeRemaining }
+
 	}
 }
