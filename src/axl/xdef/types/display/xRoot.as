@@ -11,7 +11,6 @@ package axl.xdef.types.display
 {
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
-	import flash.utils.setTimeout;
 	
 	import axl.utils.U;
 	import axl.utils.binAgent.RootFinder;
@@ -19,10 +18,17 @@ package axl.xdef.types.display
 	import axl.xdef.xLauncher;
 	import axl.xdef.interfaces.ixDef;
 
-	/** Master class for XML DisplayList projects. Treat it as your stage */
+	/** Master class for XML DisplayList projects.<br>
+	 * Launches the project, holds the config, provides top level API for DisplayObjects manipulation:
+	 * <ul>
+	 * <li>instantiating, adding and removing objects to/from display list</li>
+	 * <li>animating existing objects (single and groupped)</li>
+	 * <li>interpreting and executing XML defined functions</li>
+	 * </ul>
+	 * Top chain context of code within XML. */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.117';
+		private static const ver:String = '0.118';
 		public static function get version():String { return ver }
 		
 		protected var xsourcePrefixes:Array
@@ -31,11 +37,14 @@ package axl.xdef.types.display
 		
 		private var rootFinder:RootFinder;
 		private var launcher:xLauncher;
-		
+		/** If set - this will change config file name deduction from swf file name to this value.<br>
+		 * Do not change if you require full automation. */
 		public var fileName:String;
+		/** Determines your main server directory, to where rest of the config path and assets 
+		 * context will be added by combining <code>fileName</code> according to 
+		 * <code>axl.xdef.xLauncher.appReomoteSPLITfilename</code> rules. 
+		 * @see axl.xdef.xLauncher#appReomoteSPLITfilename*/
 		public var appRemote:String;
-		public var map:Object = {};
-		public var onRootAfterAttributes:Function;
 		
 		/** Master class for XML DisplayList projects. Treat it as your stage */
 		public function xRoot(definition:XML=null)
@@ -52,7 +61,7 @@ package axl.xdef.types.display
 			this.CONFIG = v;
 			this.def = v.root[0];
 		}
-		
+		/** Context / root path for elements using "src" attribute */
 		public function get sourcePrefixes():Array {return xsourcePrefixes }
 		public function set sourcePrefixes(v:Array):void { xsourcePrefixes = v}
 		/** Returns reference to XML config - the project definition */
@@ -69,8 +78,6 @@ package axl.xdef.types.display
 				return;
 			super.def = value;
 			XSupport.applyAttributes(value, this);
-			if(onRootAfterAttributes!=null)
-				onRootAfterAttributes();
 			xsupport.pushReadyTypes2(value, this,null,this);
 		}
 		
@@ -104,8 +111,24 @@ package axl.xdef.types.display
 					addChild(d as DisplayObject);
 			}
 		}
-		
-		public function addProto(v:Object,props:Object,to:Object=null,index:int=-1,node:String='additions'):void
+		/** (Experimental) Works the same as <code>add</code> and <code>addTo</code> method, but on instantiation
+		 * passes every element and all its sub-elements on all depth levels through decorator function.
+		 * Instead of function, key-value pairs object can be provided - co-exisisting properties will be matched
+		 * and values assigned. If its function - must accept one argument.
+		 * Already existing (registry) objects are not being passed through decorator again.<br>
+		 * Another difference is that element specified as container for target object does not have to be neccesairly
+		 * instantiated at request time. If it doesn't - one will be created, but not added to stage. In this case target won't be on stage too.
+		 * @param v - String (name of registered object or child of additions with name attribute of such), DisplayObject, or array of both
+		 * @param props - decorator function or key-value object for v and all its descendands.
+		 * @param to -  String (name of registered object or child of additions with name attribute of such), DisplayObject, or array of both to which
+		 * target (v) display list will be added
+		 * @param forceNew - if true - regardless of existance object of the same name in registry, new object will be instantiated, otherwise
+		 * last registered object of name v will be added
+		 * @param index display list depth controll
+		 * @param node - objects (v) can be defined also outside additions node
+		 * @see #add() @see #addTo() @see #registry
+		 * */
+		public function addProto(v:Object,props:Object,to:Object=null,forceNew:Boolean=false,index:int=-1,node:String='additions'):void
 		{
 			var f:Function = (props as Function) || decorator;
 			var c:DisplayObjectContainer = this;
@@ -132,9 +155,9 @@ package axl.xdef.types.display
 					gotit(v);
 				}
 				else if(v is Array)
-					getAdditionsByName(v as Array, gotit,node,null,true,f);
+					getAdditionsByName(v as Array, gotit,node,null,forceNew,f);
 				else
-					getAdditionByName(v as String, gotit,node,null,true,f);
+					getAdditionByName(v as String, gotit,node,null,forceNew,f);
 			}
 			
 			function gotit(o:Object):void
@@ -208,8 +231,7 @@ package axl.xdef.types.display
 		}
 		/** Adds DisplayObject underneath another child specified by it's name
 		 * @v - DisplayObject to add
-		 * @param chname - depth controll -name of existing element under which addition will occur
-		 * */
+		 * @param chname - depth controll -name of existing element under which addition will occur		 * */
 		public function addUnderChild(v:DisplayObject, chname:String,indexMod:int=0):void
 		{
 			var o:DisplayObject = getChildByName(chname);
@@ -218,7 +240,7 @@ package axl.xdef.types.display
 			var j:int = contains(v) ? getChildIndex(v) : int.MAX_VALUE;
 			if(j < i)
 			{
-				U.log("Child", v, v.name, "already exists in this container and it is under child", o, o? o.name : null);
+				if(debug) U.log("Child", v, v.name, "already exists in this container and it is under child", o, o? o.name : null);
 				return;
 			}
 			if(i > -1)
@@ -262,10 +284,11 @@ package axl.xdef.types.display
 		public function getAdditionByName(v:String, callback:Function=null, node:String='additions',onError:Function=null,
 										  forceNewElement:Boolean=false,decorator:Function=null):void
 		{
-			if(debug) U.log('[xRoot][getAdditionByName]', v);
+			var tn:String = '[xRoot][getAdditionByName]';
+			if(debug) U.log(tn, v);
 			if(v == null)
 			{
-				if(debug) U.log("[xRoot][getAdditionByName] requesting non existing element", v);
+				if(debug) U.log(tn + " requesting non existing element", v);
 				return;
 			}
 			if(v.charAt(0) == '$')
@@ -276,7 +299,7 @@ package axl.xdef.types.display
 			}
 			else if((registry[v] != null ) && !forceNewElement)
 			{
-				if(debug) U.log('[xRoot][getAdditionByName]',v, 'already exists in xRoot.registry cache');
+				if(debug) U.log(tn,v, 'already exists in xRoot.registry cache');
 				if(callback) callback(registry[v]);
 				return;
 			}
@@ -284,7 +307,7 @@ package axl.xdef.types.display
 			var xml:XML = getAdditionDefByName(v,node);
 			if(xml== null)
 			{
-				if(debug) U.log('[xRoot][getAdditionByName][WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
+				if(debug) U.log(tn+'[WARINING] REQUESTED CHILD "' + v + '" DOES NOT EXIST IN CONFIG "' + node +  '" NODE');
 				if(onError == null) 
 					throw new Error(v + ' does not exist in additions node');
 				else

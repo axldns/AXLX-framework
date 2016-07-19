@@ -40,7 +40,7 @@ package axl.xdef
 	import axl.xdef.types.display.xText;
 	import axl.xdef.types.display.xVOD;
 
-	/** Factory class for XML defined elements.<br>
+	/** Factory and decorator class for XML defined elements.<br>
 	 * <ul>
 	 * <li> Creates, registers, decorates and animates all objects</li>
 	 * <li> Allows to extend functionality by registering user defined elements.</li>
@@ -63,7 +63,7 @@ package axl.xdef
 		 * most recent ones*/
 		public function get registry():Object { return smallRegistry }
 		
-		/** Factory class for XML defined elements.<br>
+		/** Factory and decorator class for XML defined elements.<br>
 		 * <ul>
 		 * <li> Creates, registers, decorates and animates all objects</li>
 		 * <li> Allows to extend functionality by registering user defined elements.</li>
@@ -364,7 +364,7 @@ package axl.xdef
 		 * </ul>
 		 * @param def - XML node which children are to be parsed
 		 * @param container - DisplayObject to process (DisplayObjectContainer for adding children)
-		 * @param command - for DisplayObjectContainer its typically 'addChild', for axl.ui.Carousel it's 'addToRail'
+		 * @param decorator - Function that each and every instantiated object (all descendands) will be passed to as an argument
 		 * @param xroot - root of all XML based objects (stage equivalent)
 		 * @see #getReadyType2()
 		 * */
@@ -475,6 +475,7 @@ package axl.xdef
 		 * <li><b>div</b> - <code>axl.xdef.types.xSprite</code> - extends flash Sprite </li>
 		 * <li><b>txt</b> - <code>axl.xdef.types.xText</code> - extends flash TextField </li>
 		 * <li><b>btn</b> - <code>axl.xdef.types.xButton</code>- extends xSprite </li>
+		 * <li><b>act</b> - <code>axl.xdef.types.xAction</code>- function equivalent - lightweight code container </li>
 		 * <li><b>msk</b> - <code>axl.xdef.types.xMasked</code> - extends xSprite </li>
 		 * <li><b>swf</b> - <code>axl.xdef.types.xSwf</code> - loaded flash DisplayObject is added to xSwf as a child</li>
 		 * <li><b>data</b> - <code>axl.xdef.types.xObject</code> - loaded data is being analyzed and can be instantiated as XML 
@@ -482,6 +483,7 @@ package axl.xdef
 		 * Regardles of it's contents, instantiated axl.xdef.types.xObject assigns the result to it's own <code> data </code> property.</li>
 		 * <li><b>scrollBar</b> - <code>axl.xdef.types.xScroll</code> - extends xSprite </li>
 		 * <li><b>carousel</b> - <code>axl.ui.Carusele</code> extends flash Sprite </li>
+		 * <li><b>script</b> - <code>axl.xdef.xScript</code> extends xObject - allows to load and merge external config files</li>
 		 * </ul>
 		 * @param xml - XML object  which tag name matches one of the listed elements.
 		 * <br>Attribute <code>src</code> will delay calling callback to the moment resource is available.
@@ -492,8 +494,10 @@ package axl.xdef
 		 * and groups.
 		 * @param callback - function to execute once element is available.
 		 * <br> It should accept one parameter - loaded element, or two arguments if <code>callBack2argument</code> is specified.
+		 * @param decorator - Function that each and every instantiated object (all descendands) will be passed to as an argument
 		 * @param callBack2argument - optional second argument for callback. It is in use to <code>pushReadyTypes</code> children order.
-		 * @see webFlow.MainCallback#getAdditionByName()
+		 * @param xroot - xRoot reference that result of this function will belong to
+		 * @see axl.xdef.types.display.xRoot#getAdditionByName()
 		 * */
 		public function getReadyType2(xml:XML,callBack:Function=null,decorator:Function=null,callBack2argument:Object=null,xroot:xRoot=null):void
 		{
@@ -589,7 +593,8 @@ package axl.xdef
 				}
 			}
 		}
-		
+		/** Registers any ixDef implementator in registry under certain name. Called automatically
+		 * from constructor by most instances. */
 		public function register(v:ixDef):void 
 		{	
 			var d:XML = v.def;
@@ -604,7 +609,7 @@ package axl.xdef
 			else if (!(v is xRoot))
 				U.log(v, v.name, "[WARINING] ELEMENT HAS no def')");
 		}
-		
+		/** Registers any ixDef implementator in registry under certain name and deletes previous entry. */
 		public function requestNameChange(newName:String,requester:ixDef):String
 		{
 			if(newName != requester.name)
@@ -616,7 +621,10 @@ package axl.xdef
 			}
 			return newName;
 		}
-		
+		/** Assignes all available properties from style provider to style receiver (key match, value assign).<br>
+		 * If key of provider does not match property of receiver, no assignment is made, algorithm continues.
+		 * @param v - style provider: an Object or array of Objects containing key-value pairs
+		 * @param t - style receiver: any ixDef implementator.*/
 		public function applyStyle(v:Object,t:ixDef):void
 		{
 			if(v is Array)
