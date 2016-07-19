@@ -241,12 +241,13 @@ package axl.xdef.types.display
 				return child;
 			var f:Function = super.removeChild;
 			var c:ixDisplay = child as ixDisplay;
-			if(c != null)
+			if(!c) return child;
+			if(c.meta && c.meta.removeChild != null)
 			{
 				AO.killOff(c);
 				XSupport.animByNameExtra(c, 'removeChild', acomplete);
 			} else { acomplete() }
-			function acomplete():void { f(child) }
+			function acomplete():void { f(child); }
 			return child;
 		}
 		
@@ -254,10 +255,11 @@ package axl.xdef.types.display
 		{
 			var f:Function = super.removeChildAt;
 			var c:ixDisplay = super.getChildAt(index) as ixDisplay;
-			if(c != null)
+			if(!c) return null;
+			if(c.meta && c.meta.removeChildAt != null)
 			{
 				AO.killOff(c);
-				XSupport.animByNameExtra(c, 'removeChild', acomplete);
+				XSupport.animByNameExtra(c, 'removeChildAt', acomplete);
 			} else { acomplete() } 
 			function acomplete():void { f(index) }
 			return c as DisplayObject;
@@ -294,7 +296,6 @@ package axl.xdef.types.display
 			observerPos.y=root.transform.perspectiveProjection.projectionCenter.y;
 			observerPos.z=-root.transform.perspectiveProjection.focalLength;
 			var numc:int = this.numChildren;
-			var sortMethod:String = 'distObserver';
 			var c:DisplayObject;
 			for(i=0;i<numc;i++)
 			{
