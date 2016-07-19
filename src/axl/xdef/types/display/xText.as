@@ -19,8 +19,11 @@ package axl.xdef.types.display
 	import axl.xdef.XSupport;
 	import axl.xdef.interfaces.ixDisplay;
 	
+	/** Merges regular flash TextField and TextFormat, makes use of  htmlText, simplifies text replacements and turning
+	 * textfields into buttons. Instantiated from: <h3><code>&lt;txt/&gt;</code></h3>  */
 	public class xText extends TextField implements ixDisplay
 	{
+		/** Each instance will use this property if font attribute is not defined in its node */
 		public static var defaultFont:String;
 		
 		private var xdef:XML;
@@ -31,8 +34,8 @@ package axl.xdef.types.display
 		private var xresetOnAddedToStage:Boolean = true;
 		private var xstyles:Object;
 		
+		private var originalText:String;
 		private var tff:TextFormat;
-		private var trigerExt:Object;
 		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
@@ -58,8 +61,12 @@ package axl.xdef.types.display
 		/** Function to execute when a href tag is clicked in textfield. Event type is passed to 
 		 * this function as an argument */
 		public var onLinkEvent:Function;
-		private var originalText:String;
 		
+		/** Merges regular flash TextField and TextFormat, makes use of  htmlText, simplifies text replacements and turning
+		 * textfields into buttons. Instantiated from: <h3><code>&lt;txt/&gt;</code></h3> 
+		 * @see axl.xdef.interfaces.ixDef#def
+		 * @see axl.xdef.interfaces.ixDef#xroot
+		 * @see axl.xdef.XSupport#getReadyType2()  */
 		public function xText(definition:XML=null,xrootObj:xRoot=null)
 		{
 			this.xroot = xrootObj || xroot;
@@ -258,12 +265,12 @@ package axl.xdef.types.display
 			super.htmlText = s;
 		}
 		/** Trigers actions when user clicks on a href tag. Available actions:
-		 * meta.js, meta.actions, code (generic) and onLinkEvent (specific) where,
+		 * meta.js, code (generic) and onLinkEvent (specific) where,
 		 * event type is passed to the function as an argument. */
 		protected function linkEvent(e:TextEvent):void
 		{
-			if(trigerExt != null && ExternalInterface.available)
-				ExternalInterface.call.apply(null, trigerExt);
+			if(meta.js != null && ExternalInterface.available)
+				ExternalInterface.call.apply(null, meta.js);
 			if(code != null)
 				xroot.binCommand(code,this);
 			if(onLinkEvent != null)
@@ -292,7 +299,7 @@ package axl.xdef.types.display
 			if(a is String)
 				a = a.charAt(0) == '$' ? xroot.binCommand(a.substr(1),this) : a;
 			if(a is Array)
-				replaceReplace(a as Array,s);
+				replaceReplace(a as Array,this.htmlText);
 			autoSizeText();
 		}
 		
