@@ -22,7 +22,7 @@ package axl.xdef.types.display
 	/** Master class for XML DisplayList projects. Treat it as your stage */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.116';
+		private static const ver:String = '0.117';
 		public static function get version():String { return ver }
 		
 		protected var xsourcePrefixes:Array
@@ -318,13 +318,6 @@ package axl.xdef.types.display
 			}
 		}
 		
-		/** Removes elements from the display list. Accepts arrays of display objects, their names and mixes of it.
-		 * Skipps objects which are not part of the display list. */
-		public function remove(...args):void
-		{
-			rmv.apply(null,args);
-		}
-		
 		/**  Uses registry to define child to remove. This can reach inside containers to remove specific element.
 		 * The last registered element of name defined in V will be removed */
 		public function removeRegistered(v:String):void
@@ -366,11 +359,11 @@ package axl.xdef.types.display
 		/** Animates an object if it owns an animation definition defined by <code>screenName</code> 
 		 * @param objName - name of animatable object on the displaylist if param <code>c</code> is null
 		 * @param screenName - name of the animation definition
-		 * @param onComplete callback to call when all animations are complete
+		 * @param onComplete callback to call when all animations are complete - function or portion of uncompiled code
 		 * @param c -any animatable object that contains meta property
 		 * @see axl.xdef.XSupport#animByNameExtra()
 		 * */
-		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Function=null,c:ixDef=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
+		public function singleAnimByMetaName(objName:String, screenName:String, onComplete:Object=null,c:ixDef=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
 		{
 			c = c || this.getChildByName(objName) as ixDef || xsupport.registry[objName] as ixDef;
 			if(debug) U.log("[xRoot][singleAnimByMetaName][", screenName, '] - ', objName, c);
@@ -378,17 +371,19 @@ package axl.xdef.types.display
 				XSupport.animByNameExtra(c, screenName, onComplete,killCurrent,reset,doNotDisturb);
 			else
 			{
-				if(onComplete != null)
-					setTimeout(onComplete, 5);
+				if(onComplete is String)
+					binCommand(onComplete,c);
+				if(onComplete is Function)
+					onComplete();
 			}
 		}
 		/** Scans through all registered objects and executes animation on these which own <code>screenName</code>
 		 * defined animation in their meta property
 		 * @param screenName - name of the animation definition
-		 * @param onComplete callback to call when all animations are complete
+		 * @param onComplete callback to call when all animations are complete - function or portion of uncompiled code
 		 * @see #singleAnimByMetaName()
 		 * */
-		public function animateAllRegisteredToScreen(screenName:String,onComplete:Function=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
+		public function animateAllRegisteredToScreen(screenName:String,onComplete:Object=null,killCurrent:Boolean=true,reset:Boolean=true,doNotDisturb:Boolean=false):void
 		{
 			var all:int=0;
 			var reg:Object = xsupport.registry;
@@ -401,13 +396,14 @@ package axl.xdef.types.display
 					singleAnimByMetaName(c.name,screenName,singleComplete,c,killCurrent,reset,doNotDisturb);
 				}
 			}
-			if(all < 1 && onComplete != null)
-				onComplete();
 			function singleComplete():void
 			{
-				if(--all == 0 && onComplete !=null)
+				if(--all <= 0 && onComplete !=null)
 				{
-					onComplete();
+					if(onComplete is String)
+						binCommand(onComplete,this) //how to get c?
+					if(onComplete is Function)
+						onComplete();
 				}
 			}
 		}
@@ -450,8 +446,6 @@ package axl.xdef.types.display
 						return r;
 				}
 			}
-			else
-				U.log("Parser not available");
 			return r;
 		}
 		

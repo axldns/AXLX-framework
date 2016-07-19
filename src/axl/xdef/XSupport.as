@@ -24,20 +24,20 @@ package axl.xdef
 	import axl.xdef.interfaces.ixDisplay;
 	import axl.xdef.interfaces.ixDisplayContainer;
 	import axl.xdef.types.xAction;
+	import axl.xdef.types.xObject;
+	import axl.xdef.types.xScript;
+	import axl.xdef.types.xTimer;
 	import axl.xdef.types.display.xBitmap;
 	import axl.xdef.types.display.xButton;
 	import axl.xdef.types.display.xCarousel;
 	import axl.xdef.types.display.xCarouselSelectable;
 	import axl.xdef.types.display.xForm;
 	import axl.xdef.types.display.xMasked;
-	import axl.xdef.types.xObject;
 	import axl.xdef.types.display.xRoot;
-	import axl.xdef.types.xScript;
 	import axl.xdef.types.display.xScroll;
 	import axl.xdef.types.display.xSprite;
 	import axl.xdef.types.display.xSwf;
 	import axl.xdef.types.display.xText;
-	import axl.xdef.types.xTimer;
 	import axl.xdef.types.display.xVOD;
 
 	/** Factory class for XML defined elements.<br>
@@ -172,17 +172,16 @@ package axl.xdef
 		 * @param reset can execute ixDef <code>reset</code> interface function before animation
 		 * @see axl.utils.AO#animate() 
 		 * @see axl.xdef.interfaces.ixDef#reset() */
-		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Function=null, killCurrent:Boolean=true,reset:Boolean=false,doNotDisturb:Boolean=false):uint
+		public static function animByNameExtra(target:ixDef, animName:String, onComplete:Object=null, killCurrent:Boolean=true,reset:Boolean=false,doNotDisturb:Boolean=false):int
 		{
 			if(target.meta && target.meta.hasOwnProperty(animName))
 			{
 				if(doNotDisturb && AO.contains(target))
-					return 1;
+					return 0;
 				if(reset)
 					target.reset();
 				if(killCurrent)
 					AO.killOff(target);
-				
 				var animNameArray:Array = target.meta[animName];
 				var ag:Array = [];
 				if(!(animNameArray[0] is Array))
@@ -201,40 +200,52 @@ package axl.xdef
 					var f:Object = g[3];
 					if(f is String && f.charAt(0) == "$")
 						f = target.xroot.binCommand(f.substr(1),target);
-					g[3] = (f != null) ?  execFactory(f,target.xroot,g[2].onCompleteArgs, acomplete) : acomplete;
+					
+					if(f is String)
+						g[3] = delayedBinCommand(f,target, groupCallback);
+					else if (f is Function)
+						g[3] = delayedComplete(f as Function,target,groupCallback,g[2].onCompleteArgs);
+					else
+						g[3] = groupCallback;
 					//proceed
 					AO.animate.apply(null, g);
 				}
 			}
-			else if(onComplete != null)
-				onComplete();
-			function acomplete():void
+			if(ag.length < 1)
+				groupCallback();
+			function groupCallback():void
 			{
 				if(--atocomplete < 1 && onComplete != null)
-					onComplete();
+				{
+					if(onComplete is String)
+						target.xroot.binCommand(onComplete,target);
+					if(onComplete is Function)
+						onComplete();
+				}
 			}
 			return 0;
 		}
-		/** used for onComplete + onCompleteArgs animByNameExtra args
-		 * @see #animByNameExtra() */
-		private static function execFactory(f:Object, xrootObject:xRoot, args:Array=null, callback:Function=null):Function
+		
+		private static function delayedComplete(f:Function, target:ixDef, groupCallback:Function,onCompleteArgs:Object=null):Function
 		{
-			var anonymous:Function = function():void
+			var delayed:Function = function():void
 			{
-				var dargs:Array =  XSupport.getDynamicArgs(args, xrootObject,f) as Array;
-				if(!(f is Array))
-					f = [f];
-				var fl:int = f.length;
-				for(var g:int =0; g < fl;g++)
-					if(f[g] is Function)
-						(args != null) ? f[g].apply(null, dargs) : f[g]();
-				if(callback != null)
-				{
-					callback();
-				}
+				f.apply(null, onCompleteArgs);
+				groupCallback();
 			}
-			return anonymous;
+			return delayed;
 		}
+		
+		private static function delayedBinCommand(f:Object, target:ixDef, groupCallback:Function):Function
+		{
+			var delayed:Function = function():void
+			{
+				target.xroot.binCommand(f,target);
+				groupCallback();
+			}
+			return delayed;
+		}
+		
 		/** Parses String via JSON parse method, returns its result if successful 
 		 * or back input <code>val</code> if it failed @see JSON#parse() */
 		public static function valueReadyTypeCoversion(val:String):*
@@ -650,33 +661,6 @@ package axl.xdef
 			additionQueue.push(qcall);
 			if(additionQueue.length == 1)
 				qcall();
-		}
-		
-		/**  Resolves one ore more address/reference strings [starting with $ (dolar symbol)] in order to return object. AS3 hierarchy.
-		 * @param v - string or array
-		 * @param root - initial resource - first element of chain to look from for deeper references.
-		 * @return <ul>
-		 * <li><code>simpleSourceFinder</code> result if v is String</li>
-		 * <li><code>Array</code> of resolved elements accodrding to <code>simpleSourceFinder</code> rules. 
-		 * (non-reference array elements remain untouched, reference strings are resolved)</li>
-		 * <li>your <code>v</code> parameter if it's neither string nor array</li></ul>
-		 * @see #simpleSourceFinder() */
-		public static function getDynamicArgs(v:Object,xroot:xRoot,thisContext:Object):Object
-		{
-			if(v is String && v.charAt(0) == '$' )
-				return xroot.binCommand(String(v).substr(1),thisContext);
-			if(v is Array)
-			{
-				var a:Array = v.concat();
-				for(var i:int = a.length; i-->0;)
-				{
-					var o:Object = a[i];
-					a[i] = (o is String && o.charAt(0) == '$') ? xroot.binCommand(String(o).substr(1),thisContext) : o;
-				}
-				return a;
-			}
-			else
-				return v;
 		}
 	}
 }
