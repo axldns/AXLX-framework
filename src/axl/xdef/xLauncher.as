@@ -187,12 +187,18 @@ package axl.xdef
 		/** [MIDDLE FLOW 2] As soon as config is loaded project AND promo settings are being set */ 
 		protected function onConfigLoaded():void
 		{
-			U.log("onConfigLoaded");
+			U.log(tname,"onConfigLoaded");
 			var cfg:XML = Ldr.getAny(NetworkSettings.configPath) as XML;
-			if(!(cfg is XML) || !cfg.hasOwnProperty('root') )
+			if(!(cfg is XML))
 			{
 				U.msg("Invalid config file");
-				U.log(cfg);
+				U.log("Config isn't valid XML file");
+				return;
+			}
+			if(!cfg.hasOwnProperty('root') )
+			{
+				U.msg("Invalid config file");
+				U.log("XML config has to have <root> node");
 				return;
 			}
 			xroot.sourcePrefixes = getSourcePrefixes(cfg);
@@ -208,11 +214,11 @@ package axl.xdef
 					ConnectPHP.globalTimeout = int(projectSettings.@phpTimeout);
 				if(projectSettings.hasOwnProperty('@assetsTimeout'))
 					Ldr.globalTimeout = int(projectSettings.@assetsTimeout);
+				U.log("[[[[[[ PROJECT ]]]]]]]", projectSettings.toXMLString());
 			}
 			
 			// BUILD
 			
-			U.log("[[[[[[ PROJECT ]]]]]]]", projectSettings.toXMLString());
 			onComplete(cfg);
 			destroy();
 		}
