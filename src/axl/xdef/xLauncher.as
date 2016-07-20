@@ -8,11 +8,10 @@ package axl.xdef
 	import flash.system.Security;
 	
 	import axl.utils.ConnectPHP;
-	import axl.utils.Flow;
 	import axl.utils.Ldr;
-	import axl.utils.LiveAranger;
 	import axl.utils.NetworkSettings;
 	import axl.utils.U;
+	import axl.utils.liveArrange.LiveArranger;
 	import axl.xdef.types.display.xRoot;
 
 	public class xLauncher
@@ -29,8 +28,7 @@ package axl.xdef
 		 * which will look for config in appRemote/VG/VG_promo/VG_promo.xml */
 		public var appReomoteSPLITfilename:Array = [/(\w+?)(_.*)/,"$1/$1$2/"];
 		private var useLiveAranger:Boolean;
-		private var liveAranger:LiveAranger;
-		private var flow:Flow;
+		private var liveAranger:LiveArranger;
 		private var pathPrefixes:Array;
 		private var xroot:xRoot;
 		private var onComplete:Function;
@@ -177,7 +175,7 @@ package axl.xdef
 				U.log(tname, "[GOT "+xroot.parent+" AS PARENT - refrain from setting stage properties]");
 			}
 			if(useLiveAranger)
-				liveAranger = LiveAranger.instance ? LiveAranger.instance : new LiveAranger();
+				liveAranger = LiveArranger.instance ? LiveArranger.instance : new LiveArranger();
 			try { 
 				Security.allowDomain("*");
 				Security.allowInsecureDomain("*");
@@ -185,14 +183,6 @@ package axl.xdef
 			} catch (e:*) { U.log("SecurityError caught",e);}
 		}
 		
-		
-		/** [MIDDLE FLOW - END FLOW] As soon as all files (if any) are loaded, Middle Flow is completed
-		 * Starts END FLOW  by calling <code>runData</code> method @see #runData */ 
-		protected function onFilesLoaded():void
-		{
-			flow.destroy();
-			flow = null;
-		}
 		
 		/** [MIDDLE FLOW 2] As soon as config is loaded project AND promo settings are being set */ 
 		protected function onConfigLoaded():void

@@ -16,7 +16,7 @@ package axl.xdef.types
 	 * assset manager. Instantiated from: <h3><code>&lt;data/&gt;<br></code></h3>
 	 * Data parsing is available right after defining src attribute. Loaded data passes through  
 	 * known types check in order to instantiate valid ActionScript objects, according to <code>Ldr.load</code> Example:<br>
-	 * <pre> &lt;data src='audio.mp3' anything='$this.data.play()'/&gt; 
+	 * <pre> &lt;data src='audio.mp3' anything='$this.data.play()'/&gt; </pre>
 	 * @see axl.utils.Ldr */
 	public class xObject implements ixDef
 	{
@@ -39,7 +39,7 @@ package axl.xdef.types
 			xdef = definition;
 			xroot.support.register(this);
 		}
-		/** Reference to parent xRoot object @see axl.xdef.types.xRoot
+		/** Reference to parent xRoot object @see axl.xdef.types.display.xRoot
 		 *  @see axl.xdef.interfaces.ixDef#xroot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -59,7 +59,7 @@ package axl.xdef.types
 			xmeta =v;
 		}
 		
-		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
+		/** Sets name and registers object in registry @see axl.xdef.types.display.xRoot.registry */
 		public function get name():String { return xname }
 		public function set name(v:String):void
 		{

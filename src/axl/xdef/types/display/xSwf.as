@@ -64,7 +64,7 @@ package axl.xdef.types.display
 		 * Specifing number greater than 1 will cause jumping e.g. two frames at the time.*/
 		public var dir:int=1;
 		/** Function or portion of uncompiled code to execute when swf playback is topped. An argument for binCommand.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onStop:Object;
 		
 		/** Class is container for loaded swf files providing API for controling timeline animations.
@@ -72,7 +72,7 @@ package axl.xdef.types.display
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object
 		 * @see #mc
-		 * @see axl.xdef.types.xSwf
+		 * @see axl.xdef.types.display.xSwf
 		 * @see axl.xdef.interfaces.ixDef#def
 		 * @see axl.xdef.interfaces.ixDef#xroot
 		 * @see axl.xdef.XSupport#getReadyType2()  */

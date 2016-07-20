@@ -43,7 +43,7 @@ package axl.xdef.types.display
 		/**  Extends xCarousel class by adding functionality of animated transitions from one 
 		 * element to another and exposing "selected" element. Instantiated from &lt;carouselSelectable/&gt;
 		 * @param definition - XML definition of this class (properties and children)
-		 * @param xroot - root object this instance will belong to @see axl.xdef.types.xCarousel */
+		 * @param xroot - root object this instance will belong to @see axl.xdef.types.display.xCarousel */
 		public function xCarouselSelectable(definition:XML,xroot:xRoot=null)
 		{
 			super(definition,xroot);

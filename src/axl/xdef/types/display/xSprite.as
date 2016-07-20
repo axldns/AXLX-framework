@@ -51,7 +51,7 @@ package axl.xdef.types.display
 		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var inject:String;
 		/** Distributes  children horizontaly with gap specified by this property.
 		 * This can be an array of gaps or single number. If not set - no distrbution occurs.
@@ -66,7 +66,7 @@ package axl.xdef.types.display
 		/** Main DisplayObjectContainer class for XML defined objects. Can contain any children.<br>
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object
-		 * @see axl.xdef.types.xSprite
+		 * @see axl.xdef.types.display.xSprite
 		 * @see axl.xdef.interfaces.ixDef#def
 		 * @see axl.xdef.interfaces.ixDef#xroot
 		 * @see axl.xdef.XSupport#getReadyType2()  */
@@ -93,7 +93,7 @@ package axl.xdef.types.display
 			xdef = value;
 			parseDef();
 		}
-		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		/** Reference to parent xRoot object @see axl.xdef.types.display.xRoot 
 		 * @see axl.xdef.interfaces.ixDef#xroot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -105,8 +105,8 @@ package axl.xdef.types.display
 		 * <ul>
 		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
 		 * <li>"addChild" - animation to execute when added as a child</li>
-		 * <li>"removeChild" - animation to execute before removing from stage (delays removing from stage)</li>
-		 * instantiated and added to this instance</li>
+		 * <li>"removeChild" - animation to execute before removing from stage (delays removing from stage), instantiated 
+		 * and added to this instance</li>
 		 * </ul>
 		 * @see axl.xdef.XSupport#animByNameExtra()
 		 * @see axl.utils.AO#animate() */
@@ -120,7 +120,7 @@ package axl.xdef.types.display
 		}
 		
 		/** Sets name and registers object in registry 
-		 * @see axl.xdef.types.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
+		 * @see axl.xdef.types.display.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
 		override public function set name(v:String):void
 		{
 			super.name = xroot.support.requestNameChange(v,this);
@@ -146,12 +146,12 @@ package axl.xdef.types.display
 		}
 		
 		/** Function reference or portion of uncompiled code to execute when object is removed from stage.
-		 *  An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		 *  An argument for binCommand. @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onRemovedFromStage():Object	{ return xonRemovedFromStage }
 		public function set onRemovedFromStage(value:Object):void {	xonRemovedFromStage = value }
 		
 		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onAddedToStage():Object { return xonAddedToStage }
 		public function set onAddedToStage(value:Object):void {	xonAddedToStage = value }
 		
@@ -162,13 +162,13 @@ package axl.xdef.types.display
 		
 		/** Function or portion of uncompiled code to execute when all original structure xml children are
 		 * added to container's display list. An argument for binCommand.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onChildrenCreated():Object { return xonChildrenCreated }
 		public function set onChildrenCreated(value:Object):void { xonChildrenCreated = value }
 		
 		/** Function or portion of uncompiled code to execute when any DisplayObject is added to
 		 * this instance display list. An argument for binCommand.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onElementAdded():Object { return xonElementAdded }
 		public function set onElementAdded(value:Object):void { xonElementAdded = value }
 		

@@ -16,7 +16,7 @@ package axl.xdef.types.display
 	import axl.ui.controllers.BoundBox;
 	/** Class provides simple scroll bar functionality. Instantiated from &lt;scrollBar/&gt;.<br>
 	 * It makes use of <code>axl.ui.controllers.BoundBox</code> controler, which needs
-	 * two Display Objects to satisfy functionality (bound & box), here named as
+	 * two Display Objects to satisfy functionality (bound &amp; box), here named as
 	 * <code>rail</code> and <code>train</code>.
 	 * <h3>Backward compatibility</h3>
 	 * Scroll bar instance recognizes Display Obecjts added to its display list, and  auto-links functionality
@@ -47,9 +47,9 @@ package axl.xdef.types.display
 		public var wheelScrollAllowed:Boolean = false;
 		/** Class provides simple scroll bar functionality. Instantiated from &lt;scrollBar/&gt;.<br>
 		 * It makes use of <code>axl.ui.controllers.BoundBox</code> controler, which needs two Display Objects
-		 * to satisfy functionality (bound & box), here named as <code>rail</code> and <code>train</code>.
+		 * to satisfy functionality (bound &amp; box), here named as <code>rail</code> and <code>train</code>.
 		 * @param definition - xml definition @param xroot - reference to parent xRoot object
-		 * @see axl.xdef.types.xScroll  @see axl.xdef.interfaces.ixDef#def  @see axl.xdef.interfaces.ixDef#xroot
+		 * @see axl.xdef.types.display.xScroll  @see axl.xdef.interfaces.ixDef#def  @see axl.xdef.interfaces.ixDef#xroot
 		 * @see axl.xdef.XSupport#getReadyType2() */
 		public function xScroll(def:XML,rootObj:xRoot)
 		{

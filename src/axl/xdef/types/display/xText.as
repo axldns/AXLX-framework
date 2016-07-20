@@ -39,7 +39,7 @@ package axl.xdef.types.display
 		
 		/** Portion of uncompiled code to execute when object is created and attributes are applied. 
 		 * 	Runs only once. An argument for binCommand. Does not have to be dolar sign prefixed.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var inject:String;
 		
 		/**
@@ -90,7 +90,7 @@ package axl.xdef.types.display
 			xdef = value;
 			parseDef();
 		}
-		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		/** Reference to parent xRoot object @see axl.xdef.types.display.xRoot 
 		 *  @see axl.xdef.interfaces.ixDef#xroot*/
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -109,8 +109,7 @@ package axl.xdef.types.display
 		 * If replace array is set, every time xTimer.text or htmlText is set, text is scanned and replaced
 		 * against all regular expressions in "replace" array.
 		 * </li>
-		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
-		 * instantiated and added to this instance</li>
+		 * <li>"addedToStage" - animation(s) to execute when added to stage, instantiated and added to this instance</li>
 		 * <li>"action" - action(s) to execute when html link is clicked</li>
 		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method
 		 * when htmlText hyperLink is clicked</li>
@@ -128,7 +127,7 @@ package axl.xdef.types.display
 			performReplace();
 		}
 		
-		/** Sets name and registers object in registry @see axl.xdef.types.xRoot.registry */
+		/** Sets name and registers object in registry @see axl.xdef.types.display.xRoot.registry */
 		override public function set name(v:String):void
 		{
 			super.name = xroot.support.requestNameChange(v,this);
@@ -154,12 +153,12 @@ package axl.xdef.types.display
 		}
 		
 		/** Function reference or portion of uncompiled code to execute when object is removed from stage.
-		 *  An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		 *  An argument for binCommand. @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onRemovedFromStage():Object	{ return xonRemovedFromStage }
 		public function set onRemovedFromStage(value:Object):void {	xonRemovedFromStage = value }
 		
 		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onAddedToStage():Object { return xonAddedToStage }
 		public function set onAddedToStage(value:Object):void {	xonAddedToStage = value }
 		

@@ -53,7 +53,7 @@ package axl.xdef
 		private static var userTypes:Object={};
 			
 		private var smallRegistry:Object={};
-		/** @see axl.xdef.types.xRoot */
+		/** @see axl.xdef.types.display.xRoot */
 		public var root:xRoot;
 		private static var reservedAttributes:Array = ['src'];
 		/** Object that contains references to all instantiated and <b>uniquely</b> named objects 
@@ -471,17 +471,17 @@ package axl.xdef
 		}
 		/** Translates xml node to an ActionScript object within predefined types and their equivalents:
 		 * <ul>
-		 * <li><b>img</b> - <code>axl.xdef.types.xBitmap</code> extends flash Bitmap </li>
-		 * <li><b>div</b> - <code>axl.xdef.types.xSprite</code> - extends flash Sprite </li>
-		 * <li><b>txt</b> - <code>axl.xdef.types.xText</code> - extends flash TextField </li>
-		 * <li><b>btn</b> - <code>axl.xdef.types.xButton</code>- extends xSprite </li>
+		 * <li><b>img</b> - <code>axl.xdef.types.display.xBitmap</code> extends flash Bitmap </li>
+		 * <li><b>div</b> - <code>axl.xdef.types.display.xSprite</code> - extends flash Sprite </li>
+		 * <li><b>txt</b> - <code>axl.xdef.types.display.xText</code> - extends flash TextField </li>
+		 * <li><b>btn</b> - <code>axl.xdef.types.display.xButton</code>- extends xSprite </li>
 		 * <li><b>act</b> - <code>axl.xdef.types.xAction</code>- function equivalent - lightweight code container </li>
-		 * <li><b>msk</b> - <code>axl.xdef.types.xMasked</code> - extends xSprite </li>
-		 * <li><b>swf</b> - <code>axl.xdef.types.xSwf</code> - loaded flash DisplayObject is added to xSwf as a child</li>
+		 * <li><b>msk</b> - <code>axl.xdef.types.display.xMasked</code> - extends xSprite </li>
+		 * <li><b>swf</b> - <code>axl.xdef.types.display.xSwf</code> - loaded flash DisplayObject is added to xSwf as a child</li>
 		 * <li><b>data</b> - <code>axl.xdef.types.xObject</code> - loaded data is being analyzed and can be instantiated as XML 
 		 * ('xml'), Object ('json'), Sound ('mp3','mpeg'), DisplayObject ('jpg','png','gif','swf') or raw data (ByteArray, String). 
 		 * Regardles of it's contents, instantiated axl.xdef.types.xObject assigns the result to it's own <code> data </code> property.</li>
-		 * <li><b>scrollBar</b> - <code>axl.xdef.types.xScroll</code> - extends xSprite </li>
+		 * <li><b>scrollBar</b> - <code>axl.xdef.types.display.xScroll</code> - extends xSprite </li>
 		 * <li><b>carousel</b> - <code>axl.ui.Carusele</code> extends flash Sprite </li>
 		 * <li><b>script</b> - <code>axl.xdef.xScript</code> extends xObject - allows to load and merge external config files</li>
 		 * </ul>
@@ -585,7 +585,7 @@ package axl.xdef
 					// notify
 					if(callBack2argument != null)
 						callBack(obj, callBack2argument);
-					else if (callBack)
+					else if (callBack != null)
 						callBack(obj);
 					additionQueue.shift();
 					if(additionQueue.length > 0)

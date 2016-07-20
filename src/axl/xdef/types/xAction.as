@@ -62,7 +62,7 @@ package axl.xdef.types
 		 * @param xrootObject - parent root object for <code>binCommand</code> context
 		 * @see execute()
 		 * @see xActionSet
-		 * @see axl.xdef.types.xRoot#binCommand()
+		 * @see axl.xdef.types.display.xRoot#binCommand()
 		 */
 		public function xAction(definition:XML,xrootObject:xRoot)
 		{

@@ -18,7 +18,7 @@ package axl.xdef.types
 	 * from: <h3><code>&lt;timer/&gt;</code></h3>
 	 * Extends axl.utils.Counter by providing XML interface to it. Additionaly,
 	 * ancestor's callback can be defined as uncompiled portion of code - an
-	 * arguments for xRoot.binCommand. @see axl.utils.Counter @see axl.xdef.types.xRoot#binCommand */
+	 * arguments for xRoot.binCommand. @see axl.utils.Counter @see axl.xdef.types.display.xRoot#binCommand */
 	public class xTimer extends Counter implements ixDef
 	{
 		private var root:xRoot;
@@ -51,7 +51,7 @@ package axl.xdef.types
 			xdef = value;
 			XSupport.applyAttributes(def, this);	
 		}
-		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		/** Reference to parent xRoot object @see axl.xdef.types.display.xRoot 
 		 * @see axl.xdef.interfaces.ixDef#xroot */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -69,7 +69,7 @@ package axl.xdef.types
 		}
 		
 		/** Sets name and registers object in registry 
-		 * @see axl.xdef.types.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
+		 * @see axl.xdef.types.display.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
 		override public function set name(v:String):void
 		{
 			super.name = xroot.support.requestNameChange(v,this);

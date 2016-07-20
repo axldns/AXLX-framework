@@ -52,17 +52,17 @@ package axl.xdef.types.display
 		public function get errorProps():Object	{return errorIndicatorProperties};
 		
 		/** Function reference or portion of uncompiled code to execute when <code>submit()</code> is called but
-		 * validation errors occur.  An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		 * validation errors occur.  An argument for binCommand. @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onError:Object;
 		
 		/** Function reference or portion of uncompiled code to execute when <code>submit()</code> is called and
 		 * all textfields containting meta.regexp pass all the validation tests. 
-		 * An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		 * An argument for binCommand. @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onSubmit:Object;
 		
 		/** Lightweight container class that provides typical formular features: 
 		 * validation, submit action, error and focus indicators. Instantiated from
-		 * <h3><code>&lt;form&gt;<br>&lt;/form&gt;</code></h3> @see axl.xdef.types.xForm */
+		 * <h3><code>&lt;form&gt;<br>&lt;/form&gt;</code></h3> @see axl.xdef.types.display.xForm */
 		public function xForm(definition:XML=null, xroot:xRoot=null)
 		{
 			super(definition, xroot);

@@ -19,14 +19,14 @@ package axl.xdef.interfaces
 		 * when all original XML defined children of implementer are instantiated and added to implementer's
 		 * display list. This function is not to be executed by implementer. Core parser will call it. 
 		 * This can be reference to a function or portion of uncompiled code (argument for binCommand)
-		 * @see axl.xdef.types.xRoot#binCommand() @see axl.xdef.XSupport#pushReadyTypes2() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() @see axl.xdef.XSupport#pushReadyTypes2() */
 		function get onChildrenCreated():Object;
 		function set onChildrenCreated(v:Object):void;
 		
 		/** This method must allow to define <b>additional</b> XML defined action executed every time an
 		 * object is added to ixDisplayContainer display list 
 		 * This can be reference to a function or portion of uncompiled code (argument for binCommand)
-		 * @see axl.xdef.types.xRoot#binCommand() @see axl.xdef.XSupport#pushReadyTypes2() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() @see axl.xdef.XSupport#pushReadyTypes2() */
 		function get onElementAdded():Object;
 		function set onElementAdded(v:Object):void;
 	}

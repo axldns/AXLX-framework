@@ -82,35 +82,35 @@ package axl.xdef.types.display
 		 * @see #reconnectGapMs @see #destroy() */
 		public var reconnectAttemptsNo:int;
 		/** Function or portion of uncompiled code to execute when video playback reaches an end, before 
-		 * posible exit sequence. An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * posible exit sequence. An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()*/
 		public var onComplete:Object;
 		/** Function or portion of uncompiled code to execute when an exit sequence occurs.
 		 * This may happen for various reasons: video reaches an end, video has been removed from stage,
 		 * <code>destroy</code> method has been called manually, security error on net connection occured, exceeded 
 		 * amount of re-connections, NetConnection.Call.Failed, NetConnection.Connect.Closed, NetStream.Play.StreamNotFound,
-		 * NetStream.Play.Failed.<br>An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * NetStream.Play.Failed.<br>An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()*/
 		public var onExit:Object;
 		/** Function or portion of uncompiled code to execute when video starts playing. Both initial and unpause states.
-		 * An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()*/
 		public var onPlayStart:Object;
 		/** Function or portion of uncompiled code to execute when video buffer reaches it's maximum value (
 		 * <code>bufferInitial</code>, then switched to <code>bufferPlayback</code>). Tracking execution of
 		 * this callback allows to increase buffer and if hit again - interpretate as sign of
 		 *  good bandwidth, hence potential juggle to better quality should be considered (if available).
-		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * <br> An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()*/
 		public var onBufferFull:Object;
 		/** Function or portion of uncompiled code to execute when video buffer gets empty, typically bandwidth
 		 * can't keep up, hence potential juggle to lower quality should be considered (if available). 
 		 * This may also happen as a consequence of internet connection loss.
-		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * <br> An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()*/
 		public var onBufferEmpty:Object;
 		/** Function or portion of uncompiled code to execute when video is paused. First execution may occur
 		 * right after video is available for play but <code>AUTOPLAY = false</code> (video is paused then). 
-		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * <br> An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()*/
 		public var onPlayStop:Object;
 		/** Function or portion of uncompiled code to execute when video meta data is first received. 
 		 * Accessible via <code>videoMeta</code>
-		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * <br> An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()*/
 		public var onMeta:Object;
 		private var xcounter:Counter;
 		private var xtimePassed:String;
@@ -121,8 +121,8 @@ package axl.xdef.types.display
 		/** When duration of video is known, internal timer updates two properties:
 		 * timePassed and timeRemaining accordong to timeFormat. Once this is done, 
 		 * Function or portion of uncompiled hold by this field can be executed. 
-		 * @see #timePassed @see #timeRemaining
-		 * <br> An argument for binCommand. * @see axl.xdef.types.xRoot#binCommand()*/
+		 * <br> An argument for binCommand. * @see axl.xdef.types.display.xRoot#binCommand()
+		 * @see #timePassed @see #timeRemaining*/
 		public var onTimerUpdate:Object;
 	
 		
@@ -130,7 +130,7 @@ package axl.xdef.types.display
 		 * video display. Instantiated from &lt;vod/&gt; 
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object
-		 * @see axl.xdef.types.xVOD
+		 * @see axl.xdef.types.display.xVOD
 		 * @see axl.xdef.interfaces.ixDef#def
 		 * @see axl.xdef.interfaces.ixDef#xroot
 		 * @see axl.xdef.XSupport#getReadyType2() */

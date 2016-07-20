@@ -19,13 +19,13 @@ package axl.xdef.interfaces
 		/** This method must allow to define <b>additional</b> XML defined action executed every time
 		 * implementer is added to stage, specified in attribute named <i>onAddedToStage</i>. 
 		 * This can be reference to a function or portion of uncompiled code (argument for binCommand)
-		 *  @see axl.xdef.types.xRoot#binCommand() */
+		 *  @see axl.xdef.types.display.xRoot#binCommand() */
 		function get onAddedToStage():Object;
 		function set onAddedToStage(v:Object):void;
 		/** This method must allow to define <b>additional</b> XML defined action executed every time
 		 * implementer is removed from stage, specified in attribute named <i>onRemovedFromStage</i>. 
 		 * This can be reference to a function or portion of uncompiled code (argument for binCommand).
-		 *  @see axl.xdef.types.xRoot#binCommand() */
+		 *  @see axl.xdef.types.display.xRoot#binCommand() */
 		function get onRemovedFromStage():Object;
 		function set onRemovedFromStage(v:Object):void;
 		/** Implementors must be able to handle styles - Object or an Array of objects containing

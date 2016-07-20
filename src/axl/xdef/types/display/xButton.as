@@ -61,7 +61,7 @@ package axl.xdef.types.display
 		/** Action defined in <code>onDown</code> property can be repeated multiple times (till release, till setting disabled). This
 		 * property defines how frequent (ms) action should be repeated. Values equal and less than 0 disable repetitions. */
 		public var intervalDown:int=0;
-		/** Action defined in <code>onHover</code> property can be repeated multiple times (till roll out, till setting disabled). This
+		/** Action defined in <code>onDown</code> property can be repeated multiple times (till roll out, till setting disabled). This
 		 * property defines how frequent (ms) action should be repeated. Values equal and less than 0 disable repetitions. */
 		public var intervalHover:int=0;
 		/** Determines if pressing button down, moving mouse/finger outside the button and releasing touch/press there should cause 
@@ -72,25 +72,25 @@ package axl.xdef.types.display
 		public var externalExecution:Function;
 		/** Portion of uncompiled code to execute/evaluate when button is clicked.
 		 * @see #execute()
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var code:String;
 		/** Function or portion of uncompiled code to execute/evaluate when mouse pointer is over the button.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onOver:Object;
 		/** Function or portion of uncompiled code to execute/evaluate when mouse pointer rolls out of the button.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onOut:Object;
 		/** Function or portion of uncompiled code to execute/evaluate when mouse or touch presses the button.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onDown:Object;
 		/** Function or portion of uncompiled code to execute/evaluate when mouse or touch releases the button (after press).
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onRelease:Object;
 		
 		/** Typical interactive button class.
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object 
-		 * @see axl.xdef.types.xButton */
+		 * @see axl.xdef.types.display.xButton */
 		public function xButton(definition:XML=null,xroot:xRoot=null)
 		{
 			super(definition,xroot);
@@ -115,7 +115,7 @@ package axl.xdef.types.display
 		//---------------------------------------- OVERRIDEN METHODS -----------------------------------//
 		//---------------------------------------- MOUSE EVENTS -----------------------------------//
 		/** Common for ROLL_OVER and ROLL_OUT event handler. Returns if isEnabled = false, otherwise swaps states,
-		 * executes onOver or onOut. Sets interval if <i>hoverInterval<i> &gt; 0 */
+		 * executes onOver or onOut. Sets interval if <i>hoverInterval</i> &gt; 0 */
 		protected function onMouseHover(e:MouseEvent=null):void
 		{
 			if(!isEnabled)
@@ -159,7 +159,7 @@ package axl.xdef.types.display
 		/** Calls main execute, unless <i>externalExecution</i> is set */
 		protected function onMouseClick(e:MouseEvent):void
 		{
-			if(!externalExecution)
+			if(externalExecution == null)
 				execute(e);
 		}
 		//---------------------------------------- MOUSE EVENTS -----------------------------------//

@@ -300,7 +300,7 @@ package axl.xdef.types.display
 			else if((registry[v] != null ) && !forceNewElement)
 			{
 				if(debug) U.log(tn,v, 'already exists in xRoot.registry cache');
-				if(callback) callback(registry[v]);
+				if(callback != null) callback(registry[v]);
 				return;
 			}
 			
@@ -336,7 +336,7 @@ package axl.xdef.types.display
 			
 			function ready(v:Object):void
 			{
-				if(callback) callback(v);
+				if(callback != null) callback(v);
 				next();
 			}
 		}

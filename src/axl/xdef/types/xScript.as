@@ -48,12 +48,12 @@ package axl.xdef.types
 		public var autoInclude:Boolean = true;
 		/** Function or portion of uncompiled code to execute when object is set up but right before modifying original root config XML.
 		 * br>This field must be defined within loaded XML additions attributes and not in root XML.<br>
-		 * An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		 * An argument for binCommand. @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onInclude:Object;
 		/** Function or portion of uncompiled code to execute right after inclusion of loaded additions to original root config XML.
 		 * From this moment, all loaded definitions are available in root additions.<br>This field must be defined within loaded XML 
 		 * additions attributes and not in root XML.<br>
-		 * An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		 * An argument for binCommand. @see axl.xdef.types.display.xRoot#binCommand() */
 		public var onIncluded:Object;
 		/** Allows to load and include external XML objects definitions to root config. Instantiated from <code>&lt;script/&gt;</code><br>
 		 * @param definition - xml definition

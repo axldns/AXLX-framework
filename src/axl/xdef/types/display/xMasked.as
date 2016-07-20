@@ -51,7 +51,7 @@ package axl.xdef.types.display
 		/** Class instantiated from <b> &lt;msk/&gt;</b>.<br>Easy masking and movable/scorllable container, 
 		 * with ability to "connect" multiple controllers. Auto-recognition of &lt;scrollBar/&gt; children.
 		 * @param definition - xml definition
-		 * @param xroot - reference to parent xRoot object @see axl.xdef.types.xMasked
+		 * @param xroot - reference to parent xRoot object @see axl.xdef.types.display.xMasked
 		 * @see axl.xdef.interfaces.ixDef#def  @see axl.xdef.interfaces.ixDef#xroot
 		 * @see axl.xdef.XSupport#getReadyType2() */
 		public function xMasked(definiton:XML=null,xroot:xRoot=null)

@@ -35,7 +35,7 @@ package axl.xdef.types.display
 		/** Most basic Class for displaying images, instantiated from: <code>&lt;img/&gt;<br></code>
 		 * @param definition - xml definition
 		 * @param xroot - reference to parent xRoot object
-		 * @see axl.xdef.types.xBitmap
+		 * @see axl.xdef.types.display.xBitmap
 		 * @see axl.xdef.interfaces.ixDef#def
 		 * @see axl.xdef.interfaces.ixDef#xroot
 		 * @see axl.xdef.XSupport#getReadyType2()  */
@@ -60,7 +60,7 @@ package axl.xdef.types.display
 			xdef = value;
 			XSupport.applyAttributes(def, this);
 		}
-		/** Reference to parent xRoot object @see axl.xdef.types.xRoot 
+		/** Reference to parent xRoot object @see axl.xdef.types.display.xRoot 
 		 *  @see axl.xdef.interfaces.ixDef#xroot*/
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
@@ -72,7 +72,7 @@ package axl.xdef.types.display
 		 * <ul>
 		 * <li>"addedToStage" - animation(s) to execute when added to stage</li>
 		 * <li>"addChild" - animation to execute when added as a child</li>
-		 * <li>"removeChild" - animation to execute before removing from stage (delays removing from stage)</li>
+		 * <li>"removeChild" - animation to execute before removing from stage (delays removing from stage)
 		 * instantiated and added to this instance</li>
 		 * </ul>
 		 * @see axl.xdef.XSupport#animByNameExtra()
@@ -87,7 +87,7 @@ package axl.xdef.types.display
 		}
 		
 		/** Sets name and registers object in registry 
-		 * @see axl.xdef.types.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
+		 * @see axl.xdef.types.display.xRoot.registry @xee axl.xdef.interfaces.ixDef#name */
 		override public function set name(v:String):void
 		{
 			super.name = xroot.support.requestNameChange(v,this);
@@ -113,12 +113,12 @@ package axl.xdef.types.display
 		}
 		
 		/** Function reference or portion of uncompiled code to execute when object is removed from stage.
-		 *  An argument for binCommand. @see axl.xdef.types.xRoot#binCommand() */
+		 *  An argument for binCommand. @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onRemovedFromStage():Object	{ return xonRemovedFromStage }
 		public function set onRemovedFromStage(value:Object):void {	xonRemovedFromStage = value }
 		
 		/** Function or portion of uncompiled code to execute when object is added to stage. An argument for binCommand.
-		 * @see axl.xdef.types.xRoot#binCommand() */
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public function get onAddedToStage():Object { return xonAddedToStage }
 		public function set onAddedToStage(value:Object):void {	xonAddedToStage = value }
 		
