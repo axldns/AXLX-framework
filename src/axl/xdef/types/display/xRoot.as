@@ -11,6 +11,8 @@ package axl.xdef.types.display
 {
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
+	import flash.events.Event;
+	import flash.events.SyncEvent;
 	
 	import axl.utils.U;
 	import axl.utils.binAgent.RootFinder;
@@ -28,7 +30,7 @@ package axl.xdef.types.display
 	 * Top chain context of code within XML. */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.118';
+		private static const ver:String = '0.119';
 		public static function get version():String { return ver }
 		
 		protected var xsourcePrefixes:Array
@@ -55,6 +57,12 @@ package axl.xdef.types.display
 			this.xroot = this;
 			launcher = new xLauncher(this,onReady);
 			super(definition);
+		}
+		
+		override protected function addedToStageHandler(e:Event):void
+		{
+			super.addedToStageHandler(e);
+			stage.loaderInfo.sharedEvents.dispatchEvent(new SyncEvent("requestContextChange",true,false,[this]));
 		}
 		
 		protected function onReady(v:XML):void {
