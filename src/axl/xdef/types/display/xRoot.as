@@ -30,7 +30,7 @@ package axl.xdef.types.display
 	 * Top chain context of code within XML. */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.119';
+		private static const ver:String = '0.123';
 		public static function get version():String { return ver }
 		
 		protected var xsourcePrefixes:Array
@@ -39,23 +39,49 @@ package axl.xdef.types.display
 		
 		private var rootFinder:RootFinder;
 		private var launcher:xLauncher;
-		/** If set - this will change config file name deduction from swf file name to this value.<br>
-		 * Do not change if you require full automation. */
+		/** Defines config name and partially its location. If set -changes config file name deduction to this value.
+		 * By default, fileName value is attempted to deduct automatically. Priorities:
+		 * <ol>
+		 * <li>manual assignment to this property</li>
+		 * <li>parameters.fileName passed to xRoot constructor (use for RSL)</li>
+		 * <li>loaderInfo.parameters.fileName (use when you load project from bigger application) | native locaton on mobile projects</li>
+		 * <li>parsing loaderInfo.parameters.loadedURL</li>
+		 * <li>parsing xroot.loaderInfo.url</li>
+		 * </ol>
+		 * Do not change if you require full automation. Pass it when you use AXLX as a RSL, from stub or from other loadings
+		 * where fileName auto deduction may fail.
+		 * @see #appRemote
+		 * */
 		public var fileName:String;
-		/** Determines your main server directory, to where rest of the config path and assets 
-		 * context will be added by combining <code>fileName</code> according to 
-		 * <code>axl.xdef.xLauncher.appReomoteSPLITfilename</code> rules. 
+		/** Determines network location that contains config file. <code>fileName</code> is going to be concatenated in to appRemote according to 
+		 * axl.xdef.xLauncher.appReomoteSPLITfilename rules.<br><br>
+		 * If appRemote is not set (default), there's an attempt to deduct it automatically but then appReomoteSPLITfilename does not apply.
+		 * Priorities:
+		 * <ol>
+		 * <li>manual assignment to this property</li>
+		 * <li>parameters.loadedURL + one dir up, passed to xRoot constructor (use for RSL)</li>
+		 * <li>loaderInfo.parameters.loadedURL + one dir up (use when you load project from bigger application) | native locaton on mobile projects</li>
+		 * <li>xroot.loaderInfo.ur + one dir upl</li>
+		 * </ol>
 		 * @see axl.xdef.xLauncher#appReomoteSPLITfilename*/
 		public var appRemote:String;
 		
-		/** Master class for XML DisplayList projects. Treat it as your stage */
-		public function xRoot(definition:XML=null)
+		/** Master class for XML DisplayList projects. Treat it as your stage.
+		 * @param definition - XML definition of root, kept as it extends xSprite. 
+		 * Real definiton is passed when config is loaded.
+		 * @param parameters - can contain fileName and loadedURL to modify location of config file. 
+		 * Can be used with RSL, when deduction gives not relevant results. fileName has lower 
+		 * priority than set-able public property fileName. If present, loadedURL has higher priority
+		 * than one passed in loaderInfo.parameters.loadedURL but lower than assigned appRemote in
+		 * non-local runs.
+		 * @see #fileName @see #appRemote */
+		public function xRoot(definition:XML=null,parameters:Object=null)
 		{
 			xsupport = new XSupport();
 			rootFinder = new RootFinder(this,XSupport);
 			xsupport.root = this;
 			this.xroot = this;
-			launcher = new xLauncher(this,onReady);
+			launcher = new xLauncher(this,onReady,parameters);
 			super(definition);
 		}
 		
@@ -520,7 +546,7 @@ package axl.xdef.types.display
 		
 		/** Exposes logging to console @see axl.utils.U#log()*/
 		public function get log():Function { return U.log}
-		/** Exposes animating object @see axl.utils.AO#animate()*/
+		/** Exposes tweening engine AO.animate object @see axl.utils.AO#animate()*/
 		public function get animate():Function {return axl.utils.AO.animate}
 	}
 }

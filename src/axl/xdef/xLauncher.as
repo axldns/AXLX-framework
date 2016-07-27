@@ -1,3 +1,12 @@
+/**
+ *
+ * AXLX Framework
+ * Copyright 2014-2016 Denis Aleksandrowicz. All Rights Reserved.
+ *
+ * This program is free software. You can redistribute and/or modify it
+ * in accordance with the terms of the accompanying license agreement.
+ *
+ */
 package axl.xdef
 {
 	import flash.display.Stage;
@@ -6,6 +15,8 @@ package axl.xdef
 	import flash.events.Event;
 	import flash.system.Capabilities;
 	import flash.system.Security;
+	import flash.system.System;
+	import flash.utils.describeType;
 	
 	import axl.utils.ConnectPHP;
 	import axl.utils.Ldr;
@@ -20,29 +31,43 @@ package axl.xdef
 		private var framesCounter:int;
 		private var framesAwaitingLimit:int=60;
 		private var isLocal:Array;
-		/** Dictates config file sub-directory.<br>
-		 * Array where first element is regular expression, second "replace" argument.<br>
-		 * New string is going to be composed by executing <code>String.replace</code> function on swf file name.<br>
-		 * New string is going to be added to <code>appRemote</code> which root location of config file.<br>
+		/** Modyfies config file sub-directory.<br>
+		 * Array where first element is regular expression, second "replace" argument.<br><br>
+		 * If xRoot.appRemote is defined, final location of config file is going to be composed by executing <code>String.replace</code> on value of 
+		 * xRoot.fileName with regular expression of this property.<br>
+		 * New string is going to be concatenated with <code>appRemote</code> defined in xRoot class.<br>
 		 * Default [/(\w+?)(_.*)/,"$1/$1$2/"] means filename VG_promo will produce VG/VG_PROMO,
-		 * which will look for config in appRemote/VG/VG_promo/VG_promo.xml */
+		 * which will look for config in appRemote/VG/VG_promo/VG_promo.xml<br>
+		 * If xRoot.appRemote is not defined, this property is ignored. */
 		public var appReomoteSPLITfilename:Array = [/(\w+?)(_.*)/,"$1/$1$2/"];
 		private var useLiveAranger:Boolean;
 		private var liveAranger:LiveArranger;
 		private var pathPrefixes:Array;
 		private var xroot:xRoot;
 		private var onComplete:Function;
+		private var xparams:Object;
 		
-		public function xLauncher(rootObj:xRoot,onConfigReady:Function)
+		public function xLauncher(rootObj:xRoot,onConfigReady:Function,parameters:Object=null)
 		{
 			xroot = rootObj;
 			onComplete = onConfigReady;
-			tname= xroot.toString();
+			xparams = parameters;
+			validateParams();
+			tname= '[xRoot ' + xRoot.version+'][xLauncher]';
 			U.autoStageManaement = false;
 			U.onStageAvailable = onStageAvailable;
 			U.init(xroot,1,1);
 			findFilename();
 		}
+		
+		private function validateParams():void
+		{
+			var type:XML = describeType(xparams);
+			if(type.@isDynamic.toString() != "true")
+				xparams = {};
+			flash.system.System.disposeXML(type);
+		}
+		
 		private function findFilename():void
 		{
 			U.log(tname + '[findFilename]');
@@ -58,7 +83,7 @@ package axl.xdef
 			if(loaderInfoAvailable)
 			{
 				xroot.removeEventListener(Event.ENTER_FRAME, onEnterFrames);
-				onLoaderInfoAvailable()
+				onLoaderInfoAvailable();
 			}
 			else
 			{
@@ -80,24 +105,27 @@ package axl.xdef
 		{
 			U.log("loaderInfo", xroot.loaderInfo, "file class", Ldr.FileClass);
 			isLocal = ['app:'];
-			xroot.fileName = xroot.fileName || U.fileNameFromUrl(Ldr.FileClass.applicationDirectory.resolvePath('..').nativePath,true);
+			xroot.fileName = xroot.fileName ||  xparams.fileName || U.fileNameFromUrl(Ldr.FileClass.applicationDirectory.resolvePath('..').nativePath,true);
 			U.log(tname +" fileName =", xroot.fileName, ' isLocal:', isLocal);
-			fileNameFound()
+			fileNameFound();
 		}
 		
 		private function onLoaderInfoAvailable(e:Event=null):void
 		{
-			U.log(tname + '[onLoaderInfoAvailable]');
-			U.log(tname + ' loaderInfo:',xroot.loaderInfo);
-			U.log(tname + ' loaderInfo.url:',xroot.loaderInfo.url);
-			U.log(tname + ' loaderInfo.parameters.fileName:',xroot.loaderInfo.parameters.fileName, 'vs assigned before:', xroot.fileName);
-			U.log(tname + ' loaderInfo.parameters.loadedURL:',xroot.loaderInfo.parameters.loadedURL);
+			var report:String = tname + '[onLoaderInfoAvailable][REPORT]:'
+			report += '\n\tloaderInfo.url:',xroot.loaderInfo.url;
+			report += '\n\tloaderInfo.parameters.fileName: ' + xroot.loaderInfo.parameters.fileName + ' vs assigned before: ' + xroot.fileName;
+			report += '\n\tloaderInfo.parameters.loadedURL: ' + xroot.loaderInfo.parameters.loadedURL;
+			report += '\n\tparameters.fileName: ' + xparams.fileName;
+			report += '\n\tparameters.loadedURL: ' + xparams.loadedURL;
 			isLocal = xroot.loaderInfo.url.match(/^(file|app):/i);
 			
 			//resolve filename
-			xroot.fileName = xroot.fileName || xroot.loaderInfo.parameters.fileName || U.fileNameFromUrl(xroot.loaderInfo.parameters.loadedURL,true) || U.fileNameFromUrl(xroot.loaderInfo.url,true);
+			xroot.fileName = xroot.fileName || xparams.fileName || xroot.loaderInfo.parameters.fileName || U.fileNameFromUrl(xroot.loaderInfo.parameters.loadedURL,true) || U.fileNameFromUrl(xroot.loaderInfo.url,true);
 			
-			U.log(tname +" fileName =", xroot.fileName, ' isLocal:', isLocal);
+			report += "\n\tfileName: " + xroot.fileName + '\nisLocal: ' + isLocal;
+			U.log(report);
+			report = null;
 			fileNameFound();
 		}
 		
@@ -111,57 +139,74 @@ package axl.xdef
 		
 		private function resolveDirectories():void
 		{
-			var c:Object = flash.system.Capabilities;
-			NetworkSettings.configPath = NetworkSettings.configPath || '/cfg.xml';
+			
 			pathPrefixes = [];
-			if(isLocal)
-			{
-				if(xroot.loaderInfo && xroot.loaderInfo.parameters.hasOwnProperty('loadedURL'))
-				{
-						var v:String = xroot.loaderInfo.parameters.loadedURL.substr(0,xroot.loaderInfo.parameters.loadedURL.lastIndexOf('/')+1) + '../';
-						pathPrefixes.unshift(v);
-				}
-				else if(c.os.match(/(android|iphone)/i))
-				{
-					pathPrefixes = [
-						Ldr.FileClass.applicationStorageDirectory.url,
-						Ldr.FileClass.applicationDirectory.url
-					];
-				}
-				else
-				{
-					pathPrefixes.unshift('..'); // to work standalone LOCALLY
-				}
-			}
+			
+			var isMobile:Boolean = flash.system.Capabilities.os.match(/(android|iphone)/i);
+			var isAppLoadedFromApp:Boolean = !isMobile && xroot.loaderInfo.url != null && xroot.loaderInfo.url.match(/^app:/) !=null;
+			var isStandAlone:Boolean = !isMobile && xroot.loaderInfo.url != null && xroot.loaderInfo.url.match(/^file:/) != null;
+			
+			var appRemoteWasSet:Boolean = (xroot.appRemote != null);
+			var dirParameterPassed:Boolean =  (xroot.loaderInfo.parameters.hasOwnProperty('loadedURL'));
 			var fileNameNoExtension:String = U.fileNameFromUrl(xroot.fileName,false,true);
-			if(xroot.fileName!=null)
+			
+			
+			//app remote
+			if(!appRemoteWasSet && xroot.loaderInfo != null)
 			{
+				if(xparams.loadedURL != null)
+					xroot.appRemote = U.dirFromUrl(xparams.loadedURL) + '../';
+				else if(xroot.loaderInfo.parameters.hasOwnProperty('loadedURL'))
+					xroot.appRemote = U.dirFromUrl(xroot.loaderInfo.parameters.loadedURL) + '../';
+				else if(xroot.loaderInfo.url != null)
+					xroot.appRemote = U.dirFromUrl(xroot.loaderInfo.url) + '../';
+			}
+			if(appRemoteWasSet && xroot.fileName != null && appReomoteSPLITfilename != null)
 				xroot.appRemote += fileNameNoExtension.replace(appReomoteSPLITfilename[0], appReomoteSPLITfilename[1]);
-				NetworkSettings.configPath =  '/' + fileNameNoExtension + '.xml';
+			
+			
+			// path prefixes
+			if(isMobile)
+			{
+				pathPrefixes = [
+					Ldr.FileClass.applicationStorageDirectory.url,
+					xroot.appRemote,
+					Ldr.FileClass.applicationDirectory.url
+				];
+				U.log(tname,"[Environment - local, mobile]");
+			}
+			else if(isStandAlone)
+			{
+				pathPrefixes = ['..',xroot.appRemote]; // to work standalone LOCALLY
+				U.log(tname,"[Environment - local, standalone]");
+			}
+			else 
+			{	// app loaded or network
+				pathPrefixes = [];
+				if(dirParameterPassed)
+					pathPrefixes.push(U.dirFromUrl(xroot.loaderInfo.parameters.loadedURL) + '../');
+				pathPrefixes.push(xroot.appRemote);
 			}
 			
-			if(xroot.loaderInfo && xroot.loaderInfo.parameters["remote"])
-			{
-				pathPrefixes.push(xroot.loaderInfo.parameters["remote"]);
-			}
-			else
-				pathPrefixes.push(xroot.appRemote);
-			NetworkSettings.configPath += '?cacheBust=' + String(new Date().time).substr(0,-3);
+			// config suffix
+			NetworkSettings.configPath = NetworkSettings.configPath ||  String(fileNameNoExtension ? String('/' + fileNameNoExtension + '.xml') : "cfg.xml");
+			NetworkSettings.configPath += '?cacheBust=' + String(new Date().time);
+			
 		}
 		
 		private function loadConfig():void
 		{
-			U.log(tname,'[load config] PathPrefixes', pathPrefixes);
-			U.log("[]FILENAME", xroot.fileName,'\n[]APPREMOTE',xroot.appRemote, "\n[]CONFIG PATH", NetworkSettings.configPath);
+			U.log(tname,'[load config]\n' + 
+			"[]FILENAME", xroot.fileName,'\n[]APPREMOTE',xroot.appRemote, "\n[]CONFIG PATH", NetworkSettings.configPath, '\n[]DIRS:', pathPrefixes);
 			Ldr.load(NetworkSettings.configPath,onConfigLoaded,null,null,pathPrefixes);
 		}
 		
-		/** [MIDDLE FLOW BREAK] Use it to deal with situations where config or initial files could not be loaded
+		/** When config or initial files could not be loaded
 		 * By default it displays pop-up message*/
 		protected function errorHandler(e:Event):void { U.msg("Config file not loaded")  }
 		
 		
-		/**[MIDDLE FLOW 1] As soon as stage is available - loading screen is displayed */
+		/** Instantiates live arranger and sets allow domain */
 		protected function onStageAvailable():void
 		{
 			if(xroot.parent is Stage)
@@ -179,8 +224,7 @@ package axl.xdef
 			try { 
 				Security.allowDomain("*");
 				Security.allowInsecureDomain("*");
-				U.log("Security domain set");
-			} catch (e:*) { U.log("SecurityError caught",e);}
+			} catch (e:*) { U.log("SecurityError on Security.allowInsecureDomain caught",e);}
 		}
 		
 		
@@ -240,7 +284,7 @@ package axl.xdef
 		
 		private function destroy():void
 		{
-			U.log('[xLauncher][DESTROY]');
+			U.log(tname+'[DESTROY]');
 		}
 	}
 }
