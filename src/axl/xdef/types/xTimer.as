@@ -15,7 +15,7 @@ package axl.xdef.types
 	import axl.xdef.types.display.xRoot;
 
 	/** Non-displayable class that provides advanced timer functions. Instantiated 
-	 * from: <h3><code>&lt;timer/&gt;</code></h3>
+	 * from:<code>&lt;timer/&gt;</code>
 	 * Extends axl.utils.Counter by providing XML interface to it. Additionaly,
 	 * ancestor's callback can be defined as uncompiled portion of code - an
 	 * arguments for xRoot.binCommand. @see axl.utils.Counter @see axl.xdef.types.display.xRoot#binCommand */

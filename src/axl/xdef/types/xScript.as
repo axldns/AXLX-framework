@@ -13,7 +13,7 @@ package axl.xdef.types
 	import axl.xdef.XSupport;
 	import axl.xdef.types.display.xRoot;
 	
-	/** Lightweight class for loading external config definitions. Instantiated from: <h3><code>&lt;script/&gt;<br></code></h3>
+	/** Lightweight class for loading external config definitions. Instantiated from: <code>&lt;script/&gt;</code><br>
 	 * Externalizing portions of code / definitions allows to keep projects more structured, share elements between them, speeds
 	 * up development process by providing re-usable, modular components.<br>
 	 * This instance (unlike others) modifies original root XML config by including XML children contained in additions node of this instance
@@ -31,7 +31,7 @@ package axl.xdef.types
 	 * There is no instantiation involved - just XML definitions are added and made available to use from top level.
 	 * <pre>
 	 * &lt;config&gt;<br>
-	 * 	&lt;additions meta='{}' onInclude='log("onInclude")' onIncluded='log("onIncluded")' &gt;<br>
+	 * 	&lt;additions onInclude='log("onInclude")' onIncluded='log("onIncluded")' &gt;<br>
 	 * 		&lt;btn name="magicButton"&gt;<br>
 	 * 			&lt;img name='over' src='../shared/mbover.png'/&gt;<br>
 	 * 			&lt;img name='out' src='../shared/mbout.png'/&gt;<br>

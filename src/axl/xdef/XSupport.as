@@ -393,7 +393,6 @@ package axl.xdef
 			function readyTypeCallback(v:Object, index:int):void
 			{
 				numC-=1;
-				//U.log('[XSupport]'+container+'[' + container.name + '][pushReadyTypes2]',numC);
 				if(v != null)
 				{
 					if(v is Array)
@@ -440,8 +439,6 @@ package axl.xdef
 		/** Loads resource specified as "src" attribute of xml object. Executes callback with xml as attribute.
 		 * <ul><li>If xml does not have "src" attribute - callback is executed right away</li>
 		 * <li>If resource is already loaded (available <code>Ldr</code> class pool - callback is executed right away</li>
-		 * <li>If xml has "src" attribute but <code>dynamicLoad=false</code> - calback is executed right away</li>
-		 * <li>If xml has "src" attribute and <code>dynamicLoad=true</code> - callback is executed only when resource is loaded or failed loading.</li>
 		 * </ul> */
 		private static function checkSource(xml:XML, callBack:Function,sourcePrefixes:Object=null,overwriteInLib:Boolean=false,xroot:xRoot=null):void
 		{

@@ -13,7 +13,7 @@ package axl.xdef.types
 	import axl.xdef.types.display.xRoot;
 
 	/** Lightweight class for loading data and providing an easy acces to its contents, without accessing internal
-	 * assset manager. Instantiated from: <h3><code>&lt;data/&gt;<br></code></h3>
+	 * assset manager. Instantiated from: <code>&lt;data/&gt;<br></code>
 	 * Data parsing is available right after defining src attribute. Loaded data passes through  
 	 * known types check in order to instantiate valid ActionScript objects, according to <code>Ldr.load</code> Example:<br>
 	 * <pre> &lt;data src='audio.mp3' anything='$this.data.play()'/&gt; </pre>
