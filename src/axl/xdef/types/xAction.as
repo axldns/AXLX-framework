@@ -13,20 +13,17 @@ package axl.xdef.types
 	import axl.xdef.types.display.xRoot;
 
 	/**
-	 * Class that allows to execute at runtime XML defined funciton or set of functions.<br>
-	 * This class is instantiated from &lt;act/> node and can be referenced from registry.
-	 * Unlike in instances of <code>xAction</code> class, method <code>execute</code> accepts 
-	 * variable number of arguments. This class is non displayable (lightweight) object that can be placed in config file
+	 * Class that allows to execute at runtime XML defined funciton.<br>
+	 * Instantiated from &lt;act/> node and can be referenced from registry.
+	 * This class is non displayable (lightweight) object that can be placed in config file
 	 * and executed only via direct or referenced execute call.
-	 * @see axl.xdef.types.xAction
+	 * @see #execute()
 	 */
 	public class xAction implements ixDef
 	{
 		private var xxroot:xRoot;
 		private var xdef:XML;
 		private var xmeta:Object;
-		private var metaAlreadySet:Boolean;
-		private var reparseMetaEverytime:Boolean;
 		private var xname:String;
 		private var executeArgs:Array;
 		private var iterationIndex:int=-1;
@@ -47,55 +44,36 @@ package axl.xdef.types
 		public var repeat:Number;
 		/**
 		 * Property containing uncompiled code for binCommand. <br>
-		 * <code> code='[stage.removeChildren()]'</code>
-		 * <br><b>is the equivalent of:</b><br>
-		 * <code>meta='{"action":[{"type":"binCommand","value":[[stage.removeChildren()]]}]}'</code><br>
+		 * <code> code="stage.removeChildren()"</code>
 		 * <br>The string is going to be parsed / code evaluated on execution, every execution.<br>
 		 * <b>Confusion</b> may occur as, unlike with other in-attrubute-code-executions, you probably don't want to prepend
 		 * your config "code" attrubute value with dolar sign, unless you want to 
-		 * reference code containing variable to somewhere else.<br>  */
+		 * reference code containing variable to somewhere else.<br> 
+		 * @see axl.xdef.types.display.xRoot#binCommand() */
 		public var code:String;
 		/**
 		 * Instantiates class that interpretates XML defined function and makes it available for 
 		 * execution.
 		 * @param definition - xml definition. eg:<code> &lt;act name='ref' code='[trace(123)]'/></code>
 		 * @param xrootObject - parent root object for <code>binCommand</code> context
-		 * @see execute()
-		 * @see xActionSet
+		 * @see #execute()
 		 * @see axl.xdef.types.display.xRoot#binCommand()
 		 */
 		public function xAction(definition:XML,xrootObject:xRoot)
 		{
 			xxroot = xrootObject;
 			xdef = definition;
-			if(this.xroot != null && definition != null)
-			{
-				var v:String = String(definition.@name);
-				if(v.charAt(0) == '$' )
-					v = xroot.binCommand(v.substr(1), this,debug);
-				this.name = v;
-				xroot.registry[this.name] = this;
-			}
-			parse();
+			xroot.support.register(this);
 		}
 		
-		private function parse():void
-		{
-			var a:Object, b:Array, i:int, j:int;
-			if(!meta || meta is String)
-				return
-		}
-		/** Executes actions defined in <code>meta.action</code> 
-		 * and within <code>code</code> properties.<br>Action defined in "code"
-		 * property is executed <code>repeat</code> number of times.<br>
-		 * Repetition of actions defined in <code>meta.action</code> can be defined individually.<br>
+		/** Executes actions defined within <code>code</code> property.<br>Action is executed
+		 * <code>repeat</code> number of times.<br>
 		 * Iteration number is publicly available via <code>iteration</code>
 		 * property during execution.<br>Arguments passed to this function  are
 		 * publicly available via <code>arguments</code> getter
-		 * @see repeat
+		 * @see #code @see #repeat
+		 * @see #arguments @see #iteration
 		 * @see axl.xdef.types.xAction
-		 * @see arguments
-		 * @see iteration
 		 *  */
 		public function execute(...args):*
 		{
@@ -111,40 +89,40 @@ package axl.xdef.types
 			iterationIndex =-1;
 		}
 		/** Number of current iteration if <code>repeat</code> is set.<br>
-		 * -1 means either <code>repeat</code> is not set or the loop is over. @see repeat */
+		 * -1 means either <code>repeat</code> is not set or the loop is over. @see #repeat */
 		public function get iteration():int { return iterationIndex }
 		
 		/** Last arguments that were passed to <code>execute</code> function.
-		 * Usefull for event handling. @see execute */
+		 * Usefull for event handling. @see #execute() */
 		public function get arguments():Array { return executeArgs }
 		
 		/** Root object that this action set belongs too */
 		public function get xroot():xRoot { return xxroot }
 		public function set xroot(v:xRoot):void	{ xxroot = v }
 		
-		/** JSON object. Expected keywords: "action" 
-		 * @see axl.xdef.types.xAction */
+		/** Dynamic variables container. It's set up only once. Subsequent applying XML attributes
+		 * or calling reset() will not have an effect. @see axl.xdef.interfaces.ixDef#meta  */
 		public function get meta():Object { return xmeta }
-		public function set meta(v:Object):void {
+		public function set meta(v:Object):void 
+		{
 			if(v is String)
 				throw new Error("Invalid json for element " +  def.localName() + ' ' +  def.@name );
-			if((metaAlreadySet && !reparseMetaEverytime))
-				return;
+			if(!v || meta) return;
 			xmeta =v;
-			metaAlreadySet = true;
-			parse();
 		}
+		
 		/** Name that allows to reference this object through registry 
 		 * @see axl.xdef.interfaces.ixDef#name*/
 		public function get name():String { return xname }
-		public function set name(v:String):void { xname = v}
+		public function set name(v:String):void { xname = xroot.support.requestNameChange(v,this);}
 		
 		/** XML definition of this class instance
 		 * @see axl.xdef.interfaces.ixDef#def*/
 		public function get def():XML { return xdef }
 		public function set def(v:XML):void { xdef = v }
+		
 		/** This class does not use <code>reset</code> functionality
-		 *  @see axl.xdef.interfaces.ixDef#reset**/
+		 *  @see axl.xdef.interfaces.ixDef#reset() **/
 		public function reset():void
 		{
 		}
