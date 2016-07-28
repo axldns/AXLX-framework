@@ -45,8 +45,6 @@ package axl.xdef.types.display
 		/**
 		 * Property containing uncompiled code for binCommand. <br>
 		 * <code> code='[stage.removeChildren()]'</code>
-		 * <br><b>is the equivalent of:</b><br>
-		 * <code>meta='{"action":[{"type":"binCommand","value":[[stage.removeChildren()]]}]}'</code><br>
 		 * <br>The string is going to be parsed / code evaluated on execution, every execution.<br>
 		 * <b>Confusion</b> may occur as, unlike with other in-attrubute-code-executions, you probably don't want to prepend
 		 * your config "code" attrubute value with dolar sign, unless you want to 
@@ -58,9 +56,10 @@ package axl.xdef.types.display
 		 * result: "raplacant" */
 		public var replace:Object;
 
-		/** Function to execute when a href tag is clicked in textfield. Event type is passed to 
-		 * this function as an argument */
-		public var onLinkEvent:Function;
+		/** Function or portion of uncompiled code to execute when a href tag is clicked in textfield. 
+		 * Event type is passed to function as an argument, lastLinkEventType holds it.  */
+		public var onLinkEvent:Object;
+		public var lastLinkEventType:String;
 		
 		/** Merges regular flash TextField and TextFormat, makes use of  htmlText, simplifies text replacements and turning
 		 * textfields into buttons. Instantiated from: <h3><code>&lt;txt/&gt;</code></h3> 
@@ -110,7 +109,6 @@ package axl.xdef.types.display
 		 * against all regular expressions in "replace" array.
 		 * </li>
 		 * <li>"addedToStage" - animation(s) to execute when added to stage, instantiated and added to this instance</li>
-		 * <li>"action" - action(s) to execute when html link is clicked</li>
 		 * <li>"js" - argument(s) to apply to <code>ExternalInterface.call</code> method
 		 * when htmlText hyperLink is clicked</li>
 		 * </ul>
@@ -268,12 +266,15 @@ package axl.xdef.types.display
 		 * event type is passed to the function as an argument. */
 		protected function linkEvent(e:TextEvent):void
 		{
+			lastLinkEventType = e.type;
 			if(meta.js != null && ExternalInterface.available)
 				ExternalInterface.call.apply(null, meta.js);
 			if(code != null)
 				xroot.binCommand(code,this);
-			if(onLinkEvent != null)
-				onLinkEvent(e.type);
+			if(onLinkEvent is Function)
+				onLinkEvent(lastLinkEventType);
+			else if (onLinkEvent is String)
+				xroot.binCommand(onLinkEvent,this);
 		}
 		//----------------------- INTERNAL METHODS -------------------- //
 		//-----------------------OTHER PUBLIC API -------------------- //
