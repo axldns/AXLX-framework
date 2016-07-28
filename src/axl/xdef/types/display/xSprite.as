@@ -230,7 +230,7 @@ package axl.xdef.types.display
 			if(!c) return child;
 			if(c.meta && c.meta.addChild != null)
 			{
-				XSupport.animByNameExtra(c, 'addChild');
+				XSupport.animByNameExtra(c, 'addChildAt');
 			}
 			return child;
 		}
