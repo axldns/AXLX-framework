@@ -94,6 +94,7 @@ Blue bar still says "Invalid config file", but this time inside log we can see t
     	<root/>
     </axlx>
    *Minimal valid XML definiton of the config file*
+   
 If we copy the code above, paste to our Example.xml created before and debug the project again, blue error bar is finally gone, but swf is still blank. That's a good sign. We can start building content.
 ####Nodes
 There are two kind of nodes available: *Grand Nodes* and *Child Nodes*.
@@ -217,7 +218,7 @@ Full overview of what is supported and what is not, can be found [here](http://a
 To make sure an attribute value will go through code evaluation, use dollar sign as a prefix. E.g.
 
     <txt width='$stage.stageWidth/2' height='$stage.stageHeight/2'/>
-This applies to any native flash object properties available within ActionScript documentation. However, within AXLX framework, there are certain properties of certain classes that do not require dollar sign prefix in attribute value to contain not compled ActionScript. They actually expect a String, which is going to be evaluated when needed. If you prefix such with dollar sign, evaluation will either occur to early (not wanted) or you'll make a reference to other object containing the right string to evaluate (advanced).
+This applies to any native flash object properties available within ActionScript documentation. However, within AXLX framework, there are certain properties of certain classes that do not require dollar sign prefix in attribute value to contain uncompiled ActionScript. They actually expect a String, which is going to be evaluated when needed. If you prefix such with dollar sign, evaluation will either occur to early (not wanted) or you'll make a reference to other object containing the right string to evaluate (advanced).
 
 List of attributes that don't need dolar sign to evaluate value:
 
