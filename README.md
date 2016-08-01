@@ -3,7 +3,7 @@
 
 AXLX - open source framework for building projects based on dynamicaly loaded XML files. 
 
-Table of contents
+###Table of contents:
 
 - [Overview](#overview)
 - [STEP BY STEP](#step-by-step)
@@ -420,6 +420,7 @@ Another way to animate objects is defining custom variables inside meta their ob
 
 #####ui controller's animations
 Another type of animations available in the framework are the ones tied to pre-defined UI components. For optimization purposes, there's limited access to it (no direct callbacks, no sequencing), but most important things can be set up
+
 | implementors| animation related property|
 | ------------- |-------------	|
 | `<carouselSelectable>` | [movementSpeed](http://axldns.com/docs/axl/xdef/types/display/xCarouselSelectable.html#movementSpeed), [easingType](http://axldns.com/docs/axl/xdef/types/display/xCarouselSelectable.html#easingType), [onMovementComplete](http://axldns.com/docs/axl/xdef/types/display/xCarouselSelectable.html#onMovementComplete) |
