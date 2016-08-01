@@ -39,6 +39,11 @@ AXLX - open source framework for building projects based on dynamicaly loaded XM
 		- [Network communication](#network-communication)
 
 - [Working with it](#working-with-it)
+- [Examples](#examples)
+- [Documentation](#documentation)
+- [Minimum requirements](#minimum-requirements)
+- [Forum](#forum)
+- [Dependencies](#dependencies)
 
 
 
@@ -441,3 +446,23 @@ You can use this classes to build your API solution quick or be creative with cu
 ###Working with it
 It's highly recommended to use [AxlLoader](https://github.com/axldns/AxlLoader) application for your projects.
 It has built in development tools such as [display list editor](http://axldns.com/?page_id=98) which allows you to manipulate objects on screen easily, [stand alone console](http://axldns.com/?page_id=11) with command line and IDE style code completion, to view logs, script your project, see contents of your registry etc., and moreover - reload takes less than quarter of the second, which comparing to closing and opening or even worse: re-compiling project to see changes done to XML is a thunderbolt!
+
+###Examples
+--------------------
+To see both AXL and AXLX in action visit [examples page](http://axldns.com/?page_id=283)
+
+###Documentation
+--------------------
+[http://axldns.com/docs/](http://axldns.com/docs/)
+
+###Minimum Requirements
+--------------------
+Adobe AIR or Flash Player 11.0
+
+###Forum
+[(beta version)](http://axldns.com/phpbbforum/)
+
+###Dependencies
+[AXL Library](https://github.com/axldns/AXL-library)
+
+
