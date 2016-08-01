@@ -30,7 +30,7 @@ package axl.xdef.types.display
 		public var movementSpeed:Number= .2;
 		/** Function or portion of uncompiled code to execute when transition 
 		 * from one element to another is complete. This will be fired as many times as <code>poolMovement</code>
-		 *  was requested. Subsequent calls to poolMovement are not fetched. */
+		 *  was requested. Subsequent calls to poolMovement are processed independently and not fetched. */
 		public var onMovementComplete:Object;
 		/** Determines easing that is used for carousel movement transitions 
 		 * @see axl.utils.AO#easing  @default "easeOutQuart" */

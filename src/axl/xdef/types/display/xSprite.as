@@ -129,8 +129,7 @@ package axl.xdef.types.display
 		/** Kills all animations proceeding and sets initial (xml-def-attribute-defined) values to 
 		 * this object
 		 * @see axl.xdef.XSupport#applyAttrubutes()
-		 * @see #resetOnAddedToStage
-		 * @see #reparseMetaEverytime */
+		 * @see #resetOnAddedToStage */
 		public function reset():void 
 		{
 			AO.killOff(this);

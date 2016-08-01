@@ -116,7 +116,10 @@ package axl.xdef.types.display
 		}
 		
 		// ADD - REMOVE
-		/** Adds or removes one or more elements (config xml nodes) to stage (xml root node).
+		/** Adds one or more elements to display list. Searches through registry for already instantiated elements of the same name first.
+		 * If not found, searches through additions node for child with attribute <i>name</i> matching first argument value(s).
+		 * If found in additions, instantiates and adds object to display list.
+		 * Unless parameters <i>node</i> or <i>forceNewElement</i> state differently.
 		 * @param v - String or Array of Strings - must reffer to <code>name</code> attribute of requested config node
 		 * @param underChild - depth controll -name of existing element under which addition will occur
 		 * @param onNotExist - Function to execute if one or more elements does not exist
@@ -231,7 +234,7 @@ package axl.xdef.types.display
 			else
 				callback(c);
 		}
-		/** Adds or removes one or more elements (config xml nodes) to any instantiated DisplayObjectContainer descendants.
+		/** Adds one or more elements (config xml nodes) to any instantiated DisplayObjectContainer descendants.
 		 * @param v - String or Array of Strings - must reffer to <code>name</code> attribute of requested config node
 		 * @param intoChild - target DisplayObjectContainer ("name", "$refference" or DisplayObjectContainer itself) to add "v" to.
 		 * @param onNotExist - Function to execute if one or more elements does not exist
@@ -385,14 +388,19 @@ package axl.xdef.types.display
 				dobj.parent.removeChild(dobj);
 		}
 		/** executes <code>removeRegistered</code> in a loop */
-		public function removeRegisteredGroup(v:Array):void
+		private function removeRegisteredGroup(v:Array):void
 		{
 			for(var i:int = 0; i < v.length; i++)
 				removeRegistered(v[i]);
 		}
 		
-		/** Removes elements from the display list. Accepts arrays of display objects, their names and mixes of it.
-		 * Skipps objects which are not part of the display list. */
+		/** Removes elements from the display list. Searches through registry.
+		 * Accepts arrays of display objects, their names and mixes of it.
+		 * Skipps objects which are not part of the display list.<br>
+		 * Object removal can be delayed if object contains meta.removeChild defined animation.
+		 * Even if object has "removeChild" animation defined, can be removed from display list
+		 * instantly (without animation) if any of his ancestors are removed.
+		 * @see #registry */
 		public function rmv(...args):void
 		{
 			for(var i:int = 0,j:int = args.length, v:Object; i < j; i++)
@@ -408,7 +416,11 @@ package axl.xdef.types.display
 					U.log("[xRoot][rmv][WARNING] - Can't remove: " + v + " - is unknow type");
 			}
 		}
-		/** Dictionary of all <b>instantiated</b> objects which can be identified by <code>name</code> attribute*/
+		/** Dictionary of all <b>instantiated</b> objects which can be identified by <code>name</code> attribute. 
+		 * Multiple objects registered under the same name will cause registry to return only the 
+		 * most recently registered one. Object registration is automatic but only within AXLX framework classes.
+		 * Other ixDef implementors can use XSupport class functions to register themselves or request change in registered name. 
+		 * @see axl.xdef.XSupport#register() @see axl.xdef.XSupport#requestNameChange */
 		public function get registry():Object { return xsupport.registry }
 		/** Returns decorator of XML project */
 		public function get support():XSupport{ return xsupport } 
@@ -546,7 +558,7 @@ package axl.xdef.types.display
 		
 		/** Exposes logging to console @see axl.utils.U#log()*/
 		public function get log():Function { return U.log}
-		/** Exposes tweening engine AO.animate object @see axl.utils.AO#animate()*/
+		/** Exposes tweening engine's AO.animate function @see axl.utils.AO#animate()*/
 		public function get animate():Function {return axl.utils.AO.animate}
 	}
 }
