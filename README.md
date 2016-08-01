@@ -1,11 +1,55 @@
 **AXLX Framework**
 --------------
 
+AXLX - open source framework for building projects based on dynamicaly loaded XML files. 
+
+Table of contents
+
+- [Overview](#overview)
+- [STEP BY STEP](#step-by-step)
+	- [Setting up the project](#setting-up-the-project)
+	- [XML name and location](#xml-name-and-location)
+	- [XML structure](#xml-structure)
+		- [Nodes](#nodes)
+			- [Grand nodes](#grand-nodes)
+			- [Child Nodes](#child-nodes)
+				- [Displayable nodes](#displayable-nodes)
+				- [Functional nodes](#functional-nodes)
+				- [Decorative nodes](#decorative-nodes)
+		- [Attributes](#attributes)
+			- [How attributes are parsed](#how-attributes-are-parsed)
+				- [Attribute key](#attribute-key)
+				- [Attribute value](#attribute-value)
+				- [How to write ActionScript in XML attributes](#how-to-write-actionscript-in-xml-attributes)
+				- [Special attributes](#special-attributes)
+					- [name](#name)
+					- [meta](#meta)
+					- [src](#src)
+			- [When attributes are parsed](#when-attributes-are-parsed)
+	- [Interactivity](#interactivity)
+		- [Add, remove elements to/from display list](#add-remove-elements-tofrom-display-list)
+		- [The Registry](#the-registry)
+		- [Animations](#animations)
+			- [meta variables, keywords](#meta-variables-keywords)
+			- [meta variables, non keywords](#meta-variables-non-keywords)
+			- [ui controller’s animations](#ui-controllers-animations)
+			- [manual scripts](#manual-scripts)
+			- [Externalized animations](#externalized-animations)
+
+		- [Network communication](#network-communication)
+
+- [Working with it](#working-with-it)
+
+
+
+Overview
+--------
+
 AXLX is an Open Source framework for building projects based on dynamicaly loaded XML files. 
 
 >It is an answer to constant need of fast updates to live projects. Since updating XML does not require compilation/depoloyment afterwards, amends and bug fixes can be applied in an eye blink. 
 
-Unlike flex framework, where XML (MXML) files are used for compilation, in AXLX XMLs are used for building flash content after compilation. XML definitions can define layouts, complex interactivity, logic, data processing and even more sophisticated tasks. It benefits from set of UI components, controllers, tweening engine and other elements of AXL library.
+Unlike flex framework, where XML (MXML) files are used for compilation, in AXLX XMLs are used for building flash content after compilation. XML definitions can define layouts, complex interactivity, logic, data processing and even more sophisticated tasks. It benefits from set of UI components, controllers, tweening engine and other elements of [AXL library](https://github.com/axldns/AXL-library).
 
 It actually allows to build, develop and update projects without IDE. All it needs is a swf file with AXLX embedded in or a stub loading AXLX as a RSL. This can move weight of not necessarily developer updates to other member of the team (copywriters, graphic designers). 
 Since the most significant part is externalized to XML, using AXLX framework have positive impact on source code controll.
@@ -13,7 +57,7 @@ Since the most significant part is externalized to XML, using AXLX framework hav
 You can build your content completely on AXLX framework or just make it complementary part of larger projects. 
 It is easy to extend it by building your API on top of it.
 
-Dedicated software to work with AXLX projects is AxlLoader small, fast open source (free) AIR app. It allows to re-load projects quickly instead of constantly re-compiling or re-opening to view changes made to XML definitions.
+Dedicated software to work with AXLX projects is [AxlLoader](https://github.com/axldns/AxlLoader) small, fast open source (free) AIR app. It allows to re-load projects quickly instead of constantly re-compiling or re-opening to view changes made to XML definitions.
 
 STEP BY STEP
 ----------------------
@@ -393,5 +437,5 @@ For your back-end server communication is advised to build a proper API in your 
 You can use this classes to build your API solution quick or be creative with current solutions (meta.post, meta.url, meta.js).
 
 ###Working with it
-It's highly recommended to use AxlLoader application for your projects.
+It's highly recommended to use [AxlLoader](https://github.com/axldns/AxlLoader) application for your projects.
 It has built in development tools such as [display list editor](http://axldns.com/?page_id=98) which allows you to manipulate objects on screen easily, [stand alone console](http://axldns.com/?page_id=11) with command line and IDE style code completion, to view logs, script your project, see contents of your registry etc., and moreover - reload takes less than quarter of the second, which comparing to closing and opening or even worse: re-compiling project to see changes done to XML is a thunderbolt!
