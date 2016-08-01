@@ -30,7 +30,7 @@ package axl.xdef.types.display
 	 * Top chain context of code within XML. */
 	public class xRoot extends xSprite
 	{
-		private static const ver:String = '0.123';
+		private static const ver:String = '0.124';
 		public static function get version():String { return ver }
 		
 		protected var xsourcePrefixes:Array
