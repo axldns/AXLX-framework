@@ -142,7 +142,7 @@ package axl.xdef
 			
 			pathPrefixes = [];
 			
-			var isMobile:Boolean = flash.system.Capabilities.os.match(/(android|iphone)/i);
+			var isMobile:Boolean = (flash.system.Capabilities.os.match(/(android|iphone)/i) != null);
 			var isAppLoadedFromApp:Boolean = !isMobile && xroot.loaderInfo.url != null && xroot.loaderInfo.url.match(/^app:/) !=null;
 			var isStandAlone:Boolean = !isMobile && xroot.loaderInfo.url != null && xroot.loaderInfo.url.match(/^file:/) != null;
 			
