@@ -3,6 +3,8 @@
 
 AXLX - open source framework for building projects based on dynamicaly loaded XML files. 
 
+[Download full manual as PDF](http://axldns.com/wp-content/uploads/AXLDevelopmentKit.pdf)
+
 ###Table of contents:
 
 - [Overview](#overview)
