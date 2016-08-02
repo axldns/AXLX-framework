@@ -267,7 +267,7 @@ package axl.xdef.types.display
 		protected function linkEvent(e:TextEvent):void
 		{
 			lastLinkEventType = e.type;
-			if(meta.js != null && ExternalInterface.available)
+			if(meta && meta.js != null && ExternalInterface.available)
 				ExternalInterface.call.apply(null, meta.js);
 			if(code != null)
 				xroot.binCommand(code,this);
